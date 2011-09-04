@@ -25,3 +25,5 @@ sccToLists :: [SCC r] -> [[r]]
 sccToLists = map $ \scc -> case scc of
   AcyclicSCC i -> [i] 
   CyclicSCC l -> l
+  
+{- Hi, I'm a comment -}  
