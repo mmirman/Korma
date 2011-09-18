@@ -1,7 +1,9 @@
 {-# LANGUAGE
  FunctionalDependencies,
  UndecidableInstances, 
- ScopedTypeVariables
+ ScopedTypeVariables,
+ MultiParamTypeClasses,
+ TypeSynonymInstances
  #-}
 module SCC (sortByRefs, HasRefs(..)) where
 

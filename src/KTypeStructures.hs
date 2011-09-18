@@ -1,17 +1,21 @@
 {-# LANGUAGE
  FunctionalDependencies,
  UndecidableInstances, 
- ScopedTypeVariables
+ ScopedTypeVariables,
+ MultiParamTypeClasses,
+ TypeSynonymInstances
  #-}
 module KTypeStructures where
 
-import SCC
 import Control.Monad.Trans.State.Lazy
 import qualified Data.Set as S
 import Data.Monoid
 import Data.Functor ((<$>), fmap)
 import qualified Data.Map as M
 import Data.List (nub)
+
+import RangeUnification
+import SCC
 
 type Id = String
 
@@ -21,6 +25,7 @@ type Id = String
 infixr 1 :~~> 
 infixl 1 :~~>> 
 
+{-*-}
 
 data Kind = Kind :~~> Kind
           | KStar
@@ -323,4 +328,3 @@ K|- (->) :: G :~~> L :~~> E
   K|- { R1: t1 && ... && Rn: tn } :: L
 
 -}
-  
