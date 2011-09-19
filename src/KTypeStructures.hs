@@ -23,7 +23,7 @@ type Id = String
 -- Kinds --
 -----------
 infixr 1 :~~> 
-infixl 1 :~~>> 
+infixr 1 :~~>> 
 
 {-*-}
 
@@ -31,16 +31,18 @@ data Kind = Kind :~~> Kind
           | KStar
            deriving (Eq, Ord, Show, Read)
 
-data KindOrder = KindOrder :~~>> KOrder
-               | KNil
-               | KVar Int
+data KindOrder = KVar (LatticeVar KindOrder)
+               | KBot
+               | KTop
+               | KindOrder :~~>> KindOrder
+               | KOrder KOrder
                deriving (Eq, Ord, Show, Read)
-
+            
 data KOrder = KE
             | KL | KG
-            | KOVar Int
-            deriving (Read, Show, Eq, Ord)
-
+            | KS
+            deriving (Eq, Ord, Show, Read)
+                     
 -------------------------------
 -- Initial data/class syntax --
 -- formally specified        --
@@ -57,7 +59,7 @@ data UICon = UINamed Id
            deriving (Show, Eq, Ord, Read)
 
 data UnionSum = Union
-              | Sum 
+              | Sum
               deriving (Show, Eq, Ord, Read)
                        
 data NamedType = NamedType { namedTypeOp :: UnionSum 
@@ -108,24 +110,6 @@ instance HasKind TyVar where
 class HasKindOrder a where  
   kindOrderOf :: a -> KindOrder
 
--- When we encounter TAp t1 t2, find kindOrderOf t1 as , _ :~~>> ord, and use ord to control unification.
--- take the glb of the lhs and the rhs in this respect, and use those to control unification. 
-instance HasKindOrder TyCon where 
-  kindOrderOf TyArrow = KNil :~~>> KG :~~>> KL
-  kindOrderOf (TyUnion _) = KNil
-  kindOrderOf (TySum _) = KNil
-  kindOrderOf (TyNamed _ _ _ ko) = ko
-instance HasKindOrder Type where
-  kindOrderOf (TVar v) = kindOrderOf v
-  kindOrderOf (TCon c) = kindOrderOf c
-  kindOrderOf (TAp t1 t2) = case kindOrderOf t1 of
-    k :~~>> _  -> k
-    KNil -> error $ show t1 ++ " takes no parameters"
-instance HasKindOrder TyVar where
-  kindOrderOf (TyVar _ _ k) = k
-  kindOrderOf (TyRange t1 t2) = kindOrderOf t1
-
-  
 
 instance HasRefs NamedType Id where   
   getRefs n = mappend member_refs in_refs
