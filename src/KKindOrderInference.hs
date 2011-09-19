@@ -40,6 +40,7 @@ kindOrderInfererTop (s,k) = do
   undefined
 
 
+
 instance Lattice KOrder where          
   top = KS
   bot = KE

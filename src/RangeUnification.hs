@@ -10,7 +10,6 @@ data LatticeVar a = LatticeRange a a
                   | LatticeVar Int
                   deriving (Eq, Read, Ord, Show)
                            
-                           
 substVar :: Eq a => LatticeVar a -> LatticeVar a -> LatticeVar a -> LatticeVar a
 substVar s b a | a == s = b
 substVar _ _ a = a
@@ -18,7 +17,6 @@ substVar _ _ a = a
 substVal :: (RangeUnifiable a, Eq a) => LatticeVar a -> a -> LatticeVar a -> a
 substVal s b a | a == s = b
 substVal _ _ a = vToE a
-
                  
                  
 class Lattice a where
@@ -39,7 +37,8 @@ data RangeInequality a = RIneq a a
                        deriving (Show, Eq, Ord, Functor)
 
 -- TODO: add error handling
--- does not support non nominal recursive bindings.
+-- does not currently support non nominal recursive types.
+-- however, these can be implemented nominally. 
 rangeUnify :: (Eq a, Lattice a, RangeUnifiable a) => [RangeInequality a] -> LatticeVar a -> a
 rangeUnify [] = vToE
 rangeUnify (RIneq a b:l) | a == b = rangeUnify l
