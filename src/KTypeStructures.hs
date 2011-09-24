@@ -9,7 +9,7 @@ module KTypeStructures where
 
 import Control.Monad.Trans.State.Lazy
 import qualified Data.Set as S
-import Data.Monoid
+import Data.Monoid (mempty, mappend, mconcat)
 import Data.Functor ((<$>), fmap)
 import qualified Data.Map as M
 import Data.List (nub)
@@ -50,25 +50,30 @@ data KOrder = KE
 
 data UIType = UIApp UIType UIType 
             | UIVar Id 
-            | UIConst UICon
+            | UIConst UIConst
             deriving (Show, Eq, Ord, Read)
                      
-data UICon = UINamed Id
-           | UIAnonymous UnionSum (M.Map Id UIType)
-           | UIArrow
-           deriving (Show, Eq, Ord, Read)
+data UIConst = UINamed Id
+             | UIAnonymous UnionSum (M.Map Id UIType)
+             | UIArrow
+             deriving (Show, Eq, Ord, Read)
 
 data UnionSum = Union
               | Sum
               deriving (Show, Eq, Ord, Read)
                        
-data NamedType = NamedType { namedTypeOp :: UnionSum 
-                           , namedTypeParameters :: [Id]
-                           , namedTypeMembers :: M.Map Id UIType  {- constructors/records -}
-                           , namedTypeInheritance :: M.Map Id [UIType]
-                           }
-               deriving (Show, Eq, Ord, Read)
-                        
+data NamedType = 
+  NamedType { namedTypeOp :: UnionSum 
+            , namedTypeParameters :: [Id]
+            , namedTypeMembers :: M.Map Id UIType     -- ^ constructors/records 
+            , namedTypeInheritance :: M.Map Id [UIType] -- ^ the inheritence list.
+            }
+  deriving (Show, Eq, Ord, Read)
+
+
+getTypeInheritences nmt = map (uncurry toInherit) $ M.toList $ namedTypeInheritance nmt
+  where toInherit = foldl UIApp . UIConst . UINamed
+
 -----------
 -- Types --
 -----------
@@ -77,9 +82,8 @@ data Type = TVar TyVar | TCon TyCon | TAp Type Type | TGen Int
 data TyVar = TyVar Id Kind KindOrder
            | TyRange Type Type
            deriving (Eq, Ord, Show, Read)
-data TyCon = TyNamed Id (S.Set Id) Kind KindOrder -- named constructor/object.
-           | TyUnion (M.Map Id Type) -- Anonymous constructor/object
-           | TySum (M.Map Id Type) -- Anonymous constructor/object             
+data TyCon = TyNamed Id (S.Set Id {- constructors/records -}) Kind KindOrder
+           | TyAnonymous UnionSum (M.Map Id Type) -- Anonymous constructor/object
            | TyArrow
            deriving (Eq, Ord, Show, Read)
 
@@ -91,8 +95,7 @@ class HasKind a where
   
 instance HasKind TyCon where 
   kindOf TyArrow = KStar :~~> KStar :~~> KStar
-  kindOf (TyUnion _) = KStar
-  kindOf (TySum _) = KStar
+  kindOf (TyAnonymous _ _) = KStar
   kindOf (TyNamed _ _ k _) = k
 instance HasKind Type where  
   kindOf (TVar v) = kindOf v
@@ -110,6 +113,36 @@ instance HasKind TyVar where
 class HasKindOrder a where  
   kindOrderOf :: a -> KindOrder
 
+--- When we encounter TAp t1 t2, find kindOrderOf t1 as , _ :~~>> ord, and use ord to control unification.
+  --- take the glb of the lhs and the rhs in this respect, and use those to control unification. 
+instance HasKindOrder TyCon where 
+  kindOrderOf TyArrow = KOrder KG :~~>> KOrder KL :~~>> KOrder KE
+  kindOrderOf (TyAnonymous us _) = kindOrderOf us
+  kindOrderOf (TyNamed _ _ _ ko) = ko
+instance HasKindOrder UnionSum where  
+  kindOrderOf Union = KOrder KG
+  kindOrderOf Sum = KOrder KL
+instance HasKindOrder Type where
+  kindOrderOf (TVar v) = kindOrderOf v
+  kindOrderOf (TCon c) = kindOrderOf c
+  kindOrderOf (TAp t1 t2) = case kindOrderOf t1 of -- here is where we need to alter this a bit
+      _ :~~>> k -> k
+      _ -> error $ show t1 ++ " takes no parameters"
+instance HasKindOrder TyVar where
+  kindOrderOf (TyVar _ _ k) = k
+  kindOrderOf (TyRange t1 t2) = kindOrderOf t1
+
+getArgumentOrder arg = getArg $ kindOrderOf arg
+  where getArg (k :~~>> _) = getEnd k
+        getArg (KVar (LatticeRange a _)) = getArg a
+        getArg v = getEnd v
+        
+        getEnd (_ :~~>> k) = getEnd k
+        getEnd (KVar (LatticeRange a _)) = getEnd a
+        getEnd (KVar _) = KL
+        getEnd KBot = KE
+        getEnd KTop = KL
+        getEnd (KOrder k) = k
 
 instance HasRefs NamedType Id where   
   getRefs n = mappend member_refs in_refs
@@ -119,7 +152,7 @@ instance HasRefs UIType Id where
   getRefs (UIApp a b) = mappend (getRefs a) (getRefs b)
   getRefs (UIVar _) = mempty
   getRefs (UIConst c) = getRefs c
-instance HasRefs UICon Id where
+instance HasRefs UIConst Id where
   getRefs (UINamed i) = S.singleton i
   getRefs (UIAnonymous _ mp) = mconcat $ map getRefs $ M.elems mp
   getRefs UIArrow = mempty

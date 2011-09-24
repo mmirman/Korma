@@ -1,10 +1,15 @@
 {-# LANGUAGE
- DeriveFunctor
+ DeriveFunctor,
+ ViewPatterns,
+ FlexibleContexts
  #-}
 
 module RangeUnification where
 
 import Data.Functor ((<$>))
+import Data.Monoid
+import Control.Monad.RWS.Lazy
+
 
 data LatticeVar a = LatticeRange a a
                   | LatticeVar Int
@@ -36,10 +41,35 @@ class RangeUnifiable a where
 data RangeInequality a = RIneq a a
                        deriving (Show, Eq, Ord, Functor)
 
+instance Monoid Bool where
+  mempty = False
+  mappend = (||)
+
+
+
+getLVar :: (RangeUnifiable a, Monad m, MonadState Int m) => m a
+getLVar = do
+  i <- get
+  put (i+1)
+  return $ vToE $ LatticeVar i
+  
+  
+-- | 'refineUnifiedMap' builds a new map out of the original map which contains
+-- as few variable-variable references as possible.  It is worthwhile noting that
+-- this is incredibly inneficient, as the new map will need to be calculated every
+-- time we call the function.  It is however a very short definition.
+refineUnifiedMap :: (Eq a, RangeUnifiable a, Ord a) => (LatticeVar a -> a) -> LatticeVar a -> a
+refineUnifiedMap mp = rum mempty . mp
+  where rum remembered v@(topVariable -> Just var) = case var of
+            _ | remembered var -> v
+            LatticeRange a b | a == b -> rum (mappend (== var) remembered) a
+            _ -> rum (mappend (== var) remembered) (mp var)
+        rum _ v = v
+
 -- TODO: add error handling
 -- does not currently support non nominal recursive types.
 -- however, these can be implemented nominally. 
-rangeUnify :: (Eq a, Lattice a, RangeUnifiable a) => [RangeInequality a] -> LatticeVar a -> a
+rangeUnify :: (Show a, Eq a, Lattice a, RangeUnifiable a) => [RangeInequality a] -> LatticeVar a -> a
 rangeUnify [] = vToE
 rangeUnify (RIneq a b:l) | a == b = rangeUnify l
 rangeUnify (RIneq a b:l) = case (topVariable a, topVariable b) of
@@ -52,7 +82,7 @@ rangeUnify (RIneq a b:l) = case (topVariable a, topVariable b) of
       (True , True  ) -> rangeUnify $ (RIneq sL tU):l      
       (True , False ) -> replr s (sL,tL)
       (False, True  ) -> replr t (sU,tU)
-      (False, False ) -> rangeUnify (fmap (repS . repT) <$> l) . replS . replT . subS . subT
+      (False, False ) -> rangeUnify (fmap (repS . repT) <$> (RIneq sU' tL':l)) . replS . replT . subS . subT
         where (tL', subT) = lub tL sU
               (sU', subS) = glb sU tL
               
@@ -62,14 +92,14 @@ rangeUnify (RIneq a b:l) = case (topVariable a, topVariable b) of
   (Just s@(LatticeRange aL aU), _) ->  replr s (aL, aU') . sub
     where (aU', sub) = glb aU b
   (Just s@(LatticeVar _), _) -> case occurs s b of
-    True  -> error "Occurs check"
+    True  -> error $ "Occurs check: " ++ show s ++" occurs in " ++ show b
     False -> replr s (bot,b)
             
   (_, Just t@(LatticeRange bL bU)) -> replr t (bL', bU) . sub
     where (bL', sub) = lub a bL
   
   (_, Just t@(LatticeVar _)) -> case occurs t a of
-    True  -> error "Occurs check"
+    True  -> error $ "Occurs check: " ++ show t ++" occurs in " ++ show a
     False -> replr t (a,top)
 
   where replr f (a,b) = replv f $ LatticeRange a b
