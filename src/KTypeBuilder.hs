@@ -1,7 +1,6 @@
 module KTypeBuilder where
 
 import KTypeStructures
-import KKindInference
 import KKindOrderInference
 
 import Data.Set hiding (map)

@@ -2,59 +2,68 @@
  TupleSections,
  ViewPatterns,
  FlexibleContexts,
- FlexibleInstances
+ FlexibleInstances,
+ ScopedTypeVariables,
+ GeneralizedNewtypeDeriving
  #-}
 
 module KKindOrderInference where
 
+import Prelude hiding (foldr, foldl, mapM_)
 import Data.Map (Map, (!))
 import qualified Data.Map as M
-import Control.Monad.RWS.Lazy
+import Control.Monad.RWS (RWS, runRWS, local, ask, tell)
+import Control.Monad (foldM, forM)
 import Data.Functor ((<$>))
-
+import Data.Monoid
+import Data.Foldable
 import SCC
 import KTypeStructures
 import RangeUnification
 
------------------------------------------------
+-----------------------------------------------------------------------------
 -- by this stage, we should know that the NamedTypes are properly kinded.
+-- no lambdas or let bound polymorphism, so scc sort is primitive
 kindOrderInference :: Map Id NamedType -> Map Id KindOrder
-kindOrderInference mp = totalKindOrderInferer $ map (\s->(s,mp!s)) <$> sortByRefs mp
-                        -- no lambdas or let bound polymorphism, so scc sort is primitive
+kindOrderInference mp = totalKindOrderInferer $ map (\s-> (s, mp!s)) <$> sortByRefs mp
+                        
 
-type KindOrders = Map Id KindOrder
+type KindOrders = Map Id KindOrder 
 type KindIneq = RangeInequality KindOrder
 type KindIneqs = [KindIneq]
 type KOBind = RWS KindOrders KindIneqs Int
 
-totalKindOrderInferer :: [[(Id, NamedType)]] -> KindOrders
+type Named = (Id,NamedType)
+
+totalKindOrderInferer :: [[Named]] -> KindOrders
 totalKindOrderInferer = foldr bindingGroupKindOrderInferer mempty
 
-bindingGroupKindOrderInferer :: [(Id,NamedType)] -> KindOrders -> KindOrders
-bindingGroupKindOrderInferer l mp = mappend mp_new mp
+bindingGroupKindOrderInferer :: [Named] -> KindOrders -> KindOrders
+bindingGroupKindOrderInferer named_tipes mp = mappend mp_new mp
   where mp_new = (repVars $ refineUnifiedMap $ rangeUnify constraints) <$> all_binds
-        -- here we begin the read with "mp" so as to remember the previously infered kindOrders
+        -- here we begin the read with "mp" so as to remember the 
+        -- previously infered kindOrders
         (all_binds, _ {- num vars -}, constraints) = runRWS koit mp 0
         
         buildArrow (ko, binds) param = do
           ko' <- getLVar
-          return (ko' :~~>> ko, M.insert param ko' binds)
+          return (ko' :~~> ko, M.insert param ko' binds)
         
         koit :: KOBind KindOrders -- should this really be a KOBind?
         koit = do
-          lst <- forM l $ \(nm, nt) -> 
-            -- bind the names to new variables/kinds before hand.
+          new_kind_orders <- forM named_tipes $ \(_, nt) -> 
+            -- produce a list of kindOrders with new variables.
             foldM buildArrow (kindOrderOf $ namedTypeOp nt, mempty) 
               $ reverse $ namedTypeParameters $ nt
           
           -- now alter the environment with this.
           let allBinds :: KindOrders
-              allBinds = foldr (mappend . snd) mempty lst
+              allBinds = foldr (mappend . snd) mempty new_kind_orders
               
-          local (mappend allBinds) $ forM (zip l lst) $ \((_,nt),(ko,_)) ->
+          local (mappend allBinds) $ forM (zip named_tipes new_kind_orders) $ \((_,nt),(ko,_)) ->
             let params = reverse $ namedTypeParameters nt
                 both [p] k = M.insert p k
-                both (p:pars) (k :~~>> k') = M.insert p k . both pars k'
+                both (p:pars) (k :~~> k') = M.insert p k . both pars k'
                 both _ _ = error "does not take arguments"
             in -- Now we bind 'both' the parameters names to their corrosponding
                -- lattice variables in the kindOrderInference.  The binding only
@@ -66,7 +75,9 @@ bindingGroupKindOrderInferer l mp = mappend mp_new mp
           return allBinds
 
 
+
 -- | 'kindOrderInfererTop' recursively creates kind ordering-constraints.
+kindOrderInfererTop :: NamedType -> KOBind ()
 kindOrderInfererTop k = mapM_ kindOrderGen member_types
   where member_types = mappend (getTypeInheritences k) (M.elems $ namedTypeMembers k)
         
@@ -78,13 +89,13 @@ instance KindOrderGen UIType where
   kindOrderGen (UIApp t1 t2) = do
     k1 <- kindOrderGen t1 
     (ko, ki) <- case k1 of
-      ki :~~>> ko ->
+      ki :~~> ko ->
         return (ki, ko)
       _ -> do
         ki <- getLVar
         ko <- getLVar
-        newConstraint (ki :~~>> ko) k1
-        newConstraint k1 (ki :~~>> ko)
+        newConstraint (ki :~~> ko) k1
+        newConstraint k1 (ki :~~> ko)
         return (ki, ko)
         
     k2 <- kindOrderGen t2        
@@ -93,7 +104,7 @@ instance KindOrderGen UIType where
     
 instance KindOrderGen UIConst where
   kindOrderGen (UINamed i) = kindOrderGen i
-  kindOrderGen (UIArrow) = return $ KOrder KG :~~>> KOrder KL :~~>> KOrder KE
+  kindOrderGen (UIArrow) = return $ KOrder KG :~~> KOrder KL :~~> KOrder KE
   kindOrderGen (UIAnonymous us tipes) = do
     mapM_ kindOrderGen $ M.elems tipes
     return $ kindOrderOf us
@@ -107,9 +118,9 @@ newConstraint a b = do
   tell [RIneq a b]
 
 repVars :: (LatticeVar KindOrder -> KindOrder) -> KindOrder -> KindOrder
-repVars f (k :~~>> k') = (repVars f k) :~~>> (repVars f k')
+repVars f (k :~~> k') = (repVars f k) :~~> (repVars f k')
 repVars f (KVar k) = f k
-repVars f t = t
+repVars _ t = t
 
 ---------------------------------------------------
 -- Implementations of Lattice and RangeUnifiable --
@@ -146,10 +157,10 @@ getKindOrderBound gb = getBound'
       (KTop, b) -> (if gb then top else b, id)
       (KBot, b) -> (if gb then b else bot, id)
     
-      (a :~~>> a', b :~~>> b') -> (i_k :~~>> out_k, i_f . out_f )
+      (a :~~> a', b :~~> b') -> (i_k :~~> out_k, i_f . out_f )
         where (i_k , i_f) = diff a b
               (out_k, out_f) = same a' b'
-      (_ :~~>> _, _) -> error "unexpected arrow"
+      (_ :~~> _, _) -> error "unexpected arrow"
     
       (KOrder a, KOrder b) -> (,id) $ KOrder $ fst $ case gb of 
         True -> lub a b
@@ -162,7 +173,7 @@ instance RangeUnifiable KindOrder where
   
   reduce KBot _ = []
   reduce _ KTop = []
-  reduce (a :~~>> a') (b :~~>> b') = [RIneq b a, RIneq a' b'] 
+  reduce (a :~~> a') (b :~~> b') = [RIneq b a, RIneq a' b'] 
   reduce (KOrder a) (KOrder b) = case (a,b) of
     (KE, _) -> []
     (_, KS) -> []
@@ -172,7 +183,7 @@ instance RangeUnifiable KindOrder where
     
   replaceVars s n = repVars
     where repVars (KVar v) | v == s = n
-          repVars (a :~~>> b) = repVars a :~~>> repVars b 
+          repVars (a :~~> b) = repVars a :~~> repVars b 
           repVars other = other
   
   vToE = KVar
@@ -180,6 +191,6 @@ instance RangeUnifiable KindOrder where
   occurs lv = occurs' 
     where occurs' (KVar l) | l == lv = True
           occurs' (KVar (LatticeRange a b)) = occurs' a || occurs' b
-          occurs' (a :~~>> b) = occurs' a || occurs' b
+          occurs' (a :~~> b) = occurs' a || occurs' b
           occurs' _ = False
     

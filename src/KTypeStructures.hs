@@ -7,12 +7,9 @@
  #-}
 module KTypeStructures where
 
-import Control.Monad.Trans.State.Lazy
 import qualified Data.Set as S
 import Data.Monoid (mempty, mappend, mconcat)
-import Data.Functor ((<$>), fmap)
 import qualified Data.Map as M
-import Data.List (nub)
 
 import RangeUnification
 import SCC
@@ -22,19 +19,15 @@ type Id = String
 -----------
 -- Kinds --
 -----------
-infixr 1 :~~> 
-infixr 1 :~~>> 
+infixr 1 :~~>
+
 
 {-*-}
-
-data Kind = Kind :~~> Kind
-          | KStar
-           deriving (Eq, Ord, Show, Read)
 
 data KindOrder = KVar (LatticeVar KindOrder)
                | KBot
                | KTop
-               | KindOrder :~~>> KindOrder
+               | KindOrder :~~> KindOrder
                | KOrder KOrder
                deriving (Eq, Ord, Show, Read)
             
@@ -79,10 +72,10 @@ getTypeInheritences nmt = map (uncurry toInherit) $ M.toList $ namedTypeInherita
 -----------
 data Type = TVar TyVar | TCon TyCon | TAp Type Type | TGen Int
           deriving (Eq, Ord, Show, Read)
-data TyVar = TyVar Id Kind KindOrder
+data TyVar = TyVar Id KindOrder
            | TyRange Type Type
            deriving (Eq, Ord, Show, Read)
-data TyCon = TyNamed Id (S.Set Id {- constructors/records -}) Kind KindOrder
+data TyCon = TyNamed Id (S.Set Id {- constructors/records -}) KindOrder
            | TyAnonymous UnionSum (M.Map Id Type) -- Anonymous constructor/object
            | TyArrow
            deriving (Eq, Ord, Show, Read)
@@ -90,54 +83,35 @@ data TyCon = TyNamed Id (S.Set Id {- constructors/records -}) Kind KindOrder
 ---------------
 -- Functions --
 ---------------
-class HasKind a where
-  kindOf :: a -> Kind
-  
-instance HasKind TyCon where 
-  kindOf TyArrow = KStar :~~> KStar :~~> KStar
-  kindOf (TyAnonymous _ _) = KStar
-  kindOf (TyNamed _ _ k _) = k
-instance HasKind Type where  
-  kindOf (TVar v) = kindOf v
-  kindOf (TCon c) = kindOf c
-  kindOf (TAp t1 t2) = case (kindOf t1, kindOf t2) of
-    ( a :~~> b , a' ) | a' == a -> b 
-    ( _ :~~> _ , _) -> error $ show t1 ++" has a different kind argument than that of "++ show t2
-    ( KStar , _ ) -> error $ show t1 ++ " takes no kind arguments"
-instance HasKind TyVar where
-  kindOf (TyVar _ k _) = k
-  kindOf (TyRange t1 t2) | kindOf t1 == kindOf t2 = kindOf t1
-  kindOf (TyRange t1 t2)  = error $ show t1 ++" has a different kind than that of "++ show t2
-
 
 class HasKindOrder a where  
   kindOrderOf :: a -> KindOrder
-
---- When we encounter TAp t1 t2, find kindOrderOf t1 as , _ :~~>> ord, and use ord to control unification.
-  --- take the glb of the lhs and the rhs in this respect, and use those to control unification. 
+--- When we encounter TAp t1 t2, find kindOrderOf t1 as , _ :~~>> ord, and use ord to control unification.  Can't use KindOrder to directly check types.
+--- take the glb of the lhs and the rhs in this respect, and use those to control unification. 
 instance HasKindOrder TyCon where 
-  kindOrderOf TyArrow = KOrder KG :~~>> KOrder KL :~~>> KOrder KE
+  kindOrderOf TyArrow = KOrder KG :~~> KOrder KL :~~> KOrder KE
   kindOrderOf (TyAnonymous us _) = kindOrderOf us
-  kindOrderOf (TyNamed _ _ _ ko) = ko
+  kindOrderOf (TyNamed _ _ ko) = ko
 instance HasKindOrder UnionSum where  
   kindOrderOf Union = KOrder KG
   kindOrderOf Sum = KOrder KL
 instance HasKindOrder Type where
   kindOrderOf (TVar v) = kindOrderOf v
   kindOrderOf (TCon c) = kindOrderOf c
-  kindOrderOf (TAp t1 t2) = case kindOrderOf t1 of -- here is where we need to alter this a bit
-      _ :~~>> k -> k
+  kindOrderOf (TGen _) = error "kind order of a type variable is not yet known"
+  kindOrderOf (TAp t1 _) = case kindOrderOf t1 of -- here is where we need to alter this a bit
+      _ :~~> k -> k
       _ -> error $ show t1 ++ " takes no parameters"
 instance HasKindOrder TyVar where
-  kindOrderOf (TyVar _ _ k) = k
-  kindOrderOf (TyRange t1 t2) = kindOrderOf t1
+  kindOrderOf (TyVar _ k) = k
+  kindOrderOf (TyRange t1 _) = kindOrderOf t1
 
 getArgumentOrder arg = getArg $ kindOrderOf arg
-  where getArg (k :~~>> _) = getEnd k
+  where getArg (k :~~> _) = getEnd k
         getArg (KVar (LatticeRange a _)) = getArg a
         getArg v = getEnd v
         
-        getEnd (_ :~~>> k) = getEnd k
+        getEnd (_ :~~> k) = getEnd k
         getEnd (KVar (LatticeRange a _)) = getEnd a
         getEnd (KVar _) = KL
         getEnd KBot = KE
