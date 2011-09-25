@@ -9,24 +9,42 @@
 
 module KKindOrderInference where
 
-import Prelude hiding (foldr, foldl, mapM_)
+import Control.Monad (foldM, forM)
+import Control.Monad.RWS (RWS, runRWS, local, ask, tell)
+import Data.Foldable
+import Data.Functor ((<$>))
 import Data.Map (Map, (!))
 import qualified Data.Map as M
-import Control.Monad.RWS (RWS, runRWS, local, ask, tell)
-import Control.Monad (foldM, forM)
-import Data.Functor ((<$>))
 import Data.Monoid
-import Data.Foldable
-import SCC
-import KTypeStructures
+import Prelude hiding (foldr, foldl, mapM_)
+
+import qualified KTypeStructures as K (KindOrder(..))
+import KTypeStructures hiding (KindOrder(..))
 import RangeUnification
+import SCC
+import Utils
 
 -----------------------------------------------------------------------------
 -- by this stage, we should know that the NamedTypes are properly kinded.
 -- no lambdas or let bound polymorphism, so scc sort is primitive
-kindOrderInference :: Map Id NamedType -> Map Id KindOrder
-kindOrderInference mp = totalKindOrderInferer $ map (\s-> (s, mp!s)) <$> sortByRefs mp
-                        
+kindOrderInference :: Map Id NamedType -> Map Id K.KindOrder
+kindOrderInference mp = 
+  unsafeToSafeKO <$>> totalKindOrderInferer $ map (\s-> (s, mp!s)) <$> sortByRefs mp
+  where unsafeToSafeKO k = case k of
+          KBot -> K.KBot
+          KTop -> K.KTop
+          a :~~> b -> unsafeToSafeKO a K.:~~> unsafeToSafeKO b
+          KOrder o -> K.KOrder o
+          
+data KindOrder = KVar (LatticeVar KindOrder)
+               | KBot
+               | KTop
+               | KindOrder :~~> KindOrder
+               | KOrder KOrder
+               deriving (Eq, Ord, Show, Read)
+
+
+
 
 type KindOrders = Map Id KindOrder 
 type KindIneq = RangeInequality KindOrder
@@ -53,7 +71,7 @@ bindingGroupKindOrderInferer named_tipes mp = mappend mp_new mp
         koit = do
           new_kind_orders <- forM named_tipes $ \(_, nt) -> 
             -- produce a list of kindOrders with new variables.
-            foldM buildArrow (kindOrderOf $ namedTypeOp nt, mempty) 
+            foldM buildArrow (KOrder $ kOrderOf $ namedTypeOp nt, mempty) 
               $ reverse $ namedTypeParameters $ nt
           
           -- now alter the environment with this.
@@ -107,7 +125,8 @@ instance KindOrderGen UIConst where
   kindOrderGen (UIArrow) = return $ KOrder KG :~~> KOrder KL :~~> KOrder KE
   kindOrderGen (UIAnonymous us tipes) = do
     mapM_ kindOrderGen $ M.elems tipes
-    return $ kindOrderOf us
+    return $ KOrder $ kOrderOf us
+    
 instance KindOrderGen [Char] where
   kindOrderGen i = do
     r <- ask 
@@ -180,7 +199,7 @@ instance RangeUnifiable KindOrder where
     (a, b) | a == b -> []
     _ -> error "Kind Orders don't match."
   reduce a b = error $ show a ++ " and " ++ show b ++ " can not be unified"
-    
+  
   replaceVars s n = repVars
     where repVars (KVar v) | v == s = n
           repVars (a :~~> b) = repVars a :~~> repVars b 

@@ -11,7 +11,6 @@ import qualified Data.Set as S
 import Data.Monoid (mempty, mappend, mconcat)
 import qualified Data.Map as M
 
-import RangeUnification
 import SCC
 
 type Id = String
@@ -20,22 +19,25 @@ type Id = String
 -- Kinds --
 -----------
 infixr 1 :~~>
-
+infixr 1 :~~>>
 
 {-*-}
-
-data KindOrder = KVar (LatticeVar KindOrder)
-               | KBot
+data Kind = Kind :~~>> Kind
+          | KindStar
+          deriving (Eq, Ord, Show, Read)
+                   
+data KindOrder = KBot
                | KTop
                | KindOrder :~~> KindOrder
                | KOrder KOrder
                deriving (Eq, Ord, Show, Read)
-            
+
 data KOrder = KE
             | KL | KG
             | KS
             deriving (Eq, Ord, Show, Read)
-                     
+
+                    
 -------------------------------
 -- Initial data/class syntax --
 -- formally specified        --
@@ -86,20 +88,26 @@ data TyCon = TyNamed Id (S.Set Id {- constructors/records -}) KindOrder
 
 class HasKindOrder a where  
   kindOrderOf :: a -> KindOrder
---- When we encounter TAp t1 t2, find kindOrderOf t1 as , _ :~~>> ord, and use ord to control unification.  Can't use KindOrder to directly check types.
---- take the glb of the lhs and the rhs in this respect, and use those to control unification. 
-instance HasKindOrder TyCon where 
+  
+class HasKOrder a where  
+  kOrderOf :: a -> KOrder
+
+-- Can't use KindOrder to directly check kinds.  Will need to use Kind.
+instance HasKindOrder TyCon where
   kindOrderOf TyArrow = KOrder KG :~~> KOrder KL :~~> KOrder KE
   kindOrderOf (TyAnonymous us _) = kindOrderOf us
   kindOrderOf (TyNamed _ _ ko) = ko
+  
+instance HasKOrder UnionSum where  
+  kOrderOf Union = KG
+  kOrderOf Sum = KL
 instance HasKindOrder UnionSum where  
-  kindOrderOf Union = KOrder KG
-  kindOrderOf Sum = KOrder KL
+  kindOrderOf = KOrder . kOrderOf
 instance HasKindOrder Type where
   kindOrderOf (TVar v) = kindOrderOf v
   kindOrderOf (TCon c) = kindOrderOf c
   kindOrderOf (TGen _) = error "kind order of a type variable is not yet known"
-  kindOrderOf (TAp t1 _) = case kindOrderOf t1 of -- here is where we need to alter this a bit
+  kindOrderOf (TAp t1 _) = case kindOrderOf t1 of
       _ :~~> k -> k
       _ -> error $ show t1 ++ " takes no parameters"
 instance HasKindOrder TyVar where
@@ -108,15 +116,19 @@ instance HasKindOrder TyVar where
 
 getArgumentOrder arg = getArg $ kindOrderOf arg
   where getArg (k :~~> _) = getEnd k
-        getArg (KVar (LatticeRange a _)) = getArg a
         getArg v = getEnd v
         
         getEnd (_ :~~> k) = getEnd k
-        getEnd (KVar (LatticeRange a _)) = getEnd a
-        getEnd (KVar _) = KL
         getEnd KBot = KE
         getEnd KTop = KL
         getEnd (KOrder k) = k
+
+kindOf :: HasKindOrder a => a -> Kind
+kindOf = kindOf' . kindOrderOf
+  where kindOf' (a :~~> b) = kindOf' a :~~>> kindOf' b
+        kindOf' _ = KindStar
+
+
 
 instance HasRefs NamedType Id where   
   getRefs n = mappend member_refs in_refs
