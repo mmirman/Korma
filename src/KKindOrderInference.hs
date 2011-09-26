@@ -4,7 +4,11 @@
  FlexibleContexts,
  FlexibleInstances,
  ScopedTypeVariables,
- GeneralizedNewtypeDeriving
+ GADTs,
+ EmptyDataDecls,
+ RankNTypes,
+ GeneralizedNewtypeDeriving,
+ StandaloneDeriving
  #-}
 
 module KKindOrderInference ( kindOrderInference
@@ -32,7 +36,7 @@ data KindOrder = KVar (LatticeVar KindOrder)
                | KindOrder :~~> KindOrder
                | KOrder KOrder
                deriving (Eq, Ord, Show, Read)
-                        
+
 -----------------------------------------------------------------------------
 -- by this stage, we should know that the NamedTypes are properly kinded.
 -- no lambdas or let bound polymorphism, so scc sort is primitive

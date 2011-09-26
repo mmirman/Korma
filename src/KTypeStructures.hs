@@ -32,6 +32,7 @@ data KindOrder = KBot
                | KOrder KOrder
                deriving (Eq, Ord, Show, Read)
 
+
 data KOrder = KE
             | KL | KG
             | KS
