@@ -7,7 +7,8 @@
  GeneralizedNewtypeDeriving
  #-}
 
-module KKindOrderInference where
+module KKindOrderInference ( kindOrderInference
+                           )where
 
 import Control.Monad (foldM, forM)
 import Control.Monad.RWS (RWS, runRWS, local, ask, tell)
@@ -24,6 +25,14 @@ import RangeUnification
 import SCC
 import Utils
 
+
+data KindOrder = KVar (LatticeVar KindOrder)
+               | KBot
+               | KTop
+               | KindOrder :~~> KindOrder
+               | KOrder KOrder
+               deriving (Eq, Ord, Show, Read)
+                        
 -----------------------------------------------------------------------------
 -- by this stage, we should know that the NamedTypes are properly kinded.
 -- no lambdas or let bound polymorphism, so scc sort is primitive
@@ -35,15 +44,9 @@ kindOrderInference mp =
           KTop -> K.KTop
           a :~~> b -> unsafeToSafeKO a K.:~~> unsafeToSafeKO b
           KOrder o -> K.KOrder o
-          
-data KindOrder = KVar (LatticeVar KindOrder)
-               | KBot
-               | KTop
-               | KindOrder :~~> KindOrder
-               | KOrder KOrder
-               deriving (Eq, Ord, Show, Read)
-
-
+          KVar lv -> case lv of
+            LatticeRange a _ -> unsafeToSafeKO a
+            LatticeVar _ -> K.KOrder KE
 
 
 type KindOrders = Map Id KindOrder 
@@ -78,17 +81,19 @@ bindingGroupKindOrderInferer named_tipes mp = mappend mp_new mp
           let allBinds :: KindOrders
               allBinds = foldr (mappend . snd) mempty new_kind_orders
               
-          local (mappend allBinds) $ forM (zip named_tipes new_kind_orders) $ \((_,nt),(ko,_)) ->
+          local (mappend allBinds) 
+            $ forM (zip named_tipes new_kind_orders) $ \((_,nt),(ko,_)) ->
             let params = reverse $ namedTypeParameters nt
-                both [p] k = M.insert p k
-                both (p:pars) (k :~~> k') = M.insert p k . both pars k'
-                both _ _ = error "does not take arguments"
+                insert_params (p:pars) (k :~~> k') = M.insert p k . insert_params pars k'
+                insert_params [] k@(_ :~~> _) = error $ show k++" takes more args than there are parameters"
+                insert_params [] _ = id
+                insert_params l k = error $ show k ++ " doesn't take any more args, but we are given "++show l
             in -- Now we bind 'both' the parameters names to their corrosponding
                -- lattice variables in the kindOrderInference.  The binding only
                -- happens inside the kindOrderInfererTop, despite the variables
                -- living longer, as we would like to keep the parameters names
                -- from clashing.
-               local (both params ko) $ kindOrderInfererTop nt
+               local (insert_params params ko) $ kindOrderInfererTop nt
                
           return allBinds
 

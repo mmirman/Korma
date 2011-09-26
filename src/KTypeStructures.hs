@@ -35,8 +35,7 @@ data KindOrder = KBot
 data KOrder = KE
             | KL | KG
             | KS
-            deriving (Eq, Ord, Show, Read)
-
+            deriving (Eq, Ord, Show, Read, Enum)
                     
 -------------------------------
 -- Initial data/class syntax --
@@ -114,7 +113,11 @@ instance HasKindOrder TyVar where
   kindOrderOf (TyVar _ k) = k
   kindOrderOf (TyRange t1 _) = kindOrderOf t1
 
-getArgumentOrder arg = getArg $ kindOrderOf arg
+
+-- | @'getArgumentOrder' tfun@ returns what order we should flip the first
+-- argument of tfun.   
+getArgumentOrder :: HasKindOrder a => a -> KOrder
+getArgumentOrder = getArg . kindOrderOf
   where getArg (k :~~> _) = getEnd k
         getArg v = getEnd v
         
