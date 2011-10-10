@@ -12,7 +12,7 @@
  #-}
 
 module KKindOrderInference ( kindOrderInference
-                           )where
+                           ) where
 
 import Control.Monad (foldM, forM)
 import Control.Monad.RWS (RWS, runRWS, local, ask, tell)
