@@ -1,3 +1,57 @@
 % This is an encoding of the calculus of korma
 % and a proof of progress given the rules of 
-% inference                                    
+% inference                       
+
+tp : type.
+~> : tp -> tp -> tp. %infix right 1 ~>.
+unit : tp.
+
+tm : type.
+empty : tm.
+app : tm -> tm -> tm.
+lam : tp -> (tm -> tm) -> tm.
+
+of : tm -> tp -> type.
+of/empty : of empty unit.
+of/lam : ({x : tm} of x T2 -> of (E x) T)
+      -> of (lam T2 E) (T2 ~> T).
+of/app : of (app E1 E2) T
+      <- of E1 (T2 ~> T)
+      <- of E2 T2.
+
+value : tm -> type.
+value/empty : value empty.
+value/lam : value (lam T E).
+
+step : tm -> tm -> type.
+step/app-1 : step (app E1 E2) (app E1' E2)
+          <- step E1 E1'.
+step/app-2 : step (app E1 E2) (app E1 E2')
+	  <- value E1
+          <- step E2 E2'.
+step/beta : step (app (lam T2 E) E2) (E E2)
+          <- value E2.
+
+% preservation for a single step
+pres-step : step Tm Tm' -> of Tm Ty -> of Tm' Ty -> type.
+
+- : pres-step (step/app-1 DS) (of/app (D2 : of E2 T2) D1 : of (app E1 E2) T) (of/app D2 D1' : of (app E1' E2) T)
+ <- pres-step DS (D1 : of E1 (T2 ~> T)) (D1' : of E1' (T2 ~> T)).
+- : pres-step (step/app-2 DS (DV : value E1) : step (app E1 E2) (app E1 E2'))
+              (of/app D2 (D1 : of E1 (T2 ~> T)) : of (app E1 E2) T) 
+              (of/app D2' D1 : of (app E1 E2') T)
+ <- pres-step (DS : step E2 E2') (D2 : of E2 T2) (D2' : of E2' T2).
+- : pres-step (step/beta (V : value E2))
+              (of/app (DofE2 : of E2 T2) 
+                      (of/lam (DofE : { x : tm } {dx : of x T2 } of (E x) T)))
+	      (DofE E2 DofE2).
+
+%mode pres-step +A +B -C.
+%worlds () (pres-step _ _ _).
+%total D (pres-step D _ _).
+
+
+notstuck : tm -> type.
+notstuck/val : value E -> notstuck E.
+notstuck/type : step E E' -> notstuck E.
+
