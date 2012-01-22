@@ -1,0 +1,10 @@
+There is some information on the planned type system in docs.  
+Please put in progress papers here.
+
+Please update this readme with more structural information.
+
+TODO:  
+add a .cabal.
+add a parser.
+finish type system.
+finish interpreter.
