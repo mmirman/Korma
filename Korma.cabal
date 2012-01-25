@@ -1,0 +1,12 @@
+Name: Korma
+Version: 0.0.1
+Description: A functional logical programming language
+Author: Matthew Mirman
+Maintainer: mmirman
+Cabal-Version: >=1.2
+Build-Type: Simple
+
+Executable korma
+    Main-is: src/Compiler.hs
+    Build-depends: base >= 3
+    Extensions: EmptyDataDecls
