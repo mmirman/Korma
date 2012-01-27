@@ -1,0 +1,4 @@
+dist/
+docs/*.aux
+docs/*.log
+docs/*.pdf
