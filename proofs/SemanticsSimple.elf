@@ -1,0 +1,232 @@
+%{
+Possible counterexamples:
+
+well typed, but fail:
+  (\x:neg . x) : neg -> neg
+
+not well typed, but might succeed?
+  (\x:<()/pos|()/pos>/neg . (\z:Answer/pos. () )  (case x of is_empty is_empty))  : (<()/pos|()/pos>/neg -> ()/pos)
+
+In other system (with mode subtyping):
+since pos <: neg, this would fail to typecheck.  
+  (\x:neg .  (\z:pos. \n:neg. n ) x x)  
+}%
+%%%%%%%%%%%%%%%%%%%%%%%%
+% what resolvedness is %
+%%%%%%%%%%%%%%%%%%%%%%%%
+mode : type.
+pos : mode.
+neg : mode.
+%mode mode.
+%freeze mode.
+%name mode Gs.
+
+<m : mode -> mode -> type. %infix right 5 <m.
+%mode <m +A +B.
+<m/e : A <m A.
+<m/pn : pos <m neg.
+
+ub : mode -> mode -> mode -> type.
+ub/p : A <m C -> B <m C -> ub A B C.
+%freeze ub.
+
+mode-sub-trans : A <m B -> B <m C -> A <m C -> type.
+%mode mode-sub-trans +A +B -C.
+mode-sub-trans/e :  mode-sub-trans <m/e A A.
+mode-sub-trans/pn : mode-sub-trans <m/pn <m/e <m/pn.
+%worlds () (mode-sub-trans _ _ _).
+%unique mode-sub-trans +A +B -1C.
+%total {} (mode-sub-trans _ _ _).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the types in the language %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+tp : type.
+tp-mode : tp -> mode -> type.
+%mode tp-mode +A -B.
+
+~> : tp -> tp -> tp. %infix right 6 ~>.
+unit : tp.
+sum : tp-mode Ta A -> tp-mode Tb B -> ub A B C -> tp.
+prod : tp-mode Ta A -> tp-mode Tb B -> ub A B C -> tp.
+
+tp-mode/~> : tp-mode (B ~> A) pos.
+tp-mode/unit : tp-mode unit pos.
+tp-mode/sum : tp-mode (sum _ _ (_ : ub _ _ C)) C.
+tp-mode/prod : tp-mode (prod _ _ (_ : ub _ _ C)) C.
+%worlds () (tp-mode _ _).
+%unique tp-mode +A -1B.
+%total {} (tp-mode _ _).
+
+=< : tp -> tp -> type. %infix right 5 =<.
+%mode =< +A +B.
+=</e : A =< A.
+=</~> : A' =< A -> B =< B' -> (A ~> B) =< (A' ~> B').
+=</sum :  M <m M'
+       -> A =< A'
+       -> B =< B'
+       -> (sum (_ : tp-mode A _) (_ : tp-mode B _) (_ : ub _ _ M)) =< (sum (_ : tp-mode A' _) (_ : tp-mode B' _) (_ : ub _ _ M')).
+=</prod :  M <m M'
+        -> A =< A'
+        -> B =< B'
+        -> (prod (_ : tp-mode A _) (_ : tp-mode B _) (_ : ub _ _ M)) =< (prod (_ : tp-mode A' _) (_ : tp-mode B' _) (_ : ub _ _ M')).
+
+=<-trans : A =< B -> B =< C -> A =< C -> type. 
+=<-trans' : B =< C -> A =< B -> A =< C -> type. 
+%mode =<-trans +A +B -C.
+%mode =<-trans' +A +B -C.
+- : =<-trans =</e A A.
+- : =<-trans (=</~> AA' BB') (=</~> A'A'' B'B'') (=</~> AA'' BB'') <- =<-trans' AA' A'A'' AA'' <- =<-trans BB' B'B'' BB''.
+- : =<-trans (=</sum MM' AA' BB') (=</sum M'M'' A'A'' B'B'') (=</sum MM'' AA'' BB'') <- =<-trans AA' A'A'' AA'' <- =<-trans BB' B'B'' BB'' <- mode-sub-trans MM' M'M'' MM''. 
+- : =<-trans (=</prod MM' AA' BB') (=</prod M'M'' A'A'' B'B'') (=</prod MM'' AA'' BB'') <- =<-trans AA' A'A'' AA'' <- =<-trans BB' B'B'' BB'' <- mode-sub-trans MM' M'M'' MM''.
+- : =<-trans (=</~> AA' BB') =</e (=</~> AA' BB').
+- : =<-trans (=</sum MM' AA' BB') =</e (=</sum MM' AA' BB').
+- : =<-trans (=</prod MM' AA' BB') =</e (=</prod MM' AA' BB').
+
+- : =<-trans' =</e A A.
+- : =<-trans' (=</~> A'A'' B'B'') (=</~> AA' BB') (=</~> AA'' BB'') <- =<-trans A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB''.
+- : =<-trans' (=</sum M'M'' A'A'' B'B'') (=</sum MM' AA' BB') (=</sum MM'' AA'' BB'') <- =<-trans' A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB'' <- mode-sub-trans MM' M'M'' MM''. 
+- : =<-trans' (=</prod M'M'' A'A'' B'B'') (=</prod MM' AA' BB') (=</prod MM'' AA'' BB'') <- =<-trans' A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB'' <- mode-sub-trans MM' M'M'' MM''.
+- : =<-trans' (=</~> AA' BB') =</e (=</~> AA' BB').
+- : =<-trans' (=</sum MM' AA' BB') =</e (=</sum MM' AA' BB').
+- : =<-trans' (=</prod MM' AA' BB') =</e (=</prod MM' AA' BB').
+%worlds () (=<-trans _ _ _) (=<-trans' _ _ _).
+%unique (=<-trans +A +B -1C) (=<-trans' +A' +B' -1C').
+%total (A B) (=<-trans A _ _) (=<-trans' B _ _).
+
+
+~< : tp -> tp -> type. %infix right 5 ~<.
+%mode ~< +A +B.
+~</e : A ~< A.
+~</~> : (A ~> B) =< (A' ~> B') -> (A ~> B) ~< (A' ~> B').
+~</sum : A ~< A' 
+       -> B ~< B'
+       -> (sum (_ : tp-mode A _) (_ : tp-mode B _) _) ~< (sum (_ : tp-mode A' _) (_ : tp-mode B' _) _).
+~</prod : A ~< A' 
+        -> B ~< B' 
+        -> (prod (_ : tp-mode A _) (_ : tp-mode B _) _) ~< (prod (_ : tp-mode A' _) (_ : tp-mode B' _) _).
+
+
+promote : A =< B -> A ~< B -> type.
+%mode promote +A -B.
+- : promote =</e ~</e.
+- : promote (=</~> A B) (~</~> (=</~> A B)).
+- : promote (=</sum _ A B) (~</sum A' B') <- promote A A' <- promote B B'.
+- : promote (=</prod _ A B) (~</prod A' B') <- promote A A' <- promote B B'.
+%worlds () (promote _ _).
+%unique promote +A -1B.
+%total (A) (promote A _).
+
+
+~<-trans : A ~< B -> B ~< C -> A ~< C -> type. 
+%mode ~<-trans +A +B -C.
+- : ~<-trans ~</e A A.
+- : ~<-trans (~</~> AA') (~</~> A'A'') (~</~> AA'') <- =<-trans AA' A'A'' AA''.
+- : ~<-trans (~</sum AA' BB') (~</sum A'A'' B'B'') (~</sum AA'' BB'') <- ~<-trans AA' A'A'' AA'' <- ~<-trans BB' B'B'' BB'' . 
+- : ~<-trans (~</prod AA' BB') (~</prod A'A'' B'B'') (~</prod AA'' BB'') <- ~<-trans AA' A'A'' AA'' <- ~<-trans BB' B'B'' BB'' . 
+- : ~<-trans (~</~> AA') ~</e (~</~> AA').
+- : ~<-trans (~</sum AA' BB') ~</e (~</sum AA' BB').
+- : ~<-trans (~</prod AA' BB') ~</e (~</prod AA' BB').
+%worlds () (~<-trans _ _ _).
+%unique ~<-trans +A +B -1C.
+%total {A B} (~<-trans A B _).
+
+
+% The definition of a tm (again)
+% and other stuff with progress theorem
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+tm : tp -> type.
+used-as-neg : tm A -> tm B -> type.
+used-neg : mode -> (tm A -> tm B) -> type.
+
+
+
+lam : {L : tm A -> tm B } tp-mode A M -> used-neg M L -> tm (A ~> B).
+empty : tm unit.
+is_empty : tm (unit ~> unit).
+obj : tm A -> tm B -> tm (prod (A_m_Ma : tp-mode A _) (B_m_Mb : tp-mode B _) _).
+getLeft : tm (prod (A_m_Ma : tp-mode A M) _ _ ~> A).
+getRight : tm (prod _ (B_m_Mb : tp-mode B _) _ ~> B).
+left : tm (A ~> sum (_ : tp-mode A _) _ _).
+right : tm (B ~> sum _ (_ : tp-mode B _) _).
+switch : tm (A ~> C) -> tm (B ~> C) -> tm (sum (_ : tp-mode A _) (_ : tp-mode B _) _ ~> C).
+logic-var : tp-mode B neg -> tm B.
+@s : tm (A ~> C) -> tm A' -> A' ~< A -> tm C.
+%name tm E.
+
+used-neg/pos : used-neg pos L.
+used-neg/neg : ({a : tm A} tp-mode A neg -> used-as-neg a (L a)) -> used-neg neg L.
+
+used-as-neg/e : tp-mode T neg -> used-as-neg (A : tm T) A.
+used-as-neg/lam-inner : ({e} used-as-neg A (F e)) -> used-as-neg A (lam F _ _).
+used-as-neg/app-l : used-as-neg A E1 -> used-as-neg A (@s E1 E2 _).
+used-as-neg/app-r : tp-mode T1 neg -> tp-mode T1' neg -> used-as-neg A E2 -> used-as-neg A (@s (E1 : tm (T1 ~> T2)) (E2 : tm T1') _).
+
+used-as-neg/objL : used-as-neg A L 
+		-> tp-mode To neg
+                -> used-as-neg A (obj (L : tm To) R).
+
+used-as-neg/objR : used-as-neg A R 
+		-> tp-mode To neg
+                -> used-as-neg A (obj L (R  : tm To)).
+
+used-as-neg/product : used-as-neg (@s getLeft A _) E 
+                   -> used-as-neg (@s getRight A _) E 
+                   -> used-as-neg A E.
+
+used-as-neg/sum-unused : used-as-neg A L1 
+                       -> used-as-neg A L2 
+                       -> used-as-neg A (switch L1 L2).
+
+
+step : tm A -> tm A' -> A' ~< A -> type.
+%mode step +A -B -C.
+
+step/@s : step (@s E1 E2 A'eA) (@s E1' E2 A'eA'') B'eB
+       <- step E1 E1' (~</~> (=</~> AEA'' B'EB))
+       <- promote AEA'' AeA''
+       <- promote B'EB B'eB
+       <- ~<-trans A'eA AeA'' A'eA''.
+
+step/@sR : step (@s E1 E2' A'eA) (@s E1 E2'' A''eA) ~</e
+	<- step E2' E2'' A''eA'
+	<- ~<-trans A''eA' A'eA A''eA.
+
+step/lam : step (@s (lam V _ _) E _) (V E) ~</e.
+
+step/is_empty : step (@s is_empty empty _) empty ~</e.
+
+step/getLeft : step (@s getLeft (obj L _) _) L ~</e.
+step/getRight : step (@s getLeft (obj _ R) _) R ~</e.
+
+step/switch-left : step (@s (switch LF _) (@s left L LeP) (~</sum PeL' _)) (@s LF L LeL') ~</e
+                <- ~<-trans LeP PeL' LeL'.
+
+step/switch-right : step (@s (switch _ RF) (@s right R ReP) (~</sum _ PeR')) (@s RF R ReR') ~</e
+                <- ~<-trans ReP PeR' ReR'.
+
+%worlds () (step _ _ _).
+%name step Step.
+
+value : tm A -> type.
+%mode value +A.
+value/lam : value (lam _ _ _).
+value/empty : value empty.
+value/is_empty : value is_empty.
+value/obj : value A -> value B -> value (obj A B).
+value/getLeft : value getLeft.
+value/getRight : value getRight.
+value/left : value left.
+value/left1 : value A -> value (@s left A _).
+value/right : value right.
+value/right1 : value B -> value (@s right B _).
+value/switch : value A -> value B -> value (switch A B).
+%freeze value.
+%name value Value.
+
+%% "value F" is here only to make the proof a bit easier - there is but a single arrow case that can be considered "done"
+%% rather than also application
+resolving : value F -> step (@s (F : tm (At ~> Bt)) V _) G _ 
+          -> tp-mode At neg -> tp-mode Bt pos -> value G -> value V -> type.
+
+%mode resolving +ValueF +StepFVtoG +AtNeg +BtPos +ValueG -ValueV.
