@@ -143,8 +143,8 @@ lam : {F : tm A -> tm B } tp-mode A M -> used-neg M F -> tm (A ~> B).
 empty : tm unit.
 is_empty : tm (unit ~> unit).
 obj : tm A -> tm B -> tm (prod (A_m_Ma : tp-mode A _) (B_m_Mb : tp-mode B _)).
-getLeft : tm (prod (A_m_Ma : tp-mode A M) _ ~> A).
-getRight : tm (prod _ (B_m_Mb : tp-mode B _) ~> B).
+getLeft : tm (prod (A_m_Ma : tp-mode A M) (_ : tp-mode _ M) ~> A).
+getRight : tm (prod (_ : tp-mode _ M) (B_m_Mb : tp-mode B _) ~> B).
 left : tm (A ~> sum (_ : tp-mode A _) _ _).
 right : tm (B ~> sum _ (_ : tp-mode B _) _).
 switch : tm (A ~> C) -> tm (B ~> C) -> tm (sum (_ : tp-mode A _) (_ : tp-mode B _) _ ~> C).
@@ -194,8 +194,8 @@ step/lam : step (@s (lam V _ _) E _) (V E) ~</e.
 
 step/is_empty : step (@s is_empty empty _) empty ~</e.
 
-step/getLeft : step (@s getLeft (obj L _) _) L ~</e.
-step/getRight : step (@s getLeft (obj _ R) _) R ~</e.
+step/getLeft : step (@s getLeft (obj L _) (~</prod A'A B'B)) L A'A.
+step/getRight : step (@s getLeft (obj _ R) (~</prod A'A B'B)) R B'B.
 
 step/switch-left : step (@s (switch LF _) (@s left L LeP) (~</sum PeL' _)) (@s LF L LeL') ~</e
                 <- ~<-trans LeP PeL' LeL'.
@@ -208,18 +208,29 @@ step/switch-right : step (@s (switch _ RF) (@s right R ReP) (~</sum _ PeR')) (@s
 
 
 logic-less : tm A -> type.
-%mode logic-less +A.
+%mode logic-less +A. %name logic-less LL.
 
-logic-less/app+ : logic-less (@s (Fe : tm (At ~> Bt)) Ie _) 
-               <- tp-mode Bt pos 
-               <- logic-less Ie.
+logic-less/app-+ : logic-less (@s (Fe : tm (At ~> Bt)) Ie _) 
+               <- logic-less Ie
+               <- tp-mode Bt pos
+               <- tp-mode At neg.
 
-logic-less/app- : logic-less (@s (Fe : tm (At ~> Bt)) Ie _) 
-               <- tp-mode Bt neg
-               <- logic-less Fe
-               <- logic-less Ie.
+% in this case, we simply don't care what happens.
+logic-less/app++ : logic-less (@s (Fe : tm (At ~> Bt)) _ _) 
+                <- tp-mode Bt pos
+                <- tp-mode At pos.
+
+logic-less/app : logic-less (@s (Fe : tm (At ~> Bt)) Ie _) 
+              <- logic-less Ie
+              <- logic-less Fe.
+
 logic-less/lam : logic-less (lam F _ _) 
               <- {I} logic-less I -> logic-less (F I).
+
+logic-less/empty : logic-less empty.
+logic-less/is_empty : logic-less is_empty.
+logic-less/obj : logic-less (obj A B) <- logic-less B <- logic-less A.
+logic-less/getLeft : logic-less getLeft.
 
 %{ 
 we need step and  "logic-less Be"
@@ -227,10 +238,32 @@ so that we know that Ae, despite being positively moded is actually
 free of logic variables by having progress.  
 The existence of logic variables should hinder progress in a positively moded "thing"
 so the existence of progress should imply no logic variables.
+
+Since the existence of progress implies no logic variables, 
+then the A that "findAll F" returns (where A is such that "step (F A) Success" and F returns positive and success contains no logic variables) 
+must also contain no logic variables.
 }%
+
 resolving : step (Ae : tm At) Be _ 
          -> tp-mode At pos
          -> logic-less Be
          -> logic-less Ae
          -> type.
+
+
+- : resolving step/is_empty _ _ (logic-less/app logic-less/is_empty logic-less/empty).
+- : resolving step/getLeft Result_is_pos LL_L (logic-less/app++ (tp-mode/prod lub/e) Result_is_pos).
+- : resolving step/getRight Result_is_pos LL_R (logic-less/app++ (tp-mode/prod lub/e) Result_is_pos).
+
+- : resolving (step/switch-left _ : step (@s (switch (LF : tm (_ ~> Rt)) _ : tm (sum X6 X5 UB2 ~> Rt)) (@s left L LeP) (~</sum PeL' _) : tm Rt) (@s LF L LeL' : tm Rt) ~</e)
+              (Result_is_pos : tp-mode Rt pos)
+              (logic-less/app++ Input_is_pos Result_is_pos : logic-less (@s (LF : tm (_ ~> Rt)) L LeL'))
+              (logic-less/app++ _ Result_is_pos).
+
+- : resolving (step/switch-left _)
+              (Result_is_pos : tp-mode Rt pos)
+              (LL_Result : logic-less (@s (LF : tm (_ ~> Rt)) L LeL'))
+              _.
+
 %mode resolving +S +MAP +LLB -LLA.
+%% Result_is_Pos should imply that the input to getLeft is pos.
