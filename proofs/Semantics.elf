@@ -32,7 +32,7 @@ connect/g : connect ground ground ground.
 % the types in the language %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tp : type.
-~> : tp -> tp -> tp. %infix right 1 ~>.
+~> : tp -> tp -> tp. %infix right 6 ~>.
 unit : tp.
 answer : tp.
 sum : tp -> tp -> tp.
@@ -45,37 +45,16 @@ mu : (tp -> tp) -> tp.
 %%%%%%%%%%%%%%%%%%%%%%%
 % Predicates on types %
 %%%%%%%%%%%%%%%%%%%%%%%
-arrowless : tp -> type.
-arrowless/unit : arrowless unit.
-arrowless/answer : arrowless answer.
-arrowless/sum : arrowless (sum A B) <- arrowless A <- arrowless B.
-arrowless/prod : arrowless (prod A B) <- arrowless A <- arrowless B.
-arrowless/forall : arrowless (forall V) <- {A} arrowless A -> arrowless (V A).
-arrowless/mu : arrowless (mu V) <- {A} arrowless A -> arrowless (V A).
-%mode arrowless +A.
-%block var-arrowless : block {A} {_:arrowless A}.
-%worlds (var-arrowless) (arrowless _).
-%freeze arrowless.
-
-finite : tp -> type.
-finite/arrow : finite (A ~> B)
-      <- finite B
-      <- finite A.
-finite/sum  : finite (sum A B) <- finite A <- finite B.
-finite/prod : finite (prod A B) <- finite A <- finite B.
-
-%mode finite +A.
-%worlds () (finite _).
-%freeze finite.
-
 matchable : tp -> type.
-% matchable/finite : matchable A <- finite A.
-matchable/arrowless : matchable A <- arrowless A.
-% matchable/sum : matchable (sum A B) <- matchable A <- matchable B.
-% matchable/prod : matchable (prod A B) <- matchable A <- matchable B.
-
+matchable/unit : matchable unit.
+matchable/answer : matchable answer.
+matchable/sum : matchable (sum A B) <- matchable A <- matchable B.
+matchable/prod : matchable (prod A B) <- matchable A <- matchable B.
+matchable/forall : matchable (forall V) <- {A} matchable A -> matchable (V A).
+matchable/mu : matchable (mu V) <- {A} matchable A -> matchable (V A).
 %mode matchable +A.
-%worlds () (matchable _).
+%block var-matchable : block {A} {_:matchable A}.
+%worlds (var-matchable) (matchable _).
 %freeze matchable.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -128,7 +107,7 @@ queue/str : stack A -> stack A -> queue A.
 %%%%%%%%%%%%%%%%%%%%%%%%
 lam : ascription T -> (tm -> tm) -> tm.
 Lam : (tp -> tm) -> tm.
-app : tm  -> tm -> tm.
+@ : tm  -> tm -> tm. %infix left 6 @.
 empty : tm.
 success : tm.
 fail : tm.
@@ -140,8 +119,8 @@ right : tm -> tm.
 switch : tm -> tm -> tm.
 findAll : {A : tp} matchable A -> queue A -> tm -> tm.
 
-roll : tm -> tp -> tm.
-unroll : tm -> tp -> tm.
+roll : tm -> tp -> tm.   % roll is equivelent to a constructor.
+unroll : tm -> tp -> tm. % unroll is equivelent to a pattern.
 logic-var : tm.
 % ascription
 # : tm -> tp -> tm. %infix left 5 #.
@@ -149,31 +128,46 @@ logic-var : tm.
 %freeze queue stack tm.
 %name tm E e.
 
-is : tm -> tp -> type. %infix left 5 is.
-is/lam : ({x:tm} x is T1 -> (E x) is T2) 
-      -> ((lam (_:ascription T1) ([x] E x)) is (T1 ~> T2)).
+;; : tm -> tp -> type. %infix left 5 ;;.
 
-is/Lam : ({a:tp} (E a) is (T a))
-      -> (Lam E) is forall T.
+;;/lam : ({x} x ;; T1 -> E x ;; T2) 
+      -> lam (_:ascription T1) E ;; T1 ~> T2.
 
-is/roll : E is (T (mu ([a:tp] T a))) ->
-          (roll E (mu ([a:tp] T a))) is (mu ([a:tp] T a)).
+;;/Lam : ({a} E a ;; T a)
+      -> Lam E ;; forall T.
 
-is/unroll : E is (mu ([a:tp] T a)) ->
-          (unroll E (mu ([a:tp] T a))) is (T (mu ([a:tp] T a))).
+;;/@ : E1 ;; T1 ~> T2 
+    -> E2 ;; T1
+    -> E1 @ E2 ;; T2.
 
-is/empty : empty is unit.
-is/success : success is answer.
-is/fail : fail is answer.
-is/obj : E is T -> E' is T' -> obj E E' is prod T T'.
-is/getLeft : getLeft is forall [a] forall ([b] prod a b ~> a).
-is/getRight : getLeft is forall [b] forall ([a] prod a b ~> b).
-is/left : E is A -> left E is sum A B.
-is/right : E is B -> right E is sum A B.
-is/switch : E is (A ~> C) -> E' is (B ~> C) -> switch E E' is (sum A B ~> C).
-is/findAll : E is (A ~> answer) -> 
-	     findAll A _ _ E is sum A unit.
-is/logic-var : logic-var is A.
+;;/# : E ;; forall T1 
+    -> E # T2 ;; T1 T2.
+
+;;/roll : E ;; T (mu T)
+       -> roll E (mu T) ;; mu T.
+
+;;/unroll : E ;; mu T 
+         -> unroll E (mu T) ;; T (mu T).
+
+;;/empty : empty ;; unit.
+;;/success : success ;; answer.
+;;/fail : fail ;; answer.
+;;/obj : E  ;; T 
+      -> E' ;; T' 
+      -> obj E E' ;; prod T T'.
+;;/getLeft : getLeft ;; forall [a] forall [b] prod a b ~> a.
+;;/getRight : getLeft ;; forall [b] forall [a] prod a b ~> b.
+;;/left : E ;; A 
+       -> left E ;; sum A B.
+;;/right : E ;; B 
+        -> right E ;; sum A B.
+;;/switch : E  ;; A ~> C 
+         -> E' ;; B ~> C 
+         -> switch E E' ;; sum A B ~> C.
+;;/findAll : matchable A
+          -> E ;; A ~> answer
+          -> findAll A _ _ E ;; sum A unit.
+;;/logic-var : logic-var ;; A.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 % definition of a maybe %
@@ -248,6 +242,9 @@ resolved/fail : resolved fail.
 resolved/obj : resolved (obj A B) <- resolved A <- resolved B.
 resolved/left : resolved (left A) <- resolved A.
 resolved/right : resolved (right B) <- resolved B.
+resolved/roll : resolved (roll A _) <- resolved A.
+resolved/unroll : resolved (unroll A _) <- resolved A.
+
 %mode resolved +V.
 %worlds () (resolved _).
 %freeze resolved.
@@ -259,6 +256,8 @@ unresolved/obj-right : unresolved (obj A B) <- unresolved B.
 unresolved/left : unresolved (left A) <- unresolved A.
 unresolved/right : unresolved (right B) <- unresolved B.
 unresolved/logic-var : unresolved logic-var.
+unresolved/roll : unresolved (roll A _) <- unresolved A.
+unresolved/unroll : unresolved (unroll A _) <- unresolved A.
 %mode unresolved +V.
 %worlds () (unresolved _).
 %freeze unresolved.
@@ -268,37 +267,57 @@ unresolved/logic-var : unresolved logic-var.
 % into exactly two new children (given we only have binary sums/products)
 % even if they need to be identical.
 resolve        : tp -> tm -> tm -> tm -> type.
-resolve/unit   : resolve unit logic-var empty empty.
 resolve/answer : resolve answer logic-var success fail.
-resolve/prod   : resolve (prod _ _) logic-var (obj logic-var logic-var) (obj logic-var logic-var).
 resolve/sum    : resolve (sum _ _) logic-var (left logic-var) (right logic-var).
-% todo - finish resolve and operational semantics.
+resolve/left   : resolve Ta Ea L R
+              -> resolve (sum Ta _) (left Ea) (left L) (left R).
+resolve/right  : resolve Tb Eb L R
+              -> resolve (sum _ Tb) (right Eb) (right L) (right R).
+
+resolve/unit   : resolve unit logic-var empty empty.
+resolve/prod   : resolve (prod _ _) logic-var (obj logic-var logic-var) (obj logic-var logic-var).
+resolve/prod-L : resolve (prod Ta _) (obj Ea Eb) (obj La Eb) (obj Ra Eb)
+              <- unresolved Ea
+              <- resolve Ta Ea La Ra.
+resolve/prod-R : resolve (prod _ Tb) (obj Ea Eb) (obj Ea Lb) (obj Ea Rb)
+              <- resolved Ea
+              <- resolve Tb Eb Lb Rb.
+resolve/mu     : resolve (mu T) logic-var (roll A (mu T)) (roll B (mu T))
+              <- resolve (T (mu T)) logic-var A B.
+resolve/roll   : resolve (mu T) (roll E (mu T)) (roll A (mu T)) (roll B (mu T))
+              <- resolve (T (mu T)) E A B.
+%mode resolve +T +A -B -C.
+%worlds () (resolve _ _ _ _).
+%freeze resolve.
+
+% resolvable : E ;; T -> matchable T -> unresolved E -> resolve T E A B -> type.
+% %mode resolvable +Is +M +U -R.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % High level Operational Semantics %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % inherent in the step is the proof of preservation
-|-> : tm -> tm -> type. %infix none 10 |->.
+|-> : tm -> tm -> type. %infix right 0 |->.
 
-step/app-1 : app E1 E2 |-> app E1' E2
-	  <- E1 |-> E1'.
+step/@ : E1 @ E2 |-> E1' @ E2
+         <- E1 |-> E1'.
 
-step/app-2 : app E1 E2 |-> app E1 E2'
-          <- value E1
-	  <- E2 |-> E2'.
+%% step/lam is non strict, but also not memoizing.
+step/lam : lam _ V @ E |-> V E.
 
-step/lam : app (lam _ V) E |-> V E
-        <- value E.
+step/# : E |-> E' 
+      -> E # T |-> E' # T.
 
-step/#1 : E |-> E' 
-       -> (E # T) |-> (E' # T).
-step/#2 : ((Lam E)  # T)  |-> E T.
-step/getLeft : app getLeft (obj L _) |-> L.
-step/getRight : app getRight (obj _ R) |-> R.
+step/Lam : Lam E # T |-> E T.
 
-step/switch-left : app (switch LF _) (left L) |-> app LF L.
-step/switch-right : app (switch _ RF) (right R) |-> app RF R.
+step/getLeft : getLeft @ obj L _ |-> L.
+step/getRight : getRight @ obj _ R |-> R.
+
+step/switch-left : switch LF _ @ left L |-> LF @ L.
+step/switch-right : switch _ RF @ right R |-> RF @ R.
 
 step/findAll-start : findAll S M Q L |-> findAll S M Q' L
     		  <- queue-empty Q
@@ -322,7 +341,7 @@ step/findAll-step : findAll T M Q L |-> findAll T M Q'' L
 step/findAll-resolved : findAll T M Q L |-> findAll T M Q'' L
 		     <- dequeue Q Q' (just (elem/unresolved S))
 		     <- resolved S
-		     <- enqueue (elem/resolved S (app L E')) Q' Q''.
+		     <- enqueue (elem/resolved S (L @ E')) Q' Q''.
 
 step/findAll-unresolved : findAll T M Q L |-> findAll T M Qo L
 		       <- dequeue Q Q' (just (elem/unresolved S))
