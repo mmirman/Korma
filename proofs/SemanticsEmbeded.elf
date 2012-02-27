@@ -1,0 +1,325 @@
+%%%%%%%%%%%%%%%%%%%%%%%%
+% what resolvedness is %
+%%%%%%%%%%%%%%%%%%%%%%%%
+mode : type.
+pos : mode.
+neg : mode.
+%mode mode.
+%freeze mode.
+%name mode Gs.
+
+mode-sub : mode -> mode -> type.
+mode-sub/e : mode-sub A A.
+mode-sub/pn : mode-sub pos neg.
+
+lub : mode -> mode -> mode -> type.
+lub/p : lub pos A A.
+lub/n : lub neg _ neg.
+%freeze lub.
+
+mode-sub-trans : mode-sub A B -> mode-sub B C -> mode-sub A C -> type.
+mode-sub-trans/e :  mode-sub-trans mode-sub/e A A.
+mode-sub-trans/pn : mode-sub-trans mode-sub/pn mode-sub/e mode-sub/pn.
+%mode mode-sub-trans +A +B -C.
+%worlds () (mode-sub-trans _ _ _).
+%total {} (mode-sub-trans _ _ _).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the types in the language %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+tp : mode -> type.
+
+set : type.
+cons : tp A -> set -> set.
+nil : set.
+%name set Set.
+
+~> : tp _ -> tp _ -> tp pos. %infix right 6 ~>.
+unit : tp pos.
+answer : tp pos.
+sum : lub A B C -> tp A -> tp B -> tp C.
+prod : lub A B C -> tp A -> tp B -> tp C.
+forall : ({a} tp a -> tp B) -> tp B.
+refine : set -> tp B.
+mu : (tp A -> tp B) -> tp B.
+
+%freeze tp.
+%name tp T t.
+
+in-set : tp A -> set -> type.
+in-set/elem : in-set A (cons A _).
+in-set/cons : in-set A R -> in-set A (cons _ R).
+
+subset : set -> set -> type.
+subset/n : subset nil T.
+subset/e : in-set A T -> subset S T -> subset (cons A S) T.
+
+subset-in : in-set V S -> subset S S' -> in-set V S' -> type.
+- : subset-in (in-set/elem : in-set V (cons V S)) (subset/e InT Sub : subset (cons V S) T) InT.
+- : subset-in InC Sub InT
+ -> subset-in (in-set/cons InC) (subset/e _ Sub) InT.
+
+%mode subset-in +A +B -C.
+%worlds () (subset-in _ _ _).
+%total (A) (subset-in A _ _).
+
+subset-trans : subset A B -> subset B C -> subset A C -> type.
+- : subset-trans subset/n A subset/n.
+- : subset-trans Sub Sub' Sub''
+ -> subset-in In Sub' In''
+ -> subset-trans (subset/e In Sub) Sub' (subset/e In'' Sub'').
+
+%mode subset-trans +A +B -C.
+%worlds () (subset-trans _ _ _).
+%total (A) (subset-trans A _ _).
+
+sub : mode-sub A B -> tp A -> tp B -> type.
+sub/e : sub mode-sub/e A A.
+sub/~> : sub _ A' A -> sub _ B B' -> sub mode-sub/e (A ~> B) (A' ~> B').
+sub/sum : sub M A A' -> sub N B B' -> {D} sub D (sum C1 A B) (sum C2 A' B').
+sub/prod : sub M A A' -> sub N B B' -> {D} sub D (prod C1 A B) (prod C2 A' B').
+
+% sub/forall : ({r}{a : tp r} sub R (F r a) (G r a)) -> sub R (forall F) (forall G).
+sub/refine : subset S' S -> sub SR (refine S) (refine S').
+
+
+sub-trans : sub M A B -> sub N B C -> sub R A C -> type.
+sub-trans' : sub N B C -> sub M A B -> sub R A C -> type.
+%mode sub-trans +A +B -C.
+%mode sub-trans' +A +B -C.
+
+- : sub-trans sub/e A A.
+- : sub-trans A sub/e A.
+- : sub-trans Sb Sb' Sb''
+ -> sub-trans' Sa Sa' Sa''
+ -> sub-trans (sub/~> Sa Sb) (sub/~> Sa' Sb') (sub/~> Sa'' Sb'').
+- : mode-sub-trans MSdd' MSd'd'' MSdd''
+ -> sub-trans Smm' Sm'm'' Smm''
+ -> sub-trans Snn' Sn'n'' Snn''
+ -> sub-trans (sub/sum Smm' Snn'  MSdd')
+               (sub/sum Sm'm'' Sn'n'' MSd'd'')
+               (sub/sum Smm'' Snn''   MSdd'').
+- : mode-sub-trans MSdd' MSd'd'' MSdd''
+ -> sub-trans Smm' Sm'm'' Smm''
+ -> sub-trans Snn' Sn'n'' Snn''
+ -> sub-trans (sub/prod Smm' Snn'  MSdd')
+               (sub/prod Sm'm'' Sn'n'' MSd'd'')
+               (sub/prod Smm'' Snn''   MSdd'').
+- : subset-trans S''S' S'S S''S
+ -> mode-sub-trans MM' M'M'' MM''
+ -> sub-trans (sub/refine S'S : sub MM' _ _)
+               (sub/refine S''S' : sub M'M'' _ _)
+               (sub/refine S''S : sub MM'' _ _).
+
+
+- : sub-trans' sub/e A A.
+- : sub-trans' A sub/e A.
+- : sub-trans Sa' Sa Sa''
+ -> sub-trans' Sb' Sb Sb''
+ -> sub-trans' (sub/~> Sa' Sb') (sub/~> Sa Sb) (sub/~> Sa'' Sb'').
+- : mode-sub-trans MSdd' MSd'd'' MSdd''
+ -> sub-trans' Sm'm'' Smm' Smm''
+ -> sub-trans' Sn'n'' Snn' Snn''
+ -> sub-trans' (sub/sum Sm'm'' Sn'n'' MSd'd'')
+               (sub/sum Smm' Snn'  MSdd')
+               (sub/sum Smm'' Snn''   MSdd'').
+- : mode-sub-trans MSdd' MSd'd'' MSdd''
+ -> sub-trans' Sm'm'' Smm' Smm''
+ -> sub-trans' Sn'n'' Snn' Snn''
+ -> sub-trans' (sub/prod Sm'm'' Sn'n'' MSd'd'')
+               (sub/prod Smm' Snn'  MSdd')
+               (sub/prod Smm'' Snn''   MSdd'').
+- : subset-trans S''S' S'S S''S
+ -> mode-sub-trans MM' M'M'' MM''
+ -> sub-trans' (sub/refine S''S' : sub M'M'' _ _)
+               (sub/refine S'S : sub MM' _ _)
+               (sub/refine S''S : sub MM'' _ _).
+
+%worlds () (sub-trans' _ _ _) (sub-trans _ _ _).
+%total (D1 D2)  (sub-trans D1 _ _) (sub-trans' D2 _ _).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The term syntax and type rules %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+tm : type.
+
+% The definition of a tm
+%%%%%%%%%%%%%%%%%%%%%%%%
+lam : tp A -> (tm -> tm) -> tm.
+tLam : ({A} tp A -> tm) -> tm.
+rLam : set -> (tm -> tm) -> tm.
+empty : tm.
+is_empty : tm.
+success : tm.
+fail : tm.
+obj : tm -> tm -> tm.
+getLeft : tm.
+getRight : tm.
+left : tm -> tm.
+right : tm -> tm.
+switch : tm -> tm -> tm.
+findAll : tp neg -> tm -> tm.
+
+roll : tm -> tp _ -> tm.   % roll is equivelent to a constructor.
+unroll : tm -> tp _ -> tm. % unroll is equivelent to a pattern.
+logic-var : tm.
+
+@ : tm  -> tm -> tm. %infix left 6 @.
+% ascription
+# : tm -> tp A -> tm. %infix left 5 #.
+%name tm E e.
+
+
+;; : tm -> {A} tp A -> type. %infix left 5 ;;.
+
+used-as-neg : tm -> tm -> type.
+
+
+used-as-neg/lam-inner : ({e} (e ;; R) T -> used-as-neg A (F e)) -> used-as-neg A (lam (T : tp R) F).
+
+used-as-neg/tlam : ({R} {T: tp R} used-as-neg A (F R T)) -> used-as-neg A (tLam F).
+
+used-as-neg/rlam-nil : used-as-neg A (rLam nil F).
+used-as-neg/rlam-cons : used-as-neg A (lam T F)
+                     -> used-as-neg A (rLam P F)
+                     -> used-as-neg A (rLam (cons (T : tp R) P) F).
+
+
+used-as-neg/app-l : used-as-neg A E1 -> used-as-neg A (E1 @ E2).
+used-as-neg/app-r : used-as-neg A E2 -> used-as-neg A (E1 @ E2).
+used-as-neg/app : (E1 ;; neg) _ -> used-as-neg A (E1 @ A).
+used-as-neg/product : used-as-neg (getLeft @ A) E -> used-as-neg (getLeft @ A) E 
+                   -> used-as-neg A E.
+used-as-neg/sum-used : used-as-neg A (switch (lam (_ : tp neg) L) (lam (_ : tp neg) L) @ A).
+used-as-neg/sum-unused : used-as-neg A L1 -> used-as-neg A L2 
+                       -> used-as-neg A (switch L1 L2).
+used-as-neg/obj-l : used-as-neg A L1 -> used-as-neg A (obj L1 L2).
+used-as-neg/obj-r : used-as-neg A L2 -> used-as-neg A (obj L1 L2).
+
+used-as-neg/left : used-as-neg A L -> used-as-neg A (left L).
+used-as-neg/right : used-as-neg A L -> used-as-neg A (right L).
+used-as-neg/roll : used-as-neg A L -> used-as-neg A (roll L _).
+used-as-neg/unroll : used-as-neg A L -> used-as-neg A (unroll L _).
+used-as-neg/#tLam : used-as-neg A (F R T) -> used-as-neg A (tLam F # (T : tp R)).
+used-as-neg/#2 : used-as-neg A E -> used-as-neg A (E # _).
+
+
+;;/lam-pos : ({x} (x ;; _) T1 -> (E x ;; _) T2) 
+	  -> (lam (T1 : tp pos) E ;; _) (T1 ~> T2).
+
+;;/lam-neg : ({x} (x ;; _) T1 -> (E x ;; _) T2) 
+	  -> ({a} used-as-neg a (E a))
+	  -> (lam (T1 : tp neg) E ;; _) (T1 ~> T2).
+
+;;/tLam : ({r}{a: tp r} (F r a ;; R) (T r a))
+	-> (tLam F ;; R) (forall T).
+
+
+;;/rLam-nil : (rLam nil F ;; R) (refine nil : tp R).
+;;/rLam-cons : (rLam P F ;; R'') (refine P')
+            -> (lam T F ;; R') T'
+   	    -> (rLam (cons (T : tp R) P) F ;; R''') (refine (cons T' P')).
+
+;;/@ : sub _ T1' T1
+    -> (E1 ;; _) (T1 ~> T2)
+    -> (E2 ;; _) T1'
+    -> (E1 @ E2 ;; _) T2.
+
+;;/@R : sub _ T1' T1
+     -> in-set (T1 ~> T2) S
+     -> (E1 ;; _) (refine S)
+     -> (E2 ;; _) T1'
+     -> (E1 @ E2 ;; _) T2.
+
+;;/#t : (E ;; _ ) (forall T1)
+    -> (E # (T2 : tp A) ;; _) (T1 A T2).
+
+;;/#r : (E ;; _) (refine S)
+    -> in-set T2 S
+    -> (E # T2 ;; _) T2.
+
+;;/is_empty : (is_empty ;; _) (unit ~> answer).
+;;/roll : (E ;; _) (T (mu T))
+       -> (roll E (mu T) ;; _) (mu T).
+
+;;/unroll : (E ;; _) (mu T)
+         -> (unroll E (mu T) ;; _) (T (mu T)).
+
+;;/empty : (empty ;; _ ) unit.
+;;/success : (success ;; _ ) answer.
+;;/fail : (fail ;; _ ) answer.
+;;/obj : (E  ;; _) T 
+      -> (E' ;; _) T' 
+      -> (obj E E' ;; _) (prod _ T T').
+;;/getLeft : (getLeft ;; _) (prod _ A B ~> A).
+;;/getRight : (getLeft ;; _) (prod _ A B ~> B).
+;;/left : (E ;; M) A 
+       -> (left E ;; M) (sum _ A B ).
+;;/right : (E ;; N) B 
+        -> (right E ;; N) (sum _ A B).
+;;/switch : (E  ;; _) (A ~> C)
+         -> (E' ;; _) (B ~> C)
+         -> (switch E E' ;; _) (sum _ A B ~> C).
+;;/findAll : (E ;; _) (A ~> answer)
+          -> (findAll A E ;; _) (sum _ A unit).
+;;/logic-var : (logic-var ;; neg) A.
+
+%freeze ;;.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% High level Operational Semantics %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% inherent in the step is the proof of preservation
+|-> : tm -> tm -> type. %infix right 0 |->.
+
+step/@ : E1 @ E2 |-> E1' @ E2
+         <- E1 |-> E1'.
+
+%% step/lam is non strict, but also not memoizing.
+step/lam : lam _ V @ E |-> V E.
+
+step/# : E |-> E' 
+      -> E # T |-> E' # T.
+
+step/tLam : tLam E # (T : tp R) |-> E R T.
+step/rLam : rLam _ V @ E |-> V E.
+
+step/is_empty : is_empty @ empty |-> success.
+
+step/unroll1 : E |-> E'
+            -> unroll E T |-> unroll E' T.
+
+step/unroll2 : unroll (roll E T1) T2 |-> E.
+
+step/roll : E |-> E'
+         -> roll E T |-> roll E' T.
+
+step/getLeft : getLeft @ obj L _ |-> L.
+step/getRight : getRight @ obj _ R |-> R.
+
+step/switch-left : switch LF _ @ left L |-> LF @ L.
+step/switch-right : switch _ RF @ right R |-> RF @ R.
+
+% a proof that one thing succeeds.
+step/findAll-succ : (V ;; _) A
+                 -> E @ V |-> success
+                 -> findAll A E |-> left V.
+
+%freeze |->. %name |-> Step.
+
+
+% we don't need to prove "progress" actually, just the presservation of modedness.
+% and that a moded, matchable, value expression is resolved.
+% the mode might widen, but it will stay safe.
+preservation : I |-> O
+          -> (I ;; M) T
+          -> (O ;; N) P
+	  -> sub _ P T
+	  -> type.
+%mode preservation +O +M -M' -S.
+
+- : preservation step/is_empty (;;/@ sub/e ;;/is_empty ;;/empty) ;;/success sub/e.
+- : preservation Step T T' (sub/~> Sa Sb)
+ -> preservation (step/@ Step) (;;/@ S T Q) (;;/@ S T' Q) Sb.

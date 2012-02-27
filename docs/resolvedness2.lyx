@@ -1,0 +1,646 @@
+#LyX 1.6.9 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Resolvedness Idea
+\end_layout
+
+\begin_layout Author
+Matthew Mirman
+\end_layout
+
+\begin_layout Date
+October 19, 2011
+\end_layout
+
+\begin_layout Standard
+So after some thinking, I realized that the reason that calling types in
+ all locations 
+\begin_inset Quotes eld
+\end_inset
+
+Resolved
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+Unresolved
+\begin_inset Quotes erd
+\end_inset
+
+ and having findAll accept as an argument a function with an argument of
+ type 
+\begin_inset Quotes eld
+\end_inset
+
+Resolved
+\begin_inset Quotes erd
+\end_inset
+
+ is the wrong way of looking at this.
+ In this system, there are no operations which only operate on 
+\begin_inset Quotes eld
+\end_inset
+
+Unresolved
+\begin_inset Quotes erd
+\end_inset
+
+ values.
+ If the argument to a 
+\begin_inset Quotes eld
+\end_inset
+
+case of
+\begin_inset Quotes erd
+\end_inset
+
+ is resolved, then it acts as it does in a functional setting, and if it
+ is unresolved, it resolves the argument.
+ 
+\end_layout
+
+\begin_layout Standard
+Thus, a better system is to say unifiable arguments can be either 
+\begin_inset Quotes eld
+\end_inset
+
+Resolved
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+Unresolved
+\begin_inset Quotes erd
+\end_inset
+
+, and functions can be 
+\begin_inset Quotes eld
+\end_inset
+
+Resolving
+\begin_inset Quotes erd
+\end_inset
+
+, or 
+\begin_inset Quotes eld
+\end_inset
+
+Unresolving
+\begin_inset Quotes erd
+\end_inset
+
+, depending on the annotation of their argument.
+\end_layout
+
+\begin_layout Standard
+Type Relations:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+O\leqq I\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+a\leqq a\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Static typing rules:
+\end_layout
+
+\begin_layout Standard
+This rule says that if a is resolved in the environment is safe, and a being
+ unresolved in the environment is 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma,x:a_{O}\vdash e:b}{\Gamma\vdash\lambda x.e:a_{O}\rightarrow b}\]
+
+\end_inset
+
+ 
+\begin_inset Formula \[
+\frac{\Gamma,x:a_{O}\nvdash e:b\;\;\Gamma,x:a_{I}\vdash e:b}{\Gamma\vdash\lambda x.e:a_{I}\rightarrow b}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma\vdash e_{1}:\; a_{g'}\rightarrow b_{g''}\;\;\Gamma\vdash e_{2}:\; a_{g}\;\;\; g\leqq g'}{\Gamma\vdash e_{1}\: e_{2}:\; b_{g''}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{g_{1}\leqq g\;\; g_{2}\leqq g}{\mbox{case of}:(a_{g_{1}}\rightarrow o_{k})\rightarrow(b_{g_{2}}\rightarrow o_{k})\rightarrow[a_{g_{2}}|b_{g_{1}}]_{g}\rightarrow o_{k}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{g_{1}\leqq g\;\; g_{2}\leqq g}{\mbox{left}:\{a_{g_{1}}\&b_{g_{2}}\}_{g}\rightarrow b_{g_{2}}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{g_{1}\leqq g\;\; g_{2}\leqq g}{\mbox{right}:\{a_{g_{1}}\&b_{g_{2}}\}_{g}\rightarrow b_{g_{2}}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{}{\mbox{unify}:\; a_{g}\rightarrow a_{g}\rightarrow\mbox{Ans}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{findAll}:(a_{I}\rightarrow\mbox{Ans}_{O})\rightarrow[a_{(O)}]_{(O)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{free}:(a_{(U)}\rightarrow b)\rightarrow b\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma,x:a_{I}\vdash e:b}{\Gamma\vdash\lambda x.e:a_{I}\rightarrow b}\]
+
+\end_inset
+
+ 
+\begin_inset Formula \[
+\frac{\Gamma,x:a_{I}\nvdash e:b\;\;\Gamma,x:a_{O}\vdash e:b}{\Gamma\vdash\lambda x.e:a_{U}\rightarrow b}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma\vdash e_{1}:\; a_{g'}\rightarrow b_{g''}\;\;\Gamma\vdash e_{2}:\; a_{g}\;\;\; g\leqq g'}{\Gamma\vdash e_{1}\: e_{2}:\; b_{g''}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{g_{1}\leqq g\;\; g_{2}\leqq g}{\mbox{case of}:(a_{g_{1}}\rightarrow o_{k})\rightarrow(b_{g_{2}}\rightarrow o_{k})\rightarrow[a_{g_{2}}|b_{g_{1}}]_{g}\rightarrow o_{k}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{g_{1}\leqq g\;\; g_{2}\leqq g}{\mbox{left}:\{a_{g_{1}}\&b_{g_{2}}\}_{g}\rightarrow b_{g_{2}}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{g_{1}\leqq g\;\; g_{2}\leqq g}{\mbox{right}:\{a_{g_{1}}\&b_{g_{2}}\}_{g}\rightarrow b_{g_{2}}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{}{\mbox{unify}:\; a_{g}\rightarrow a_{g}\rightarrow\mbox{Ans}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{findAll}:(a_{I}\rightarrow\mbox{Ans}_{O})\rightarrow[a_{(O)}]_{(O)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{free}:(a_{(U)}\rightarrow b)\rightarrow b\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Some Examples:
+\end_layout
+
+\begin_layout Paragraph
+Unifying is Resolving if either of it's argumens are Resolving, and Unresolving
+ otherwise.
+\end_layout
+
+\begin_layout Standard
+The sense that it is resolving is as follows:
+\end_layout
+
+\begin_layout Standard
+The case where 
+\begin_inset Formula $a$
+\end_inset
+
+ is resolving in the environment: 
+\begin_inset Formula $\Gamma,a:T_{(R)}\vdash\mbox{unify}\; a:T_{(R)}\rightarrow\mbox{Ans}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The case where 
+\begin_inset Formula $a$
+\end_inset
+
+ is unresolving in the environment: 
+\begin_inset Formula $\Gamma,a:T_{(U)}\vdash\mbox{unify}\; a:T_{(U)}\rightarrow\mbox{Ans}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+.
+\end_layout
+
+\begin_layout Standard
+If 
+\begin_inset Formula $a:T_{(R)}$
+\end_inset
+
+ in the environment, then 
+\begin_inset Formula $\mbox{findAll}(\mbox{unify}\; a)$
+\end_inset
+
+ is valid.
+\end_layout
+
+\begin_layout Standard
+If 
+\begin_inset Formula $a:T_{(U)}$
+\end_inset
+
+ in the environment, then 
+\begin_inset Formula $\mbox{findAll}(\mbox{unify}\; a)$
+\end_inset
+
+ is invalid.
+\end_layout
+
+\begin_layout Standard
+So
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\lambda a.\mbox{findAll}(\mbox{unify}\; a):T_{(U)}\rightarrow[T_{(R)}]_{(R)}$
+\end_inset
+
+ as this function is non resolving.
+\end_layout
+
+\begin_layout Standard
+If 
+\begin_inset Formula $a:T_{(R)}$
+\end_inset
+
+ in the environment
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+, then 
+\begin_inset Formula $\mbox{unify}\;[a]\;(\mbox{findall}(\mbox{unify}\; a))$
+\end_inset
+
+ is valid
+\end_layout
+
+\begin_layout Standard
+If 
+\begin_inset Formula $a:T_{(U)}$
+\end_inset
+
+in the environment, then is 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $\mbox{unify}\;[a]\;(\mbox{findall}(\mbox{unify}\; a))$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\noun default
+\color inherit
+ invalid 
+\end_layout
+
+\begin_layout Standard
+so
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+\begin_inset Formula $\lambda a.\mbox{unify}\;[a]\;(\mbox{findall}(\mbox{unify}\; a)):T_{(U)}\rightarrow\mbox{Ans}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+thus,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\mbox{findAll(\lambda}a.\mbox{unify}\;[a]\;(\mbox{findall}(\mbox{unify}\; a)))$
+\end_inset
+
+ is not valid.
+\end_layout
+
+\begin_layout Standard
+.
+\end_layout
+
+\begin_layout Standard
+if 
+\begin_inset Formula $a:T_{(U)}$
+\end_inset
+
+ in the environment, then 
+\begin_inset Formula $\mbox{free}\;(\mbox{unify}\; a):\mbox{Ans}$
+\end_inset
+
+ is valid
+\end_layout
+
+\begin_layout Standard
+if 
+\begin_inset Formula $a:T_{(R)}$
+\end_inset
+
+ in the environment, then 
+\begin_inset Formula $\mbox{free}\;(\mbox{unify}\; a):\mbox{Ans}$
+\end_inset
+
+ is valid 
+\end_layout
+
+\begin_layout Part*
+Try 2
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+A\leqq I\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+A\leqq A\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{B\leqq A\;\;\; A'\leqq B'}{A\rightarrow A'\leqq B\rightarrow B'}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma,x/O\vdash e/g}{\Gamma\vdash(\lambda x:a/O.e)/O\rightarrow g}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma,x/O\vdash\sim e/g\;\;\;\Gamma,x/I\vdash e/g}{\Gamma\vdash(\lambda x:a/I.e)/I\rightarrow g}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma\vdash e_{1}/g'\rightarrow g''\;\;\Gamma\vdash e_{2}/g\;\;\; g\leqq g'}{\Gamma\vdash e_{1}\: e_{2}/g''}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{g_{1}\leqq g\;\;\; g_{2}\leqq g}{\Gamma\vdash\mbox{obj}/g_{1}\rightarrow g_{2}\rightarrow g}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{g_{1}\leqq g\;\; g_{2}\leqq g}{\mbox{case of}/(g_{1}\rightarrow k)\rightarrow(g_{2}\rightarrow k)\rightarrow g\rightarrow k}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{g'\leqq g}{\mbox{left}/g\rightarrow g'}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{g'\leqq g}{\mbox{right}/g\rightarrow g'}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{unify}/g\rightarrow g\rightarrow O\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{findAll}:(O\rightarrow O)\rightarrow O\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{succ}/O\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{free}/(I\rightarrow O)\rightarrow O\]
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

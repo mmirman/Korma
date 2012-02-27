@@ -1,0 +1,2261 @@
+#LyX 1.6.9 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+ 
+\usepackage{babel}
+
+\newcommand{\judges}{ \; \; \; \Gamma \vdash}
+\end_preamble
+\use_default_options true
+\language english
+\inputencoding latin9
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize letterpaper
+\use_geometry false
+\use_amsmath 2
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Static Verification for a Non Strict Functional Logical Language
+\end_layout
+
+\begin_layout Author
+Matthew Mirman
+\end_layout
+
+\begin_layout Abstract
+While functional logical programming has become more present with the formulatio
+n of small step semantics, it appears as though less attention has been
+ made to the static analysis and verification of such languages.
+ If the language is intended to be efficiently compiled to safe code, statically
+ ensuring safety is essential.
+ Furthermore, functional logical programming presents an incredible paradigm
+ shift from traditional imperative or functional paradigms.
+ It is thus necessary for the compiler to provide as much feedback as possible
+ to inform the programmer of the correct use of the language, without hindering
+ the readability of code.
+ As reasoning about the time complexity of logical code is undesirable and
+ difficult in the intended setting, the non strict and complete evaluation
+ strategy known as Needed Narrowing is used.
+ In consolidating logical and functional semantics, the primitive findAll
+ is both an accessible and necessary means to make use of successful queries.
+ We note that in conjunction with a non strict evaluation strategy, it is
+ possible for findAll to return unground logical variables, despite being
+ the only block against nondeterminism.
+ Mode analysis is suggested as a means of ensuring results from findAll
+ are ground.
+ As logical code can be considered a non-deterministic search, the primitive
+ findAll can be easily parallelized.
+ However, the unconstrained use of free variables throughout code could
+ easily result in space leaks and unintentional non-deterministic IO.
+ We present a type level system for constraining the scope of non determinism
+ in plausible programs.
+ The proposed analysis are formalized using Twelf.
+\end_layout
+
+\begin_layout Abstract
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part*
+Introduction
+\end_layout
+
+\begin_layout Standard
+While there exist non strict functional logical programming languages
+\begin_inset CommandInset citation
+LatexCommand cite
+key "FLP"
+
+\end_inset
+
+, no practical language seems to statically verify runtime safety entirely.
+ We present the Korma language, a lazy functional logical language, with
+ which we hope to provide a safer runtime analysis.
+ The Korma language is based on the Curry
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Curry"
+
+\end_inset
+
+ language, a functional logical programming influenced by the designs of
+ Prolog and Haskell.
+ The Korma language is pure, but for the IO monad, uses System F, and has
+ type classes.
+ 
+\end_layout
+
+\begin_layout Standard
+While the language is based on lambda calculus with sum and product types,
+ it also includes logic primitives such as 
+\series bold
+free
+\series default
+, 
+\series bold
+findAll
+\series default
+, 
+\series bold
+unify
+\series default
+, and
+\series bold
+ caseof
+\series default
+.
+ 
+\series bold
+free
+\series default
+ is a function which initializes a variable as a free variable.
+ 
+\series bold
+findAll
+\series default
+ searches for any or all instances of a variable which satisfy a logical
+ predicate.
+ 
+\series bold
+unify
+\series default
+ searches for equality, and 
+\series bold
+caseof
+\series default
+ non-deterministically branches when given a logic variable as an argument.
+\end_layout
+
+\begin_layout Standard
+Due to the 
+\series bold
+caseof
+\series default
+ and 
+\series bold
+findAll
+\series default
+ primitives, logic programming is a powerful model for complex queries,
+ and thus encourages programmers to potentially write less verbose code
+ than would otherwise be possible.
+ Because nondeterministically branching for every free variable at every
+ switch statement could very easily result in an exponential blowup in time
+ complexity of programs, the Needed Narrowing evaluation strategy
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Sergio1994"
+
+\end_inset
+
+ is used.
+ In this strategy, logic variables are never initialized until they are
+ needed to make progress.
+ It is important that if there are values that cause a predicate to succeed,
+ that the primitive 
+\series bold
+findAll
+\series default
+ will output them rather than spending forever trying another value.
+ This completeness property of findAll can be ensured by a breadth first
+ search of possible variable initializations and evaluations.
+ While both depth first and breadth first searches are possible in Curry
+ and Prolog in the absence of a findAll primitive, we show that the introduction
+ of findAll as a language primitive make controlling non-determinism in
+ the IO monad possible.
+ 
+\end_layout
+
+\begin_layout Standard
+We also note that the introduction of 
+\series bold
+findAll
+\series default
+ as a complete primitive in the presence of non strict semantics makes mode
+ checking
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Pfenning1996"
+
+\end_inset
+
+ a necessity.
+ We have conjectured rules for the mode checking of this language and are
+ in the process of formalizing the rules and proving progress for the language
+ in Twelf.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part*
+Syntax
+\end_layout
+
+\begin_layout Standard
+To simplify the system for the moment, unification and recursive types are
+ ommited.
+ 
+\end_layout
+
+\begin_layout Standard
+The grammar for the simplified language is as follows:
+\end_layout
+
+\begin_layout Standard
+Types:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+t\;::=v\;|\; t\rightarrow t\;|\;()\;|\;\mbox{answer}\;|\; t\times t\;|\; t+t\;|\;\forall x.t\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Terms:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+e\;::=x\;|\;\lambda x:t.e\;|\;\lambda v.e\;|\;(e\; e)\;|\;(e\;[t])\;|\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{findAll}_{t}\;|\;\mbox{free}_{t}\;|\;\mbox{success}\;|\;\mbox{fail}\;|\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{obj}\;|\;\mbox{getLeft}\;|\;\mbox{getRight}\;|\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{left}\;|\;\mbox{right}\;|\;\mbox{caseof}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part*
+Semantics
+\end_layout
+
+\begin_layout Section*
+Natural Semantics
+\end_layout
+
+\begin_layout Standard
+We begin with a simplified set of rules, for which we can provide an approximati
+on of the behavior of findAll.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-APP_{1}) }\frac{E_{1}\Rightarrow E_{1}'}{E_{1}\; E_{2}\Rightarrow E_{1}'\; E_{2}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-APP_{2}) }\frac{E_{2}\Rightarrow E_{2}'}{E_{1}\; E_{2}\Rightarrow E_{1}\; E_{2}'}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-Type\;\ APP_{2}) }\frac{E_{1}\Rightarrow E_{1}'}{E_{1}\;[T]\Rightarrow E_{1}'\;[T]}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-APP\;\ LAM) }(\lambda x:t.e_{1})\; e_{2}\Rightarrow[x\mapsto e_{2}]e_{1}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-APP\;\ TY-LAM) }(\lambda v.e_{1})\;[t]\Rightarrow[v\mapsto t]e_{1}\]
+
+\end_inset
+
+provided 
+\begin_inset Formula $t$
+\end_inset
+
+ is free for 
+\begin_inset Formula $e_{2}$
+\end_inset
+
+ in 
+\begin_inset Formula $e_{1}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \begin{align*}
+\mbox{(E-GET LEFT) }\mbox{getLeft }(\mbox{obj}\; e_{1}\; e_{2}) & \Rightarrow e_{1}\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-GET RIGHT) }\mbox{getRight }(\mbox{obj}\; e_{1}\; e_{2})\Rightarrow e_{2}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-SWITCH-LEFT) }(\mbox{caseof}\; LF\; RF)\;(\mbox{left}L)\Rightarrow LF\; L\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-SWITCH-RIGHT) }(\mbox{caseof}\; LF\; RF)\;(\mbox{right\;}L)\Rightarrow RF\; R\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-FINDALL-SUCC) }\frac{\vdash V:T\;\;\; E\; V\Rightarrow\mbox{success}}{\mbox{findAll}_{T}\; E\Rightarrow(\mbox{left}\; V)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-FINDALL-SUCC) }\frac{\forall V.\;\vdash V:T\implies E\; V\Rightarrow\mbox{fail}}{\mbox{findAll}_{T}\; E\Rightarrow(\mbox{right}\;())}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-FREE-SUCC) }\frac{\vdash V:T}{\mbox{free}_{T}\; E\Rightarrow E\; V}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Types
+\end_layout
+
+\begin_layout Standard
+To better understand these rules, it is helpful to asign typing rules.
+ The Korma languages uses System F, as described in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Pierce2002"
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $ $
+\end_inset
+
+
+\begin_inset Formula \[
+\frac{x:T\in\Gamma}{\Gamma\vdash x:T}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma,x:T_{1}\vdash e:T_{2}}{\Gamma\vdash(\lambda x:T_{1}.e):T_{1}\rightarrow T_{2}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma\vdash e_{1}:T_{1}\rightarrow T_{2}\;\Gamma\vdash e_{2}:T_{1}}{\Gamma\vdash e_{1}e_{2}:T_{2}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma,v\vdash e:T}{\Gamma\vdash\lambda v.e\;:\;\forall v.T}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma\vdash e:\forall v.T_{2}}{\Gamma\vdash e\;[T_{1}]\;:\;[v\rightarrow T_{1}]\; T_{2}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{getLeft}:\forall v_{1}\; v_{2}.v_{1}\times v_{2}\rightarrow v_{1}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{getRight}:\forall v_{1}\; v_{2}.v_{1}\times v_{2}\rightarrow v_{2}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{left}:\forall v_{1}\; v_{2}.v_{1}\rightarrow v_{1}+v_{2}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{right}:\forall v_{1}\; v_{2}.v_{2}\rightarrow v_{1}+v_{2}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{obj}:\forall v_{1}\; v_{2}.v_{1}\rightarrow v_{2}\rightarrow v_{1}\times v_{2}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{caseof}:\forall v_{1}\; v_{2}\; v_{3}.(v_{1}\rightarrow v_{3})\rightarrow(v_{2}\rightarrow v_{3})\rightarrow v_{1}+v_{2}\rightarrow v_{3}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{free}:\forall v_{1}\; v_{2}.(v_{1}\rightarrow v_{2})\rightarrow v_{2}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{findAll}:\forall v.(v\rightarrow\mbox{answer})\rightarrow v+()\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{success}:answer\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{fail}:answer\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Small Step Operational Semantics
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="23" columns="5">
+<features>
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Rule
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Heap
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Control
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Stack
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Notes
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+varcons
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma[x\mapsto t]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $x$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma[x\mapsto t]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $t$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+varexp
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma[x\mapsto e]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $x$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+e is not constructor rooted
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma[x\mapsto t]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+e
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $x:S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $e\neq x$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+val
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $v$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $x:S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $v$
+\end_inset
+
+ is constructor rooted or a 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma[x\mapsto v]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $v$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+variable with 
+\begin_inset Formula $\Gamma[y]=y$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+lam
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $(\lambda x:t.e)$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $e':S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $y$
+\end_inset
+
+ is fresh
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma[y\mapsto e']$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[x\mapsto y]e$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+app
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $e_{1}\; e_{2}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $e_{1}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $e_{2}:S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+case
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\mbox{caseof}\;\; LF\;\; RF\;\; e$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+S
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $e$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\mbox{caseof}LF\; RF:S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+select-left
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\mbox{left }e$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\mbox{caseof}LF\; RF:S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $LF\; e$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+select-right
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\mbox{right }e$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\mbox{caseof}LF\; RF:S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $RF\; e$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+guess-left
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma[x\mapsto x]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $x$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\mbox{caseof}LF\; RF:S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $y$
+\end_inset
+
+ is fresh
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma[x\mapsto\mbox{left}\; y,\; y\mapsto y]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $LF\; y$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+guess-right
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma[x\mapsto x]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $x$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\mbox{caseof}LF\; RF:S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $y$
+\end_inset
+
+ is fresh
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma[x\mapsto\mbox{right}\; y,\; y\mapsto y]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $RF\; y$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+free
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\mbox{free}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $(\lambda x.e):S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $y$
+\end_inset
+
+ is fresh
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $\Gamma[y\mapsto y]$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $[x\mapsto y]e$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $S$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The small step semantics above are an extended and simplified version of
+ those provided in the literature
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Albert2002"
+
+\end_inset
+
+, and is the currently implemented in the Korma interpreter.
+ The implemented small step semantics for the findAll involves branching
+ for every guess, and placing the potential solution on a breadth first
+ search queue.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part*
+The Scope of Non-determinism
+\end_layout
+
+\begin_layout Standard
+To show that the 
+\series bold
+findAll
+\series default
+ primitive can be used to control the scope of free variables, it is easiest
+ to use notions from subtyping systems, and to construct a syntactic transformat
+ion.
+ We also present a method for ensuring the unifiability of the free variables.
+ In order to unify, free variables must be unifiable, and constructed from
+ products and sums only.
+\end_layout
+
+\begin_layout Standard
+We can refine the types stated earlier for as follows, given the presence
+ of type classes:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{free}::\;\forall a\; b.(\mbox{Unifiable}\; a)\implies(a\rightarrow b)\rightarrow b\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{findAll}::\mbox{Unifiable}\; a\implies(a\rightarrow\mbox{Success})\rightarrow[a]\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Note here that 
+\series bold
+findAll
+\series default
+ returns a list.
+ The typeclass 
+\series bold
+Unifiable
+\series default
+ can be automatically derived for types which do not contain arrows.
+ 
+\end_layout
+
+\begin_layout Standard
+In a pure lazy functional setting, IO has traditionally been accomplished
+ using the IO monad.
+ In order to not deviate from this pattern, it is necessary to ensure that
+ computations still make sense from within the IO monad, and that the scope
+ of the free variables does cause unexpected nondeterminism of effects.
+ Ensuring that the nondeterminism of free does leek into the IO monad statically
+ can be made into a type level problem by the following system.
+\end_layout
+
+\begin_layout Standard
+Suppose we have two parameterized types 
+\begin_inset Formula $\mbox{Many}\; a$
+\end_inset
+
+ and 
+\begin_inset Formula $\mbox{Single}\; a$
+\end_inset
+
+, with the following subtyping rules:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+(\mbox{S-ReturnQuantity})\;\mbox{Single}\; a<:\;\mbox{Many}\; a\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\mbox{Single}$
+\end_inset
+
+ and 
+\begin_inset Formula $\mbox{Many}$
+\end_inset
+
+ are instances of the built in 
+\begin_inset Formula $\mbox{ReturnQuantity}$
+\end_inset
+
+ typeclass, and the following application function's type is given as a
+ primitive.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\$\$::\mbox{ReturnQuantity}\; m\implies(a\rightarrow m\; b)\rightarrow(m\; a\rightarrow m\; b)\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The 
+\begin_inset Quotes eld
+\end_inset
+
+main
+\begin_inset Quotes erd
+\end_inset
+
+ action for the program will has type 
+\begin_inset Formula $\mbox{Single}\;(\mbox{IO}\;())$
+\end_inset
+
+, and 
+\begin_inset Formula $\mbox{return}::a\rightarrow\mbox{Single }(m\; a)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{free}::(\mbox{Unifiable}\; a)\implies(a\rightarrow\mbox{Many}\; b)\rightarrow\mbox{Many}\; b\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{findall}::(\mbox{Unifiable}\; a)\implies(a\rightarrow\mbox{Many}\;\mbox{Success})\rightarrow\mbox{Single}\;[a]\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This way, any function which is deterministic can be used anywhere a non-determi
+nistic function can be used, but not visa versa.
+ To make this feature not cumbersome to the user, we apply the inductively
+ defined transformation 
+\begin_inset Formula $\phi$
+\end_inset
+
+ to the abstract syntax tree.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\phi(e_{1}\; e_{2})=\phi(e_{1})\;\$\$\;\phi(e_{2})\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\phi(\lambda x.e)=\lambda x.\phi(e)\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part*
+Mode Checking & Future Work
+\end_layout
+
+\begin_layout Standard
+Consider the following Korma code:
+\end_layout
+
+\begin_layout LyX-Code
+list = findAll $ 
+\backslash
+a -> free $ 
+\backslash
+z -> case z of
+\end_layout
+
+\begin_layout LyX-Code
+    A -> left a =:= A
+\end_layout
+
+\begin_layout LyX-Code
+    B -> (right a,left a) =:= ([A],A) 
+\end_layout
+
+\begin_layout Standard
+Given the needed narrowing evaluation strategy, list would contain two values,
+ 
+\begin_inset Quotes eld
+\end_inset
+
+{left = A & right = ? }
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+{ left = A & right = [A] }
+\begin_inset Quotes erd
+\end_inset
+
+.
+ We can thus infer that the type of list is 
+\begin_inset Quotes eld
+\end_inset
+
+[ (A+B) * [ A + B ] ]
+\begin_inset Quotes erd
+\end_inset
+
+.
+ However, if we were to ask for 
+\begin_inset Quotes eld
+\end_inset
+
+right (head list)
+\begin_inset Quotes erd
+\end_inset
+
+, we would have encountered a logical variable.
+ This code is thus non resolving.
+ The effects from non resolving code can be non local and unintuitive for
+ a novice logic programmer, and thus preventing findAll from accepting non
+ resolving functions is necessary.
+ 
+\end_layout
+
+\begin_layout Standard
+Logic programming systems such as Twelf and Prolog have introduced the notion
+ of mode checking 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Pfenning1996"
+
+\end_inset
+
+ in order to ensure that predicate arguments intended as inputs only get
+ used as inputs, and predicate arguments intended as outputs are ground
+ on function return.
+ While checking modes in an entirely logical system, even a higher order
+ logical system is a solved problem 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Pfenning2004"
+
+\end_inset
+
+, checking modes for functional logic programs is not as simple.
+ In order for functional code to be of use in predicates, outputs of functions
+ need to be linked to inputs from functions in modes.
+ One possible solution to extending the power of modes is to use refinement
+ modes in a manner akin to refinement types 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Refinement,Refinement2"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+While we have conjectured number systems for ensuring the mode safety of
+ Korma programs, no proofs of their correctness have been produced so far.
+ The formalization of these systems and their proofs is in active development
+ using Twelf.
+ Much of the Korma language has been implemented using an interpreter written
+ in Haskell, but parallelizing versions have yet to be written.
+ Furthermore, it would interesting to explore the sorts of safe concurrency
+  primitives that could be created using the same principles as 
+\series bold
+findAll
+\series default
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "/Users/matt/Documents/MyBib"
+options "bibtotoc,plain"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

@@ -1,0 +1,626 @@
+#LyX 1.6.9 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Resolvedness Idea
+\end_layout
+
+\begin_layout Author
+Matthew Mirman
+\end_layout
+
+\begin_layout Date
+October 19, 2011
+\end_layout
+
+\begin_layout Standard
+So after some thinking, I realized that the reason that calling types in
+ all locations 
+\begin_inset Quotes eld
+\end_inset
+
+Resolved
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+Unresolved
+\begin_inset Quotes erd
+\end_inset
+
+ and having findAll accept as an argument a function with an argument of
+ type 
+\begin_inset Quotes eld
+\end_inset
+
+Resolved
+\begin_inset Quotes erd
+\end_inset
+
+ is the wrong way of looking at this.
+ In this system, there are no operations which only operate on 
+\begin_inset Quotes eld
+\end_inset
+
+Unresolved
+\begin_inset Quotes erd
+\end_inset
+
+ values.
+ If the argument to a 
+\begin_inset Quotes eld
+\end_inset
+
+case of
+\begin_inset Quotes erd
+\end_inset
+
+ is resolved, then it acts as it does in a functional setting, and if it
+ is unresolved, it resolves the argument.
+ 
+\end_layout
+
+\begin_layout Standard
+Thus, a better system is to say unifiable arguments can be either 
+\begin_inset Quotes eld
+\end_inset
+
+Resolved
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+Unresolved
+\begin_inset Quotes erd
+\end_inset
+
+, and functions can be 
+\begin_inset Quotes eld
+\end_inset
+
+Resolving
+\begin_inset Quotes erd
+\end_inset
+
+, or 
+\begin_inset Quotes eld
+\end_inset
+
+Unresolving
+\begin_inset Quotes erd
+\end_inset
+
+, depending on the annotation of their argument.
+\end_layout
+
+\begin_layout Standard
+Type Relations:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+U\leqq R\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+- an unresolved value can be used wherever a resolved value is needed (but
+ will propogate unresolvedness based on the types of the primitive functions),
+ and a resolving function can be used wherever an unresolving function is
+ needed - but not visa-versa.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{a\leqq b}{t_{(a)}\leqslant t_{(b)}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+t\leqslant t\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\forall n.g_{n}\leqq g}{[N_{1}:a_{1(g_{1})}|\cdots|N_{n}:a_{n(g_{n})}]\leqslant[N_{1}:a_{1(g_{1})}|\cdots|N_{n}:a_{n(g_{n})}]_{g}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\forall n.g_{n}\leqq g}{\{N_{1}:a_{1(g_{1})}\&\cdots\&N_{n}:a_{n(g_{n})}\}\leqslant\{N_{1}:a_{1(g_{1})}\&\cdots\&N_{n}:a_{n(g_{n})}\}_{g}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{b_{1}\leqslant a_{1}\;\; a_{2}\leqslant b_{2}}{a_{1}\rightarrow_{A}a_{2}\leqslant b_{1}\rightarrow b_{2}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Static typing rules:
+\end_layout
+
+\begin_layout Standard
+This rule says that if a is resolved in the environment is safe, and a being
+ unresolved in the environment is 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma,x:a_{(R)}\vdash e:b\;\;\Gamma,x:a_{(U)}\vdash e:b\;}{\Gamma\vdash\lambda x.e:a_{(R)}\rightarrow b}\]
+
+\end_inset
+
+ 
+\begin_inset Formula \[
+\frac{\Gamma,x:a_{(U)}\nvdash e:b\;\;\Gamma,x:a_{(R)}\vdash e:b}{\Gamma\vdash\lambda x.e:a_{(U)}\rightarrow b}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma,x:a\vdash e:b\;\;\Gamma,x:a_{(R)}\nvdash e:b\;\;\Gamma,x:a_{(U)}\nvdash e:b\;}{\Gamma\vdash\lambda x.e:a\rightarrow b}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma\vdash e_{1}:\; a\rightarrow b\;\;\Gamma\vdash e_{2}:\; a}{\Gamma\vdash e_{1}\: e_{2}:\; b}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{case of}_{[N_{1}|\cdots|N_{n}]}:(a_{1}\rightarrow o)\rightarrow\cdots\rightarrow(a{}_{n}\rightarrow o)\rightarrow[N_{1}:a_{1}|\cdots|N_{n}:a_{n}]\rightarrow o\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+(.N_{i})_{\{N_{1}\&\cdots\&N_{n}\}}:\{N_{1}:a_{1}\&\cdots\&N_{n}:a_{n}\}\rightarrow a_{i}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{unify}:a_{(g)}\rightarrow a_{(g)}\rightarrow\mbox{Ans}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{findAll}:(a_{(R)}\rightarrow\mbox{Ans})\rightarrow[a_{(R)}]_{(R)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{free}:(a_{(U)}\rightarrow b)\rightarrow b\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph
+Some Examples:
+\end_layout
+
+\begin_layout Paragraph
+Unifying is Resolving if either of it's argumens are Resolving, and Unresolving
+ otherwise.
+\end_layout
+
+\begin_layout Standard
+The sense that it is resolving is as follows:
+\end_layout
+
+\begin_layout Standard
+The case where 
+\begin_inset Formula $a$
+\end_inset
+
+ is resolving in the environment: 
+\begin_inset Formula $\Gamma,a:T_{(R)}\vdash\mbox{unify}\; a:T_{(R)}\rightarrow\mbox{Ans}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The case where 
+\begin_inset Formula $a$
+\end_inset
+
+ is unresolving in the environment: 
+\begin_inset Formula $\Gamma,a:T_{(U)}\vdash\mbox{unify}\; a:T_{(U)}\rightarrow\mbox{Ans}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+.
+\end_layout
+
+\begin_layout Standard
+If 
+\begin_inset Formula $a:T_{(R)}$
+\end_inset
+
+ in the environment, then 
+\begin_inset Formula $\mbox{findAll}(\mbox{unify}\; a)$
+\end_inset
+
+ is valid.
+\end_layout
+
+\begin_layout Standard
+If 
+\begin_inset Formula $a:T_{(U)}$
+\end_inset
+
+ in the environment, then 
+\begin_inset Formula $\mbox{findAll}(\mbox{unify}\; a)$
+\end_inset
+
+ is invalid.
+\end_layout
+
+\begin_layout Standard
+So
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\lambda a.\mbox{findAll}(\mbox{unify}\; a):T_{(U)}\rightarrow[T_{(R)}]_{(R)}$
+\end_inset
+
+ as this function is non resolving.
+\end_layout
+
+\begin_layout Standard
+If 
+\begin_inset Formula $a:T_{(R)}$
+\end_inset
+
+ in the environment
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+, then 
+\begin_inset Formula $\mbox{unify}\;[a]\;(\mbox{findall}(\mbox{unify}\; a))$
+\end_inset
+
+ is valid
+\end_layout
+
+\begin_layout Standard
+If 
+\begin_inset Formula $a:T_{(U)}$
+\end_inset
+
+in the environment, then is 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $\mbox{unify}\;[a]\;(\mbox{findall}(\mbox{unify}\; a))$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\noun default
+\color inherit
+ invalid 
+\end_layout
+
+\begin_layout Standard
+so
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+\begin_inset Formula $\lambda a.\mbox{unify}\;[a]\;(\mbox{findall}(\mbox{unify}\; a)):T_{(U)}\rightarrow\mbox{Ans}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+thus,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\mbox{findAll(\lambda}a.\mbox{unify}\;[a]\;(\mbox{findall}(\mbox{unify}\; a)))$
+\end_inset
+
+ is not valid.
+\end_layout
+
+\begin_layout Standard
+.
+\end_layout
+
+\begin_layout Standard
+if 
+\begin_inset Formula $a:T_{(U)}$
+\end_inset
+
+ in the environment, then 
+\begin_inset Formula $\mbox{free}\;(\mbox{unify}\; a):\mbox{Ans}$
+\end_inset
+
+ is valid
+\end_layout
+
+\begin_layout Standard
+if 
+\begin_inset Formula $a:T_{(R)}$
+\end_inset
+
+ in the environment, then 
+\begin_inset Formula $\mbox{free}\;(\mbox{unify}\; a):\mbox{Ans}$
+\end_inset
+
+ is valid 
+\end_layout
+
+\begin_layout Part*
+Try 2
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+T\;::=v\;|\; T\rightarrow T\:|\;[T\vee T]\;|\;\{T\wedge T\}\;|\;()\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma,x:a\vdash e:b}{\Gamma\vdash(\lambda x:a\;.\; e):a\rightarrow b}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma\vdash e_{1}:\; a\rightarrow b\;\;\Gamma\vdash e_{2}:\; a}{\Gamma\vdash e_{1}\: e_{2}:\; b}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{case of}:(a\rightarrow o)\rightarrow(b\rightarrow o)\rightarrow[a\vee b]\rightarrow o\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{left}:\{a\wedge b\}\rightarrow a\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{right}:\{a\wedge b\}\rightarrow b\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{findAll}:(a\rightarrow\mbox{Ans})\rightarrow[a]\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{free}:(a\rightarrow b)\rightarrow b\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and also
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{C(x:a,e)\equiv P(a)}{(\lambda x:a.e)::\;(U\rightarrow)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma\vdash(\lambda x:a.e):(a\rightarrow b)\;\;\tau,x::\; a\bullet U\Vdash e\propto\bullet}{(\lambda x:a.e)::(R\implies\bullet)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\Gamma\vdash(\lambda x:a.e):(a\rightarrow b)\;\;\tau,x::a\bullet U\Vdash e\not\propto\bullet}{(\lambda x:a.e)::(U\implies\bullet)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\frac{\tau\Vdash e\propto(a\implies b)\;\;\tau\Vdash e'\propto a'\; a'\leqq a}{\tau\Vdash e\; e'\propto b}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $ $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{free}::(U\implies\bullet)\implies\bullet\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{findAll}::(R\implies\bullet)\implies\bullet\]
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

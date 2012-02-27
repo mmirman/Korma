@@ -1,0 +1,325 @@
+% getting to unsafe-mode in emacs: twelf-server-send-command "set unsafe true"
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% what resolvedness is %
+%%%%%%%%%%%%%%%%%%%%%%%%
+sres : type.
+pos : sres.
+neg : sres.
+%mode sres.
+
+%% the output of res is it's size and ensures it is finite.
+res : type.
+
+res-set : type.
+cons : res -> res-set -> res-set.
+nil : res-set.
+
+
+res/t : sres -> res.
+~>> : res -> res -> res. %infix right 6 ~>>.
+res/refine : res-set -> res.
+%freeze sres res.
+
+%name sres Gs.
+%name res G.
+
+
+is_in_res-set : res -> res-set -> type.
+is_in/elem : is_in_res-set A (cons A _).
+is_in/cons : is_in_res-set A R -> is_in_res-set A (cons _ R).
+
+subset : res-set -> res-set -> type.
+- : subset nil T.
+- : is_in_res-set A T -> subset S T -> subset (cons A S) T.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the types in the language %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+tp : type.
+~> : tp -> tp -> tp. %infix right 6 ~>.
+unit : tp.
+answer : tp.
+sum : tp -> tp  -> tp.
+prod : tp -> tp -> tp.
+forall : (tp -> tp) -> tp.
+mu : (tp -> tp) -> tp.
+
+%block tp-block : block {_ : tp}. 
+%worlds (tp-block) (tp).
+%freeze tp.
+%name tp T t.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The term syntax and type rules %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+tm : type.
+
+% The definition of a tm
+%%%%%%%%%%%%%%%%%%%%%%%%
+lam : tp -> res -> (tm -> tm) -> tm.
+rLam : res-set -> (res -> tm) -> tm.
+tLam : (tp -> tm) -> tm.
+
+empty : tm.
+is_empty : tm.
+success : tm.
+fail : tm.
+obj : tm -> tm -> tm.
+getLeft : tm.
+getRight : tm.
+left : tm -> tm.
+right : tm -> tm.
+switch : tm -> tm -> tm.
+findAll : tp -> tm -> tm.
+
+roll : tm -> tp -> tm.   % roll is equivelent to a constructor.
+unroll : tm -> tp -> tm. % unroll is equivelent to a pattern.
+logic-var : tm.
+
+@ : tm  -> tm -> tm. %infix left 6 @.
+% ascription
+#r : tm -> res -> tm. %infix left 5 #r.
+#t : tm -> tp -> tm. %infix left 5 #t.
+%name tm E e.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% What constitutes a final value %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+value : tm -> type.
+value/empty : value empty.
+value/success : value success.
+value/fail : value fail.
+value/lam : value (lam _ _ _).
+value/Lam : value (tLam _).
+value/unroll : value A -> value (unroll A _).
+value/roll : value A -> value (roll A _).
+value/obj : value (obj _ _).
+value/left : value (left _).
+value/is_empty : value is_empty.
+value/right : value (right _).
+value/getLeft : value getLeft.
+value/getRight : value getRight.
+value/switch : value (switch _ _).
+%mode value +V. %worlds () (value _). %freeze value. %name value V v.
+
+;; : tm -> tp -> type. %infix left 5 ;;.
+
+;;/lam : ({x} x ;; T1 -> E x ;; T2) 
+      -> lam T1 _ E ;; T1 ~> T2.
+
+;;/tLam : ({a} E a ;; T a)
+       -> tLam E ;; forall T.
+
+;;/rLam : ({a} is_in_res-set a RF -> E a ;; T)
+       -> rLam RF E ;; T.
+
+;;/@ : E1 ;; T1 ~> T2 
+    -> E2 ;; T1
+    -> E1 @ E2 ;; T2.
+
+;;/#t : E ;; forall T1
+    -> E #t T2 ;; T1 T2.
+
+;;/#r : E ;; T
+     -> E #r _ ;; T.
+;;/is_empty : is_empty ;; unit ~> answer.
+;;/roll : E ;; T (mu T)
+       -> roll E (mu T) ;; mu T.
+
+;;/unroll : E ;; mu T 
+         -> unroll E (mu T) ;; T (mu T).
+
+;;/empty : empty ;; unit.
+;;/success : success ;; answer.
+;;/fail : fail ;; answer.
+;;/obj : E  ;; T 
+      -> E' ;; T' 
+      -> obj E E' ;; prod T T'.
+;;/getLeft : getLeft ;; forall [a] forall [b] prod a b ~> a.
+;;/getRight : getLeft ;; forall [b] forall [a] prod a b ~> b.
+;;/left : E ;; A 
+       -> left E ;; sum A B.
+;;/right : E ;; B 
+        -> right E ;; sum A B.
+;;/switch : E  ;; A ~> C 
+         -> E' ;; B ~> C 
+         -> switch E E' ;; sum A B ~> C.
+;;/findAll : E ;; A ~> answer
+          -> findAll A E ;; sum A unit.
+;;/logic-var : logic-var ;; A.
+
+%freeze ;;.
+
+resolved : tm -> type.
+resolved/empty : resolved empty.
+resolved/success : resolved success.
+resolved/fail : resolved fail.
+resolved/obj : resolved (obj A B) <- resolved A <- resolved B.
+resolved/left : resolved (left A) <- resolved A.
+resolved/right : resolved (right B) <- resolved B.
+resolved/roll : resolved (roll A _) <- resolved A.
+resolved/unroll : resolved (unroll A _) <- resolved A.
+
+%mode resolved +V.
+%worlds () (resolved _).
+%freeze resolved.
+%name resolved V v.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% High level Operational Semantics %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% inherent in the step is the proof of preservation
+|-> : tm -> tm -> type. %infix right 0 |->.
+
+step/@ : E1 @ E2 |-> E1' @ E2
+         <- E1 |-> E1'.
+
+%% step/lam is non strict, but also not memoizing.
+step/lam : lam _ _ V @ E |-> V E.
+
+step/#t : E |-> E' 
+      -> E #t T |-> E' #t T.
+
+step/#r : E |-> E' 
+      -> E #r R |-> E' #r R.
+
+step/tLam : tLam E #t T |-> E T.
+step/rLam : is_in_res-set R F -> rLam F E #r R |-> E R.
+
+step/is_empty : is_empty @ empty |-> success.
+
+step/unroll1 : E |-> E'
+            -> unroll E T |-> unroll E' T.
+
+step/unroll2 : unroll (roll E T1) T2 |-> E.
+
+step/roll : E |-> E'
+         -> roll E T |-> roll E' T.
+
+step/getLeft : getLeft @ obj L _ |-> L.
+step/getRight : getRight @ obj _ R |-> R.
+
+step/switch-left : switch LF _ @ left L |-> LF @ L.
+step/switch-right : switch _ RF @ right R |-> RF @ R.
+
+% a proof that one thing succeeds.
+step/findAll-succ : V ;; A 
+                 -> E @ V |-> success
+                 -> findAll A E |-> left S.
+
+%freeze |->. %name |-> Step.
+
+%%%%%%%%%%%%%%%%%%%%%%
+% Mode declarations  %
+%%%%%%%%%%%%%%%%%%%%%%
+
+
+has-no-neg : res -> type.
+has-no-neg/refine-empty : has-no-neg (res/refine nil).
+has-no-neg/refine-cons : has-no-neg A -> has-no-neg (res/refine P) -> has-no-neg (res/refine (cons A P)).
+has-no-neg/~>> : has-no-neg (_ ~>> _).
+has-no-neg/t : has-no-neg (res/t pos).
+
+connect : res -> res -> res -> type.
+connect/pos : has-no-neg A -> has-no-neg B -> connect A B (res/t pos).
+connect/neg : connect _ _ (res/t neg).
+
+
+sub : res -> res -> type.
+sub/e : sub A A.
+sub/top : sub A (res/t neg).
+sub/pos : has-no-neg A -> sub A (res/t pos).
+sub/pos/~>> : sub (_ ~>> _) (res/t pos). % TODO, finish.
+
+sub/~>> : sub B A -> sub A' B' -> sub (A ~>> A') (B ~>> B').
+sub/ref : (subset G F) -> sub (res/refine F) (res/refine G).
+sub/con : sub A B -> sub B C -> sub A C.
+
+ub : res -> res -> res -> type.
+ub/all : sub A C -> sub B C -> ub A B C.
+
+
+%freeze sub ub.
+moded : tm -> res -> type.
+used-as-neg : tm -> tm -> type.
+
+used-as-neg/rlam-all : res-set -> tm -> (res -> tm) -> type.
+used-as-neg/rlam-all/empty : used-as-neg/rlam-all nil _ _.
+used-as-neg/rlam-all/cons : used-as-neg A (F R) -> used-as-neg/rlam-all P A F -> used-as-neg/rlam-all (cons R P) A F.
+used-as-neg/rlam : used-as-neg/rlam-all P A F -> used-as-neg A (rLam P F).
+used-as-neg/tlam : ({t} used-as-neg A (F t)) -> used-as-neg A (tLam F).
+used-as-neg/lam-inner : used-as-neg A (F empty) -> used-as-neg A (lam _ _ F).
+used-as-neg/app-l : used-as-neg A E1 -> used-as-neg A (E1 @ E2).
+used-as-neg/app-r : used-as-neg A E2 -> used-as-neg A (E1 @ E2).
+used-as-neg/app : moded E1 (res/t neg) -> used-as-neg A (E1 @ A).
+used-as-neg/product : used-as-neg (getLeft @ A) E -> used-as-neg (getLeft @ A) E 
+                   -> used-as-neg A E.
+used-as-neg/sum-used : used-as-neg A (switch (lam _ (res/t neg) L) (lam _ (res/t neg) L) @ A).
+used-as-neg/sum-unused : used-as-neg A L1 -> used-as-neg A L2 
+                       -> used-as-neg A (switch L1 L2).
+used-as-neg/obj-l : used-as-neg A L1 -> used-as-neg A (obj L1 L2).
+used-as-neg/obj-r : used-as-neg A L2 -> used-as-neg A (obj L1 L2).
+
+used-as-neg/left : used-as-neg A L -> used-as-neg A (left L).
+used-as-neg/right : used-as-neg A L -> used-as-neg A (right L).
+used-as-neg/roll : used-as-neg A L -> used-as-neg A (roll L _).
+used-as-neg/unroll : used-as-neg A L -> used-as-neg A (unroll L _).
+used-as-neg/#r1 : is_in_res-set R P -> used-as-neg A (F R) -> used-as-neg A (rLam P F #r R).
+used-as-neg/#r2 : used-as-neg A E -> used-as-neg A (E #r _).
+used-as-neg/#t : used-as-neg A E -> used-as-neg A (E #t _).
+
+
+
+moded/lam-not-neg : ({a : tm} moded a R -> moded (F a) K)
+                  -> has-no-neg R 
+		  -> moded (lam _ R F) (R ~>> K).
+
+moded/lam-neg : ({a} moded a (res/t neg) -> moded (F a) K) 
+              -> ({a} used-as-neg a (F a))
+	      -> moded (lam _ (res/t neg) F) (res/t neg ~>> K).
+
+moded/success : moded success (res/t pos).
+moded/empty : moded empty (res/t pos).
+moded/fail : moded fail (res/t pos).
+moded/logic-var : moded success (res/t neg).
+moded/is_empty : moded is_empty (res/t A ~>> res/t pos).
+
+moded/left : moded A B -> moded (left A) B.
+moded/right : moded A B -> moded (right A) B.
+moded/obj : moded A Ra -> moded B Rb -> connect Ra Rb R -> moded (obj A B) R.
+moded/getLeft : moded getLeft (A ~>> A).
+moded/getRight : moded getRight (A ~>> A).
+moded/switch : moded A Ra -> moded B Rb -> ub Ra Rb R -> moded (switch A B) R.
+
+moded/findAll : moded A (res/t neg ~>> res/t pos) -> moded (findAll _ A) (res/t pos).
+moded/roll : moded A R -> moded (roll A _) R.
+moded/unroll : moded A R -> moded (unroll A _) R.
+moded/logic-var : moded logic-var (res/t neg).
+
+moded/@ : sub R1 R1' -> moded A (R1' ~>> R2) -> moded B R1 -> moded (A @ B) R2.
+moded/#t : moded A R -> moded (A #t _) R.
+moded/#r : is_in_res-set R F -> moded A (res/refine F) -> moded (A #r R) R.
+moded/tLam : ({t} moded (E t) R) -> moded (tLam E) R. 
+%freeze moded.
+
+% we don't need to prove "progress" actually, just the presservation of modedness.
+% and that a moded, matchable, value expression is resolved.
+% the mode might widen, but it will stay safe.
+moded-pres : I |-> O
+          -> moded I M
+          -> moded O N
+	  -> sub N M
+	  -> type.
+%mode moded-pres +O +M -M' -S.
+
+% first some base cases.
+- : moded-pres step/is_empty (moded/@ S moded/is_empty moded/empty) moded/success S.
+- : moded-pres step/getRight (moded/@ S moded/getRight (moded/obj _ Mproof (connect/pos _ MnotPos))) Mproof (sub/pos MnotPos).
+- : moded-pres step/getRight (moded/@ S moded/getRight (moded/obj _ M connect/neg)) M sub/top.
+- : moded-pres step/getLeft (moded/@ S moded/getLeft (moded/obj Mproof _ (connect/pos MnotPos _))) Mproof (sub/pos MnotPos).
+- : moded-pres step/getLeft (moded/@ S moded/getLeft (moded/obj M _ connect/neg)) M sub/top.
+- : moded-pres (step/tLam : tLam _ #t T |-> _) (moded/#t (moded/tLam F)) (F T) sub/e.
