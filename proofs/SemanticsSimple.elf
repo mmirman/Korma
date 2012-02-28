@@ -27,6 +27,16 @@ lub/pr : lub neg pos neg.
 %total {A B} (lub A B _).
 %freeze lub. %name lub LUB.
 
+glb : mode -> mode -> mode -> type.
+glb/e : glb A A A.
+glb/pl : glb pos neg pos.
+glb/pr : glb neg pos pos.
+%mode glb +A +B -C.
+%worlds () (glb _ _ _). 
+%unique glb +A +B -1C.
+%total {A B} (glb A B _).
+%freeze glb. %name glb GLB.
+
 mode-sub-trans : A <m B -> B <m C -> A <m C -> type.
 %mode mode-sub-trans +A +B -C.
 mode-sub-trans/e :  mode-sub-trans <m/e A A.
@@ -55,6 +65,8 @@ tp-mode/prod : tp-mode (prod (_ : tp-mode _ A) (_ : tp-mode _ B)) C <- lub A B C
 %worlds () (tp-mode _ _).
 %unique tp-mode +A -1B.
 %total {} (tp-mode _ _).
+%name tp-mode TM.
+%name tp T t.
 
 =< : tp -> tp -> type. %infix right 5 =<.
 %mode =< +A +B.
@@ -147,7 +159,10 @@ getLeft : tm (prod (A_m_Ma : tp-mode A M) (_ : tp-mode _ M) ~> A).
 getRight : tm (prod (_ : tp-mode _ M) (B_m_Mb : tp-mode B _) ~> B).
 left : tm (A ~> sum (_ : tp-mode A _) _ _).
 right : tm (B ~> sum _ (_ : tp-mode B _) _).
-switch : tm (A ~> C) -> tm (B ~> C) -> tm (sum (_ : tp-mode A _) (_ : tp-mode B _) _ ~> C).
+% switch should be GLB not LUB, but right now just making them equal seems good enough.
+switch : tm (A ~> C) 
+      -> tm (B ~> C) 
+      -> tm (sum (_ : tp-mode A MC) (_ : tp-mode B MC) (_ : ub _ _ MC) ~> C).
 logic-var : tp-mode B neg -> tm B.
 @s : tm (A ~> C) -> tm A' -> A' ~< A -> tm C.
 %name tm E.
@@ -197,7 +212,7 @@ step/is_empty : step (@s is_empty empty _) empty ~</e.
 step/getLeft : step (@s getLeft (obj L _) (~</prod A'A B'B)) L A'A.
 step/getRight : step (@s getLeft (obj _ R) (~</prod A'A B'B)) R B'B.
 
-step/switch-left : step (@s (switch LF _) (@s left L LeP) (~</sum PeL' _)) (@s LF L LeL') ~</e
+step/switch-left  : step (@s (switch LF _) (@s left L LeP) (~</sum PeL' _)) (@s LF L LeL') ~</e
                 <- ~<-trans LeP PeL' LeL'.
 
 step/switch-right : step (@s (switch _ RF) (@s right R ReP) (~</sum _ PeR')) (@s RF R ReR') ~</e
@@ -231,6 +246,9 @@ logic-less/empty : logic-less empty.
 logic-less/is_empty : logic-less is_empty.
 logic-less/obj : logic-less (obj A B) <- logic-less B <- logic-less A.
 logic-less/getLeft : logic-less getLeft.
+logic-less/getRight : logic-less getRight.
+logic-less/left : logic-less left.
+logic-less/right : logic-less right.
 
 %{ 
 we need step and  "logic-less Be"
@@ -250,20 +268,31 @@ resolving : step (Ae : tm At) Be _
          -> logic-less Ae
          -> type.
 
-
 - : resolving step/is_empty _ _ (logic-less/app logic-less/is_empty logic-less/empty).
-- : resolving step/getLeft Result_is_pos LL_L (logic-less/app++ (tp-mode/prod lub/e) Result_is_pos).
-- : resolving step/getRight Result_is_pos LL_R (logic-less/app++ (tp-mode/prod lub/e) Result_is_pos).
+- : resolving step/getLeft Result_is_pos _ (logic-less/app++ (tp-mode/prod lub/e) Result_is_pos).
+- : resolving step/getRight Result_is_pos _ (logic-less/app++ (tp-mode/prod lub/e) Result_is_pos).
+- : resolving (step/switch-left _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
+              Result_is_pos _ (logic-less/app++ tp-mode/sum Result_is_pos).
+- : resolving (step/switch-left _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
+              Result_is_pos
+              (logic-less/app-+ Input_is_pos Result_is_pos Ie)
+              (logic-less/app-+ tp-mode/sum Result_is_pos (logic-less/app logic-less/left Ie)).
+- : resolving (step/switch-left _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
+              Result_is_pos
+              (logic-less/app _ Ie)
+              (logic-less/app-+ tp-mode/sum Result_is_pos (logic-less/app logic-less/left Ie)).
 
-- : resolving (step/switch-left _ : step (@s (switch (LF : tm (_ ~> Rt)) _ : tm (sum X6 X5 UB2 ~> Rt)) (@s left L LeP) (~</sum PeL' _) : tm Rt) (@s LF L LeL' : tm Rt) ~</e)
-              (Result_is_pos : tp-mode Rt pos)
-              (logic-less/app++ Input_is_pos Result_is_pos : logic-less (@s (LF : tm (_ ~> Rt)) L LeL'))
-              (logic-less/app++ _ Result_is_pos).
+- : resolving (step/switch-right _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
+              Result_is_pos _ (logic-less/app++ tp-mode/sum Result_is_pos).
+- : resolving (step/switch-right _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
+              Result_is_pos
+              (logic-less/app-+ Input_is_pos Result_is_pos Ie)
+              (logic-less/app-+ tp-mode/sum Result_is_pos (logic-less/app logic-less/right Ie)).
+- : resolving (step/switch-right _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
+              Result_is_pos
+              (logic-less/app _ Ie)
+              (logic-less/app-+ tp-mode/sum Result_is_pos (logic-less/app logic-less/right Ie)).
 
-- : resolving (step/switch-left _)
-              (Result_is_pos : tp-mode Rt pos)
-              (LL_Result : logic-less (@s (LF : tm (_ ~> Rt)) L LeL'))
-              _.
 
 %mode resolving +S +MAP +LLB -LLA.
 %% Result_is_Pos should imply that the input to getLeft is pos.
