@@ -165,8 +165,8 @@ used-as-neg/sum-unused : used-as-neg A L1
 step : tm A -> tm A' -> A' =< A -> type.
 %mode step +A -B -C.
 
-step/@s : step (@s E1 E2 A'eA) (@s E1' E2 A'eA'') B'EB
-       <- step E1 E1' (=</~> AeA'' B'EB)
+step/@s : step (@s E1 E2 A'eA) (@s E1' E2 A'eA'') B'eB
+       <- step E1 E1' (=</~> AeA'' B'eB)
        <- =<-trans A'eA AeA'' A'eA''.
 
 step/lam : step (@s (lam V _ _) E _) (V E) =</e.
@@ -272,6 +272,10 @@ resolving : step (Ae : tm At) Be _
               (logic-less/app _ Ie)
               (logic-less/app-+ tp-mode/sum Result_is_pos (logic-less/app logic-less/right Ie)).
 
+10 : resolving (step/@s _ StepE1tE1') Result_is_Pos (logic-less/app LLFe LLIe) (logic-less/app LLFe' LLIe) 
+  <- resolving StepE1tE1' tp-mode/~> LLFe LLFe'.
+
+11 : resolving (step/@s _ _) Result_is_Pos (logic-less/app-+ Input_is_neg Result_is_Pos LLIe) (logic-less/app-+ Input_is_neg Result_is_Pos LLIe).
 
 %mode resolving +A +B +C -D.
 %worlds () (resolving _ _ _ _).
