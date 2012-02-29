@@ -262,6 +262,8 @@ then the A that "findAll F" returns (where A is such that "step (F A) Success" a
 must also contain no logic variables.
 }%
 
+
+
 resolving : step (Ae : tm At) Be _ 
          -> tp-mode At pos
          -> logic-less Be
@@ -269,6 +271,7 @@ resolving : step (Ae : tm At) Be _
          -> type.
 
 - : resolving step/is_empty _ _ (logic-less/app logic-less/is_empty logic-less/empty).
+
 - : resolving step/getLeft Result_is_pos _ (logic-less/app++ (tp-mode/prod lub/e) Result_is_pos).
 - : resolving step/getRight Result_is_pos _ (logic-less/app++ (tp-mode/prod lub/e) Result_is_pos).
 - : resolving (step/switch-left _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
@@ -293,6 +296,3 @@ resolving : step (Ae : tm At) Be _
               (logic-less/app _ Ie)
               (logic-less/app-+ tp-mode/sum Result_is_pos (logic-less/app logic-less/right Ie)).
 
-
-%mode resolving +S +MAP +LLB -LLA.
-%% Result_is_Pos should imply that the input to getLeft is pos.
