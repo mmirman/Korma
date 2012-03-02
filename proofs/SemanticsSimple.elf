@@ -113,12 +113,19 @@ tp-mode/prod : tp-mode (prod (_ : tp-mode _ A) (_ : tp-mode _ B)) C <- lub A B C
 % and other stuff with progress theorem
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tm : tp -> type.
+
+subRes : tp -> type.
+subRes/dual : {B} tm B -> B =< B' -> subRes B'.
+
+getSubRes : subRes B' -> {B} tm B -> B =< B' -> type.
+%mode getSubRes +A -B -C -D.
+getSubRes/get : getSubRes (subRes/dual B TmB BsB') B TmB BsB'.
+
 used-as-neg : tm A -> tm B -> type.
-used-neg : mode -> (tm A -> tm B) -> type.
+used-neg : mode -> ({A'} A' =< A -> tm A' -> subRes B) -> type.
 
 
-
-lam : {F : tm A -> tm B } tp-mode A M -> used-neg M F -> tm (A ~> B).
+lam : {F : {A'} A' =< A -> tm A' -> subRes B } tp-mode A M -> used-neg M F -> tm (A ~> B).
 empty : tm unit.
 obj : tm A -> tm B -> tm (prod (A_m_Ma : tp-mode A _) (B_m_Mb : tp-mode B _)).
 getLeft : tm (prod (A_m_Ma : tp-mode A M) (_ : tp-mode _ M)) -> tm A.
@@ -133,11 +140,16 @@ logic-var : tp-mode B neg -> tm B.
 @s : tm (A ~> C) -> tm A' -> A' =< A -> tm C.
 %name tm E.
 
+used-as-neg' : tm A -> subRes B -> type.
+used-as-neg'/eval : used-as-neg' A SubResB 
+                 <- getSubRes SubResB _ TmB _ 
+                 <- used-as-neg A TmB.
+
 used-neg/pos : used-neg pos L.
-used-neg/neg : ({a : tm A} tp-mode A neg -> used-as-neg a (L a)) -> used-neg neg L.
+used-neg/neg : ({A'}{s}{a} tp-mode A' neg -> used-as-neg' a (L A' s a)) -> used-neg neg L.
 
 used-as-neg/e : tp-mode T neg -> used-as-neg (A : tm T) A.
-used-as-neg/lam-inner : ({e} used-as-neg A (F e)) 
+used-as-neg/lam-inner : ({T'} {s}{e} used-as-neg' A (F T' s e)) 
                      -> used-as-neg A (lam F _ _).
 used-as-neg/app-l : used-as-neg A E1 
                  -> used-as-neg A (@s E1 E2 _).
@@ -162,6 +174,10 @@ used-as-neg/sum-unused : used-as-neg A L1
                        -> used-as-neg A L2 
                        -> used-as-neg A (switch L1 L2).
 
+
+%worlds () (getSubRes _ _ _ _).
+%total {A} (getSubRes A _ _ _).
+
 step : tm A -> tm A' -> A' =< A -> type.
 %mode step +A -B -C.
 
@@ -169,7 +185,7 @@ step/@s : step (@s E1 E2 A'eA) (@s E1' E2 A'eA'') B'eB
        <- step E1 E1' (=</~> AeA'' B'eB)
        <- =<-trans A'eA AeA'' A'eA''.
 
-step/lam : step (@s (lam V _ _) E _) (V E) =</e.
+step/lam : step (@s (lam V _ _) (E : tm T) S) TmB B'eB <- getSubRes (V T S E) _ TmB B'eB.
 
 step/getLeft : step (getLeft (obj L _)) L =</e.
 step/getLeft-simp : step (getLeft A) (getLeft A') L'eL  <- step A A' (=</prod L'eL _).
@@ -185,9 +201,13 @@ step/switch-right : step (@s (switch _ RF) (@s right R ReP) (=</sum _ _ PeR')) (
 %worlds () (step _ _ _).
 %name step Step.
 
-
 logic-less : tm A -> type.
-%mode logic-less +A. %name logic-less LL.
+logic-less' : subRes A -> type.
+logic-less'/get : logic-less' Sub <- getSubRes Sub _ TmB _ <- logic-less TmB.
+
+%mode (logic-less +A) (logic-less' +A). 
+%name logic-less LL.
+%name logic-less' LL'.
 
 logic-less/app-+ : logic-less (@s (Fe : tm (At ~> Bt)) Ie _) 
                <- logic-less Ie
@@ -204,7 +224,7 @@ logic-less/app : logic-less (@s (Fe : tm (At ~> Bt)) Ie _)
               <- logic-less Fe.
 
 logic-less/lam : logic-less (lam F _ _) 
-              <- {I} logic-less I -> logic-less (F I).
+              <- {A}{s}{I} logic-less I -> logic-less' (F A s I).
 
 logic-less/empty : logic-less empty.
 logic-less/obj : logic-less (obj A B) <- logic-less B <- logic-less A.
@@ -225,6 +245,13 @@ so the existence of progress should imply no logic variables.
 Since the existence of progress implies no logic variables, 
 then the A that "findAll F" returns (where A is such that "step (F A) Success" and F returns positive and success contains no logic variables) 
 must also contain no logic variables.
+
+i think (@s (A: _/+ ~> _/+) (B : _/-) _) : _/- for this all to work.  which is an odd exception case, 
+more accurately, "+ ~> +" is actually "- ~> -"
+but corresponds to not actually being negative. that, or no right hand side steps. 
+that InputIsPos is an argument to resolving why we need this stuff.
+so we need a lemma that says (F I: A/+) => F:R/+ ~> O/+ => I:R/+.
+
 }%
 
 resolving : step (Ae : tm At) Be _ 
@@ -232,13 +259,6 @@ resolving : step (Ae : tm At) Be _
          -> logic-less Be
          -> logic-less Ae
          -> type.
-
-%{ i think (@s (A: _/+ ~> _/+) (B : _/-) _) : _/- for this all to work.  which is an odd exception case, 
-   more accurately, "+ ~> +" is actually "- ~> -"
-   but corresponds to not actually being negative. that, or no right hand side steps. 
-   that InputIsPos is an argument to resolving why we need this stuff.
-   so we need a lemma that says (F I: A/+) => F:R/+ ~> O/+ => I:R/+.
-}%
 
 0 : resolving (_ : step (@s E1 _ _) (@s E1 _ _) _) _ (logic-less/app++ Arg_Pos Arg_Neg) (logic-less/app++ Arg_Pos Arg_Neg).
 
@@ -277,5 +297,6 @@ resolving : step (Ae : tm At) Be _
 
 11 : resolving (step/@s _ _) Result_is_Pos (logic-less/app-+ Input_is_neg Result_is_Pos LLIe) (logic-less/app-+ Input_is_neg Result_is_Pos LLIe).
 
+12 : resolving (step/lam (GetSubRes : getSubRes (V T S E) _ TmB B'eB) : step (@s (lam V _ _) E S) TmB B'eB) _ _ _.
 %mode resolving +A +B +C -D.
 %worlds () (resolving _ _ _ _).
