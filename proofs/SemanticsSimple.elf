@@ -297,6 +297,10 @@ resolving : step (Ae : tm At) Be _
 
 11 : resolving (step/@s _ _) Result_is_Pos (logic-less/app-+ Input_is_neg Result_is_Pos LLIe) (logic-less/app-+ Input_is_neg Result_is_Pos LLIe).
 
-12 : resolving (step/lam (GetSubRes : getSubRes (V T S E) _ TmB B'eB) : step (@s (lam V _ _) E S) TmB B'eB) _ _ _.
+12 : resolving (step/lam (GetSubRes : getSubRes (V T S E) _ TmB B'eB) : step (@s (lam V _ _) E S) TmB B'eB) 
+     Result_is_Pos
+     (LogicLessTmB : logic-less TmB)
+     _.  % now what? This is definitely the hard case.
+
 %mode resolving +A +B +C -D.
 %worlds () (resolving _ _ _ _).
