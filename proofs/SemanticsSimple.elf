@@ -263,11 +263,11 @@ resolving : step (Ae : tm At) Be _
 0 : resolving (_ : step (@s E1 _ _) (@s E1 _ _) _) _ (logic-less/app++ Arg_Pos Arg_Neg) (logic-less/app++ Arg_Pos Arg_Neg).
 
 2 : resolving step/getLeft Result_is_pos LogicLessLeft (logic-less/getLeft-lazy LogicLessLeft).
-2' : resolving (step/getLeft-simp Step) Lpos (logic-less/getLeft LogicLessLeft) (logic-less/getLeft LogicLessLeft')
+2p : resolving (step/getLeft-simp Step) Lpos (logic-less/getLeft LogicLessLeft) (logic-less/getLeft LogicLessLeft')
   <- resolving Step (tp-mode/prod lub/e) LogicLessLeft (LogicLessLeft' : logic-less L).
 
 3 : resolving step/getRight Result_is_pos LogicLessLeft (logic-less/getRight-lazy LogicLessLeft).
-3' : resolving (step/getRight-simp Step) Rpos (logic-less/getRight LogicLessRight) (logic-less/getRight LogicLessRight')
+3p : resolving (step/getRight-simp Step) Rpos (logic-less/getRight LogicLessRight) (logic-less/getRight LogicLessRight')
   <- resolving Step (tp-mode/prod lub/e) LogicLessRight LogicLessRight'.
 
 4 : resolving (step/switch-left _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
