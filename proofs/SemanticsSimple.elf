@@ -188,7 +188,7 @@ used-as-neg'/eval : used-as-neg' A SubResB
                  <- used-as-neg A TmB.
 
 result-neg : type.
-
+%freeze result-neg.
 used-neg/+* : used-neg (L : {t'} t' =< T -> tm t' -> subRes R) 
             <- tp-mode T pos.
 used-neg/-- : used-neg (L : {t'} t' =< T -> tm t' -> subRes R) 
@@ -200,7 +200,7 @@ used-neg/-+ : used-neg (L : {t'} t' =< T -> tm t' -> subRes R)
 	    <- tp-mode T neg
 	    <- ({t' : tp }{s : t' =< T}{a : tm t'} used-as-neg' a (L t' s a)).
 
-used-as-neg/e : result-neg -> used-as-neg (A : tm T) A.
+used-as-neg/e : result-neg -> tp-mode T neg -> used-as-neg (A : tm T) A.
 used-as-neg/lam-inner : ({T'}{s}{e} used-as-neg' A (F T' s e)) 
 		      -> used-as-neg A (lam F _).
 used-as-neg/app-l : used-as-neg A E1 
@@ -340,160 +340,11 @@ unpack-used-as-neg' : used-as-neg' TmA SubResB -> used-as-neg TmA TmB -> type.
 
 
 
+uan-2-ll : used-as-neg E (B : tm T) -> tp-mode T pos -> logic-less E -> type.
+%mode uan-2-ll +UsedAsNeg +Pos -LogicLess.
 
-used-as-neg-2-logic-less : used-as-neg E (B : tm T) -> tp-mode T pos -> logic-less E -> type.
-%mode used-as-neg-2-logic-less +UsedAsNeg +Pos -LogicLess.
-
-
-
-%worlds () (used-as-neg-2-logic-less _ _ _).
-%total {A B} (used-as-neg-2-logic-less A B _).
+% - : uan-2-ll (used-as-neg/lam-inner LAM) Pos (logic-less/lam _).
 
 
-
-
-%{ 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-we need step and  "logic-less Be"
-so that we know that Ae, despite being positively moded is actually 
-free of logic variables by having progress.  
-The existence of logic variables should hinder progress in a positively moded "thing"
-so the existence of progress should imply no logic variables.
-
-Since the existence of progress implies no logic variables, 
-then the A that "findAll F" returns 
-(where A is such that "step (F A) Success" and F returns positive and success contains no logic variables) 
-must also contain no logic variables.
-
-i think (@s (A: _/+ ~> _/+) (B : _/-) _) : _/- for this all to work.  which is an odd exception case, 
-more accurately, "+ ~> +" is actually "- ~> -"
-but corresponds to not actually being negative. that, or no right hand side steps. 
-that InputIsPos is an argument to resolving why we need this stuff.
-so we need a lemma that says (F I: A/+) => F:R/+ ~> O/+ => I:R/+.
-
-}%
-
-
-
-
-%{
-
-resolving : step (Ae : tm At) Be _
-         -> tp-mode At pos
-         -> logic-less Be
-         -> logic-less Ae
-         -> type.
-
-0 : resolving (_ : step (@s E1 _ _) (@s E1 _ _) _) _ (logic-less/app++ Arg_Pos Arg_Neg) (logic-less/app++ Arg_Pos Arg_Neg).
-
-1 : resolving (step/obj-simp _ Simp) Init_Result_Pos LogicLessLeft (logic-less/lr-lazy LogicLessLeft Simp).
-
-2p0 : resolving (step/getLeft-simp Step NotValE1) Lpos (logic-less/getLeft LogicLessObj) (logic-less/getLeft LogicLessObj')
-   <- resolving Step (tp-mode/prod lub/e) LogicLessObj (LogicLessObj' : logic-less L).
-
-2p1 : resolving 
-       (step/getLeft-simp 
-	  (step/lam _)
-	  (not-val/@s : not-val (@s (lam F (used-neg/-+ UsedAsNegFoo _ ResultPos)) (V : tm T) S)))
-       Lpos 
-       (logic-less/lr-lazy _ _)
-       (logic-less/getLeft (logic-less/app-+ ResultPos LogicLessV)) 
-    <- unpack-used-as-neg' (UsedAsNegFoo T S V) UsedAsNeg
-    <- used-as-neg-2-logic-less UsedAsNeg Lpos LogicLessV.
-
-2p2 : resolving 
-       (step/getLeft-simp (step/lam _) (not-val/@s : not-val (@s (lam _ (used-neg/+* ArgPos)) _ _))) 
-       Lpos 
-       (logic-less/lr-lazy _ _)
-       (logic-less/getLeft (logic-less/app++ ArgPos (tp-mode/prod lub/e))).
-
-2p3 : resolving
-       (step/getLeft-simp (step/obj-simp Eq Simp) _)
-       (Init_Result_Pos : tp-mode Lt pos)
-       (logic-less/lr-lazy LL_L Simp' ) % : logic-less (getLeft IMB))
-       (logic-less/lr-lazy LL_L Simp'' ) % : logic-less (getLeft (getLeft IMB')))
-   <- concat-obj-simp/l Simp Simp' Simp''.
-
-
-2p4 : resolving
-       (step/getLeft-simp Step _)
-       Init_Result_Pos
-       (logic-less/lr-lazy LL_L (obj-simp/l S))
-       (logic-less/getLeft LL)
-   <- {LL_R} resolving Step (tp-mode/prod lub/e) (logic-less/obj LL_L LL_R) LL.
-
-4 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
-              Init_Result_Pos _ (logic-less/app++ tp-mode/sum Init_Result_Pos).
-5 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Init_Result_Pos
-              (logic-less/app-+ Init_Result_Pos Ie)
-              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/left Ie)).
-6 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Init_Result_Pos
-              (logic-less/app _ Ie)
-              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/left Ie)).
-
-7 : resolving (step/switch-right _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
-              Init_Result_Pos _ (logic-less/app++ tp-mode/sum Init_Result_Pos).
-8 : resolving (step/switch-right _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Init_Result_Pos
-              (logic-less/app-+ Init_Result_Pos Ie)
-              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/right Ie)).
-9 : resolving (step/switch-right _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Init_Result_Pos
-              (logic-less/app _ Ie)
-              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/right Ie)).
-
-10 : resolving (step/@s _ StepE1tE1') Init_Result_Pos (logic-less/app LLFe LLIe) (logic-less/app LLFe' LLIe) 
-  <- resolving StepE1tE1' tp-mode/~> LLFe LLFe'.
-
-11 : resolving
-      (step/@s Trans Step)
-      Init_Result_Pos
-      (logic-less/app-+ Init_Result_Pos' LLIe)
-      (logic-less/app-+ Init_Result_Pos LLIe).
-
-%% somehow the positivity of the result, 
-%% and the positivity of the first argument imply the non check of the logic-less
-
-12 : resolving 
-     (step/lam (GetSubRes : getSubRes (V T S E) _ TmB B'eB) : step (@s (lam V (used-neg/+* Arg_Is_Pos)) E S) TmB B'eB) 
-     Init_Result_Pos
-     LogicLessTmB
-     (logic-less/app++ Arg_Is_Pos Init_Result_Pos).
-
-% might need to prove an equality lemma for GetSubRes.
-13 : resolving
-      (step/lam (GetSubRes : getSubRes (V T S E) B' TmB B'eB) 
-        : step (@s (lam V (used-neg/-+ ProveUsedAsNeg Arg_Is_Neg _)) _ _) _ _)
-      Init_Result_Pos
-      LogicLessTmB
-      (logic-less/app-+ Init_Result_Pos LogicLessE)
-  <- unpack-used-as-neg' (ProveUsedAsNeg T S E) UsedAsNeg
-  <- used-as-neg-2-logic-less UsedAsNeg Init_Result_Pos LogicLessE.
-
-
-
-% "ProveUsedAsNeg T S E E_Is_Neg" should show that "logic-less E"
-% somehow we also would need E_Is_Neg or at least, E could be Neg.
-% to get E_Is_Neg, we need to know that the input is Neg for logic-less.
-% perhaps LogicLessTmB should be entered?  (or not, it feels a bit weird doing that).
-
-%mode resolving +A +B +C -D.
-%block getLR : some {T}{L : tm T}{LL_L: logic-less L}{T'}{R : tm T'} block {LL_R: logic-less R}.
-%worlds () (resolving _ _ _ _).
-%total {A B} (resolving A _ B _).
-
-
-
-WHYY is this causing server timeouts?  its very clearly an error given that step/getLeft takes no arguments
-
-2p3 : resolving 
-       (step/getLeft-simp Step not-val/getLeft)
-       Lpos
-       (logic-less/getLeft-lazy LogicLessLeft)
-       _
-   <- resolving (step/getLeft Step) (tp-mode/prod lub/e) LogicLessLeft LogicLessObj.
-
-}%
+%worlds () (uan-2-ll _ _ _).
+%total {A B} (uan-2-ll A B _).
