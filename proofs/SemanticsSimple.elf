@@ -1,3 +1,4 @@
+% twelf-server-send-command "set unsafe true"
 %%%%%%%%%%%%%%%%%%%%%%%%
 % what resolvedness is %
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -68,9 +69,32 @@ tp-mode/prod : tp-mode (prod (_ : tp-mode _ A) (_ : tp-mode _ B)) C <- lub A B C
 %name tp-mode TM.
 %name tp T t.
 
+%% effectiveness lemma for lub
+has-lub : {A}{B} lub A B C -> type.
+%mode has-lub +A +B -D.
+- : has-lub _ _ lub/e.
+- : has-lub _ _ lub/pl.
+- : has-lub _ _ lub/pr.
+%worlds () (has-lub _ _ _).
+%unique has-lub +A +B -1LUB.
+%total {A B} (has-lub A B _).
+
+%% effectiveness lemma for tp-mode
+has-tp-mode : {T} tp-mode T M -> type.
+%mode has-tp-mode +T -TpMode.
+- : has-tp-mode _ tp-mode/~>.
+- : has-tp-mode _ tp-mode/unit.
+- : has-tp-mode _ tp-mode/sum.
+- : has-lub _ _ LUB -> has-tp-mode _ (tp-mode/prod LUB).
+%worlds () (has-tp-mode _ _).
+%unique has-tp-mode +A -1B.
+%total {} (has-tp-mode _ _).
+
+
+
 =< : tp -> tp -> type. %infix right 5 =<.
 %mode =< +A +B.
-=</e : A =< A.
+=</unit : unit =< unit.
 =</~> : A' =< A -> B =< B' -> (A ~> B) =< (A' ~> B').
 =</sum :  M <m M'
        -> A =< A'
@@ -83,23 +107,39 @@ tp-mode/prod : tp-mode (prod (_ : tp-mode _ A) (_ : tp-mode _ B)) C <- lub A B C
 =<-trans : A =< B -> B =< C -> A =< C -> type. 
 =<-trans' : B =< C -> A =< B -> A =< C -> type. 
 
+
+=<-eq : {A} A =< A -> type.
+=<-eq/unit : =<-eq unit =</unit.
+=<-eq/~> : =<-eq (Ta ~> Tb) (=</~> A B) <- =<-eq Tb B <- =<-eq Ta A.
+=<-eq/sum : =<-eq (sum (_: tp-mode Ta _) (_ : tp-mode Tb _) _) (=</sum <m/e A B) 
+         <- =<-eq Tb B 
+         <- =<-eq Ta A.
+=<-eq/prod : =<-eq (prod (_: tp-mode Ta _) (_ : tp-mode Tb _)) (=</prod A B)  
+          <- =<-eq Tb B 
+          <- =<-eq Ta A.
+%mode =<-eq +T -A.
+%worlds () (=<-eq _ _).
+%unique =<-eq +T -1A.
+%total {A} (=<-eq A _).
+
+
+eq-gen : {Eq : A =< A} =<-eq A Eq -> type.
+%mode eq-gen +A -B.
+%worlds () (eq-gen _ _).
+%trustme %total {A} (eq-gen A _).
+
 %mode =<-trans +A +B -C.
 %mode =<-trans' +A +B -C.
-- : =<-trans =</e A A.
+- : =<-trans =</unit =</unit =</unit.
 - : =<-trans (=</~> AA' BB') (=</~> A'A'' B'B'') (=</~> AA'' BB'') <- =<-trans' AA' A'A'' AA'' <- =<-trans BB' B'B'' BB''.
 - : =<-trans (=</sum MM' AA' BB') (=</sum M'M'' A'A'' B'B'') (=</sum MM'' AA'' BB'') <- =<-trans AA' A'A'' AA'' <- =<-trans BB' B'B'' BB'' <- mode-sub-trans MM' M'M'' MM''. 
 - : =<-trans (=</prod AA' BB') (=</prod A'A'' B'B'') (=</prod AA'' BB'') <- =<-trans AA' A'A'' AA'' <- =<-trans BB' B'B'' BB''.
-- : =<-trans (=</~> AA' BB') =</e (=</~> AA' BB').
-- : =<-trans (=</sum MM' AA' BB') =</e (=</sum MM' AA' BB').
-- : =<-trans (=</prod AA' BB') =</e (=</prod AA' BB').
 
-- : =<-trans' =</e A A.
+- : =<-trans' =</unit =</unit =</unit.
 - : =<-trans' (=</~> A'A'' B'B'') (=</~> AA' BB') (=</~> AA'' BB'') <- =<-trans A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB''.
 - : =<-trans' (=</sum M'M'' A'A'' B'B'') (=</sum MM' AA' BB') (=</sum MM'' AA'' BB'') <- =<-trans' A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB'' <- mode-sub-trans MM' M'M'' MM''. 
 - : =<-trans' (=</prod A'A'' B'B'') (=</prod AA' BB') (=</prod AA'' BB'') <- =<-trans' A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB''.
-- : =<-trans' (=</~> AA' BB') =</e (=</~> AA' BB').
-- : =<-trans' (=</sum MM' AA' BB') =</e (=</sum MM' AA' BB').
-- : =<-trans' (=</prod AA' BB') =</e (=</prod AA' BB').
+
 %worlds () (=<-trans _ _ _) (=<-trans' _ _ _).
 %unique (=<-trans +A +B -1C) (=<-trans' +A' +B' -1C').
 %total (A B) (=<-trans A _ _) (=<-trans' B _ _).
@@ -122,14 +162,14 @@ getSubRes : subRes B' -> {B} tm B -> B =< B' -> type.
 getSubRes/get : getSubRes (subRes/dual B TmB BsB') B TmB BsB'.
 
 used-as-neg : tm A -> tm B -> type.
-used-neg : mode -> ({A'} A' =< A -> tm A' -> subRes B) -> type.
+used-neg : ({A'} A' =< A -> tm A' -> subRes B) -> type.
 
 
-lam : {F : {A'} A' =< A -> tm A' -> subRes B } tp-mode A M -> used-neg M F -> tm (A ~> B).
+lam : {F : {A'} A' =< A -> tm A' -> subRes B } used-neg F -> tm (A ~> B).
 empty : tm unit.
 obj : tm A -> tm B -> tm (prod (A_m_Ma : tp-mode A _) (B_m_Mb : tp-mode B _)).
-getLeft : tm (prod (A_m_Ma : tp-mode A M) (_ : tp-mode _ M)) -> tm A.
-getRight : tm (prod (_ : tp-mode _ M) (B_m_Mb : tp-mode B _)) -> tm B.
+getLeft : tm (prod (A_m_M : tp-mode A M) (_ : tp-mode _ M)) -> tm A.
+getRight : tm (prod (_ : tp-mode _ M) (B_m_M : tp-mode B M)) -> tm B.
 left : tm (A ~> sum (_ : tp-mode A _) _ _).
 right : tm (B ~> sum _ (_ : tp-mode B _) _).
 % switch should be GLB not LUB, but right now just making them equal seems good enough.
@@ -140,22 +180,38 @@ logic-var : tp-mode B neg -> tm B.
 @s : tm (A ~> C) -> tm A' -> A' =< A -> tm C.
 %name tm E.
 
+
+
 used-as-neg' : tm A -> subRes B -> type.
 used-as-neg'/eval : used-as-neg' A SubResB 
-                 <- getSubRes SubResB _ TmB _ 
+                 <- getSubRes SubResB _ TmB _
                  <- used-as-neg A TmB.
 
-used-neg/pos : used-neg pos L.
-used-neg/neg : ({A'}{s}{a} tp-mode A' neg -> used-as-neg' a (L A' s a)) -> used-neg neg L.
+result-neg : type.
 
-used-as-neg/e : tp-mode T neg -> used-as-neg (A : tm T) A.
-used-as-neg/lam-inner : ({T'} {s}{e} used-as-neg' A (F T' s e)) 
-                     -> used-as-neg A (lam F _ _).
+used-neg/+* : used-neg (L : {t'} t' =< T -> tm t' -> subRes R) 
+            <- tp-mode T pos.
+used-neg/-- : used-neg (L : {t'} t' =< T -> tm t' -> subRes R) 
+	    <- tp-mode R neg
+	    <- tp-mode T neg
+	    <- ({t' : tp }{s : t' =< T}{a : tm t'} result-neg -> used-as-neg' a (L t' s a)).
+used-neg/-+ : used-neg (L : {t'} t' =< T -> tm t' -> subRes R) 
+	    <- tp-mode R pos
+	    <- tp-mode T neg
+	    <- ({t' : tp }{s : t' =< T}{a : tm t'} used-as-neg' a (L t' s a)).
+
+used-as-neg/e : result-neg -> used-as-neg (A : tm T) A.
+used-as-neg/lam-inner : ({T'}{s}{e} used-as-neg' A (F T' s e)) 
+		      -> used-as-neg A (lam F _).
 used-as-neg/app-l : used-as-neg A E1 
                  -> used-as-neg A (@s E1 E2 _).
 used-as-neg/app-r : tp-mode T1 neg 
-                 -> tp-mode T1' neg 
-                 -> used-as-neg A E2 
+%                 -> tp-mode T1' neg    
+% we might need this in the future, I need to think about it.  The current 
+% fail case is something like "(E : _/ - ~> +) y" where y is the variable to be used as neg
+% rather then ensure that y is in fact neg, we just assert that we now can let the result be 
+% neg by restricted subsumption.
+                 -> (result-neg -> used-as-neg A E2)
                  -> used-as-neg A (@s (E1 : tm (T1 ~> T2)) (E2 : tm T1') _).
 
 used-as-neg/objL : used-as-neg A L 
@@ -178,28 +234,59 @@ used-as-neg/sum-unused : used-as-neg A L1
 %worlds () (getSubRes _ _ _ _).
 %total {A} (getSubRes A _ _ _).
 
+not-val : tm A -> type.
+%mode not-val +A.
+not-val/getLeft : not-val (getLeft _).
+not-val/getRight : not-val (getRight _).
+not-val/@s : not-val (@s _ _ _).
+%worlds () (not-val _).
+
+
+
+
 step : tm A -> tm A' -> A' =< A -> type.
+
 %mode step +A -B -C.
 
 step/@s : step (@s E1 E2 A'eA) (@s E1' E2 A'eA'') B'eB
        <- step E1 E1' (=</~> AeA'' B'eB)
        <- =<-trans A'eA AeA'' A'eA''.
 
-step/lam : step (@s (lam V _ _) (E : tm T) S) TmB B'eB <- getSubRes (V T S E) _ TmB B'eB.
+step/lam : step (@s (lam V _) (E : tm T) S) TmB (B'eB : B' =< B) <- getSubRes (V T S E) B' TmB B'eB.
 
-step/getLeft : step (getLeft (obj L _)) L =</e.
-step/getLeft-simp : step (getLeft A) (getLeft A') L'eL  <- step A A' (=</prod L'eL _).
-step/getRight : step (getLeft (obj _ R)) R =</e.
-step/getRight-simp : step (getRight A) (getRight A') R'eR  <- step A A' (=</prod _ R'eR).
+step/getLeft : step (getLeft (obj L _)) (L : tm Lt) Eq <- =<-eq Lt Eq.
 
-step/switch-left  : step (@s (switch LF _) (@s left L LeP) (=</sum _ PeL' _)) (@s LF L LeL') =</e
-                 <- =<-trans LeP PeL' LeL'.
+step/getLeft-simp : step (getLeft A) (getLeft A') L'eL 
+                 <- not-val A 
+                 <- step A A' (=</prod L'eL _).
+             
+step/getRight : step (getRight (obj _ R)) (R : tm Rt) Eq <- =<-eq Rt Eq.
 
-step/switch-right : step (@s (switch _ RF) (@s right R ReP) (=</sum _ _ PeR')) (@s RF R ReR') =</e
-                <- =<-trans ReP PeR' ReR'.
+step/getRight-simp : step (getRight A) (getRight A') R'eR 
+                  <- not-val A
+                  <- step A A' (=</prod _ R'eR).
+
+step/switch-left  : step (@s (switch (LF : tm (_ ~> ResT)) _) (@s left L LeP) (=</sum _ PeL' _)) (@s LF L LeL') Eq
+                 <- =<-trans LeP PeL' LeL'
+                 <- =<-eq ResT Eq.
+
+step/switch-right : step (@s (switch _ (RF : tm (_ ~> ResT))) (@s right R ReP) (=</sum _ _ PeR')) (@s RF R ReR') Eq
+                <- =<-trans ReP PeR' ReR'
+                 <- =<-eq ResT Eq.
 
 %worlds () (step _ _ _).
 %name step Step.
+
+neg-is-top : A =< A' -> tp-mode A neg -> tp-mode A' neg -> type.
+%mode neg-is-top +A +B -C. %worlds () (neg-is-top _ _ _).
+%trustme %total {} (neg-is-top _ _ _).
+
+pos-is-bot : A =< A' -> tp-mode A' pos -> tp-mode A pos -> type.
+%mode pos-is-bot +A +B -C. %worlds () (pos-is-bot _ _ _).
+%trustme %total {} (pos-is-bot _ _ _).
+
+
+
 
 logic-less : tm A -> type.
 logic-less' : subRes A -> type.
@@ -209,10 +296,11 @@ logic-less'/get : logic-less' Sub <- getSubRes Sub _ TmB _ <- logic-less TmB.
 %name logic-less LL.
 %name logic-less' LL'.
 
+
+
 logic-less/app-+ : logic-less (@s (Fe : tm (At ~> Bt)) Ie _) 
                <- logic-less Ie
-               <- tp-mode Bt pos
-               <- tp-mode At neg.
+               <- tp-mode Bt pos.
 
 % in this case, we simply don't care what happens.
 logic-less/app++ : logic-less (@s (Fe : tm (At ~> Bt)) _ _) 
@@ -223,19 +311,50 @@ logic-less/app : logic-less (@s (Fe : tm (At ~> Bt)) Ie _)
               <- logic-less Ie
               <- logic-less Fe.
 
-logic-less/lam : logic-less (lam F _ _) 
-              <- {A}{s}{I} logic-less I -> logic-less' (F A s I).
+logic-less/lam : logic-less (lam F _) 
+              <- {a}{s}{i} logic-less i -> logic-less' (F a s i).
 
 logic-less/empty : logic-less empty.
 logic-less/obj : logic-less (obj A B) <- logic-less B <- logic-less A.
 logic-less/getLeft : logic-less A -> logic-less (getLeft A).
-logic-less/getLeft-lazy : logic-less L -> logic-less (getLeft (obj L _ : tm (prod _ (_ : tp-mode _ pos)))).
+
 logic-less/getRight : logic-less A -> logic-less (getRight A).
-logic-less/getRight-lazy : logic-less R -> logic-less (getLeft (obj _ R: tm (prod (_ : tp-mode _ pos) _))).
+
 logic-less/left : logic-less left.
 logic-less/right : logic-less right.
 
+%{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Some lemmas for unpacking and effectiveness
+}%
+
+%% unpacking lemma for used-as-neg
+unpack-used-as-neg' : used-as-neg' TmA SubResB -> used-as-neg TmA TmB -> type.
+%mode unpack-used-as-neg' +UaN' -R.
+- : unpack-used-as-neg' (used-as-neg'/eval UsedAsNegATmB getSubRes/get) UsedAsNegATmB.
+%worlds () (unpack-used-as-neg' _ _).
+%unique unpack-used-as-neg' +A -1C.
+%total {A} (unpack-used-as-neg' A _).
+
+
+
+
+
+used-as-neg-2-logic-less : used-as-neg E (B : tm T) -> tp-mode T pos -> logic-less E -> type.
+%mode used-as-neg-2-logic-less +UsedAsNeg +Pos -LogicLess.
+
+
+
+%worlds () (used-as-neg-2-logic-less _ _ _).
+%total {A B} (used-as-neg-2-logic-less A B _).
+
+
+
+
 %{ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 we need step and  "logic-less Be"
 so that we know that Ae, despite being positively moded is actually 
 free of logic variables by having progress.  
@@ -243,7 +362,8 @@ The existence of logic variables should hinder progress in a positively moded "t
 so the existence of progress should imply no logic variables.
 
 Since the existence of progress implies no logic variables, 
-then the A that "findAll F" returns (where A is such that "step (F A) Success" and F returns positive and success contains no logic variables) 
+then the A that "findAll F" returns 
+(where A is such that "step (F A) Success" and F returns positive and success contains no logic variables) 
 must also contain no logic variables.
 
 i think (@s (A: _/+ ~> _/+) (B : _/-) _) : _/- for this all to work.  which is an odd exception case, 
@@ -254,7 +374,12 @@ so we need a lemma that says (F I: A/+) => F:R/+ ~> O/+ => I:R/+.
 
 }%
 
-resolving : step (Ae : tm At) Be _ 
+
+
+
+%{
+
+resolving : step (Ae : tm At) Be _
          -> tp-mode At pos
          -> logic-less Be
          -> logic-less Ae
@@ -262,45 +387,113 @@ resolving : step (Ae : tm At) Be _
 
 0 : resolving (_ : step (@s E1 _ _) (@s E1 _ _) _) _ (logic-less/app++ Arg_Pos Arg_Neg) (logic-less/app++ Arg_Pos Arg_Neg).
 
-2 : resolving step/getLeft Result_is_pos LogicLessLeft (logic-less/getLeft-lazy LogicLessLeft).
-2p : resolving (step/getLeft-simp Step) Lpos (logic-less/getLeft LogicLessLeft) (logic-less/getLeft LogicLessLeft')
-  <- resolving Step (tp-mode/prod lub/e) LogicLessLeft (LogicLessLeft' : logic-less L).
+1 : resolving (step/obj-simp _ Simp) Init_Result_Pos LogicLessLeft (logic-less/lr-lazy LogicLessLeft Simp).
 
-3 : resolving step/getRight Result_is_pos LogicLessLeft (logic-less/getRight-lazy LogicLessLeft).
-3p : resolving (step/getRight-simp Step) Rpos (logic-less/getRight LogicLessRight) (logic-less/getRight LogicLessRight')
-  <- resolving Step (tp-mode/prod lub/e) LogicLessRight LogicLessRight'.
+2p0 : resolving (step/getLeft-simp Step NotValE1) Lpos (logic-less/getLeft LogicLessObj) (logic-less/getLeft LogicLessObj')
+   <- resolving Step (tp-mode/prod lub/e) LogicLessObj (LogicLessObj' : logic-less L).
 
-4 : resolving (step/switch-left _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
-              Result_is_pos _ (logic-less/app++ tp-mode/sum Result_is_pos).
-5 : resolving (step/switch-left _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Result_is_pos
-              (logic-less/app-+ Input_is_pos Result_is_pos Ie)
-              (logic-less/app-+ tp-mode/sum Result_is_pos (logic-less/app logic-less/left Ie)).
-6 : resolving (step/switch-left _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Result_is_pos
+2p1 : resolving 
+       (step/getLeft-simp 
+	  (step/lam _)
+	  (not-val/@s : not-val (@s (lam F (used-neg/-+ UsedAsNegFoo _ ResultPos)) (V : tm T) S)))
+       Lpos 
+       (logic-less/lr-lazy _ _)
+       (logic-less/getLeft (logic-less/app-+ ResultPos LogicLessV)) 
+    <- unpack-used-as-neg' (UsedAsNegFoo T S V) UsedAsNeg
+    <- used-as-neg-2-logic-less UsedAsNeg Lpos LogicLessV.
+
+2p2 : resolving 
+       (step/getLeft-simp (step/lam _) (not-val/@s : not-val (@s (lam _ (used-neg/+* ArgPos)) _ _))) 
+       Lpos 
+       (logic-less/lr-lazy _ _)
+       (logic-less/getLeft (logic-less/app++ ArgPos (tp-mode/prod lub/e))).
+
+2p3 : resolving
+       (step/getLeft-simp (step/obj-simp Eq Simp) _)
+       (Init_Result_Pos : tp-mode Lt pos)
+       (logic-less/lr-lazy LL_L Simp' ) % : logic-less (getLeft IMB))
+       (logic-less/lr-lazy LL_L Simp'' ) % : logic-less (getLeft (getLeft IMB')))
+   <- concat-obj-simp/l Simp Simp' Simp''.
+
+
+2p4 : resolving
+       (step/getLeft-simp Step _)
+       Init_Result_Pos
+       (logic-less/lr-lazy LL_L (obj-simp/l S))
+       (logic-less/getLeft LL)
+   <- {LL_R} resolving Step (tp-mode/prod lub/e) (logic-less/obj LL_L LL_R) LL.
+
+4 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
+              Init_Result_Pos _ (logic-less/app++ tp-mode/sum Init_Result_Pos).
+5 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
+              Init_Result_Pos
+              (logic-less/app-+ Init_Result_Pos Ie)
+              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/left Ie)).
+6 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
+              Init_Result_Pos
               (logic-less/app _ Ie)
-              (logic-less/app-+ tp-mode/sum Result_is_pos (logic-less/app logic-less/left Ie)).
+              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/left Ie)).
 
-7 : resolving (step/switch-right _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
-              Result_is_pos _ (logic-less/app++ tp-mode/sum Result_is_pos).
-8 : resolving (step/switch-right _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Result_is_pos
-              (logic-less/app-+ Input_is_pos Result_is_pos Ie)
-              (logic-less/app-+ tp-mode/sum Result_is_pos (logic-less/app logic-less/right Ie)).
-9 : resolving (step/switch-right _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Result_is_pos
+7 : resolving (step/switch-right _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
+              Init_Result_Pos _ (logic-less/app++ tp-mode/sum Init_Result_Pos).
+8 : resolving (step/switch-right _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
+              Init_Result_Pos
+              (logic-less/app-+ Init_Result_Pos Ie)
+              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/right Ie)).
+9 : resolving (step/switch-right _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
+              Init_Result_Pos
               (logic-less/app _ Ie)
-              (logic-less/app-+ tp-mode/sum Result_is_pos (logic-less/app logic-less/right Ie)).
+              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/right Ie)).
 
-10 : resolving (step/@s _ StepE1tE1') Result_is_Pos (logic-less/app LLFe LLIe) (logic-less/app LLFe' LLIe) 
+10 : resolving (step/@s _ StepE1tE1') Init_Result_Pos (logic-less/app LLFe LLIe) (logic-less/app LLFe' LLIe) 
   <- resolving StepE1tE1' tp-mode/~> LLFe LLFe'.
 
-11 : resolving (step/@s _ _) Result_is_Pos (logic-less/app-+ Input_is_neg Result_is_Pos LLIe) (logic-less/app-+ Input_is_neg Result_is_Pos LLIe).
+11 : resolving
+      (step/@s Trans Step)
+      Init_Result_Pos
+      (logic-less/app-+ Init_Result_Pos' LLIe)
+      (logic-less/app-+ Init_Result_Pos LLIe).
 
-12 : resolving (step/lam (GetSubRes : getSubRes (V T S E) _ TmB B'eB) : step (@s (lam V _ _) E S) TmB B'eB) 
-     Result_is_Pos
-     (LogicLessTmB : logic-less TmB)
-     _.  % now what? This is definitely the hard case.
+%% somehow the positivity of the result, 
+%% and the positivity of the first argument imply the non check of the logic-less
+
+12 : resolving 
+     (step/lam (GetSubRes : getSubRes (V T S E) _ TmB B'eB) : step (@s (lam V (used-neg/+* Arg_Is_Pos)) E S) TmB B'eB) 
+     Init_Result_Pos
+     LogicLessTmB
+     (logic-less/app++ Arg_Is_Pos Init_Result_Pos).
+
+% might need to prove an equality lemma for GetSubRes.
+13 : resolving
+      (step/lam (GetSubRes : getSubRes (V T S E) B' TmB B'eB) 
+        : step (@s (lam V (used-neg/-+ ProveUsedAsNeg Arg_Is_Neg _)) _ _) _ _)
+      Init_Result_Pos
+      LogicLessTmB
+      (logic-less/app-+ Init_Result_Pos LogicLessE)
+  <- unpack-used-as-neg' (ProveUsedAsNeg T S E) UsedAsNeg
+  <- used-as-neg-2-logic-less UsedAsNeg Init_Result_Pos LogicLessE.
+
+
+
+% "ProveUsedAsNeg T S E E_Is_Neg" should show that "logic-less E"
+% somehow we also would need E_Is_Neg or at least, E could be Neg.
+% to get E_Is_Neg, we need to know that the input is Neg for logic-less.
+% perhaps LogicLessTmB should be entered?  (or not, it feels a bit weird doing that).
 
 %mode resolving +A +B +C -D.
+%block getLR : some {T}{L : tm T}{LL_L: logic-less L}{T'}{R : tm T'} block {LL_R: logic-less R}.
 %worlds () (resolving _ _ _ _).
+%total {A B} (resolving A _ B _).
+
+
+
+WHYY is this causing server timeouts?  its very clearly an error given that step/getLeft takes no arguments
+
+2p3 : resolving 
+       (step/getLeft-simp Step not-val/getLeft)
+       Lpos
+       (logic-less/getLeft-lazy LogicLessLeft)
+       _
+   <- resolving (step/getLeft Step) (tp-mode/prod lub/e) LogicLessLeft LogicLessObj.
+
+}%
