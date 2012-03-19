@@ -63,6 +63,10 @@ tp-mode/~> : tp-mode (B ~> A) pos.
 tp-mode/unit : tp-mode unit pos.
 tp-mode/sum : tp-mode (sum _ _ (_ : ub _ _ C)) C.
 tp-mode/prod : tp-mode (prod (_ : tp-mode _ A) (_ : tp-mode _ B)) C <- lub A B C.
+
+
+
+
 %worlds () (tp-mode _ _).
 %unique tp-mode +A -1B.
 %total {} (tp-mode _ _).
@@ -162,6 +166,7 @@ getSubRes : subRes B' -> {B} tm B -> B =< B' -> type.
 getSubRes/get : getSubRes (subRes/dual B TmB BsB') B TmB BsB'.
 
 used-as-neg : tm A -> tm B -> type.
+%mode used-as-neg +A +B.
 used-neg : ({A'} A' =< A -> tm A' -> subRes B) -> type.
 
 
@@ -183,11 +188,13 @@ logic-var : tp-mode B neg -> tm B.
 
 
 used-as-neg' : tm A -> subRes B -> type.
+%mode used-as-neg' +A +B.
 used-as-neg'/eval : used-as-neg' A SubResB 
                  <- getSubRes SubResB _ TmB _
                  <- used-as-neg A TmB.
 
 result-neg : type.
+%mode result-neg.
 
 used-neg/+* : used-neg (L : {t'} t' =< T -> tm t' -> subRes R) 
             <- tp-mode T pos.
@@ -234,6 +241,20 @@ used-as-neg/sum-unused : used-as-neg A L1
 %worlds () (getSubRes _ _ _ _).
 %total {A} (getSubRes A _ _ _).
 
+obj-simp : tm T -> tm T -> type.
+%mode obj-simp +A -B.
+obj-simp/el : obj-simp (getLeft (obj L _)) L.
+obj-simp/er : obj-simp (getRight (obj _ R)) R.
+obj-simp/l : obj-simp (getLeft O) L <- obj-simp O (obj  L _).
+obj-simp/r : obj-simp (getRight O) R <- obj-simp O (obj _ R).
+obj-simp/concat : obj-simp A C <- obj-simp A B <- obj-simp B C.
+%worlds () (obj-simp _ _).
+
+concat-obj-simp/l : obj-simp A B -> obj-simp (getLeft B) C -> obj-simp (getLeft A) C -> type.
+%mode concat-obj-simp/l +A +B -C.
+%worlds () (concat-obj-simp/l _ _ _).
+%trustme %total {A B} (concat-obj-simp/l A B _).
+
 not-val : tm A -> type.
 %mode not-val +A.
 not-val/getLeft : not-val (getLeft _).
@@ -254,8 +275,14 @@ step/@s : step (@s E1 E2 A'eA) (@s E1' E2 A'eA'') B'eB
 
 step/lam : step (@s (lam V _) (E : tm T) S) TmB (B'eB : B' =< B) <- getSubRes (V T S E) B' TmB B'eB.
 
+
 step/getLeft : step (getLeft (obj L _)) (L : tm Lt) Eq <- =<-eq Lt Eq.
 
+step/e : step A A Eq <- =<-eq T Eq.
+
+step/obj-simp : step A A' Eq
+             <- obj-simp A (A' : tm T)
+             <- =<-eq T Eq.
 step/getLeft-simp : step (getLeft A) (getLeft A') L'eL 
                  <- not-val A 
                  <- step A A' (=</prod L'eL _).
@@ -315,11 +342,19 @@ logic-less/lam : logic-less (lam F _)
               <- {a}{s}{i} logic-less i -> logic-less' (F a s i).
 
 logic-less/empty : logic-less empty.
-logic-less/obj : logic-less (obj A B) <- logic-less B <- logic-less A.
+logic-less/obj : logic-less (obj A B) 
+              <- logic-less B 
+              <- logic-less A.
+
+
 logic-less/getLeft : logic-less A -> logic-less (getLeft A).
 
 logic-less/getRight : logic-less A -> logic-less (getRight A).
-
+%{
+logic-less/lr-lazy : logic-less A
+                  <- obj-simp A V
+                  <- logic-less V.
+}%
 logic-less/left : logic-less left.
 logic-less/right : logic-less right.
 
@@ -347,7 +382,7 @@ used-as-neg-2-logic-less : used-as-neg E (B : tm T) -> tp-mode T pos -> logic-le
 
 
 %worlds () (used-as-neg-2-logic-less _ _ _).
-%total {A B} (used-as-neg-2-logic-less A B _).
+%trustme %total {A B} (used-as-neg-2-logic-less A B _).
 
 
 
@@ -374,29 +409,33 @@ so we need a lemma that says (F I: A/+) => F:R/+ ~> O/+ => I:R/+.
 
 }%
 
-
-
-
-%{
-
 resolving : step (Ae : tm At) Be _
          -> tp-mode At pos
          -> logic-less Be
          -> logic-less Ae
          -> type.
 
+- : resolving (step/e _) _ A A. 
+
 0 : resolving (_ : step (@s E1 _ _) (@s E1 _ _) _) _ (logic-less/app++ Arg_Pos Arg_Neg) (logic-less/app++ Arg_Pos Arg_Neg).
 
-1 : resolving (step/obj-simp _ Simp) Init_Result_Pos LogicLessLeft (logic-less/lr-lazy LogicLessLeft Simp).
+% 1 : resolving (step/obj-simp _ Simp) Init_Result_Pos LogicLessLeft (logic-less/lr-lazy LogicLessLeft Simp).
+
+1 : ({T}{E} tp-mode T pos -> used-as-neg (obj L R) (E : tm T) -> resolving _ _ _ _)
+ -> resolving (step/getLeft _ : step (getLeft (obj L (R: tm Rt))) L _) Init_Result_Pos LL_L (logic-less/getLeft (logic-less/obj LL_L LL_R)).
+
+
 
 2p0 : resolving (step/getLeft-simp Step NotValE1) Lpos (logic-less/getLeft LogicLessObj) (logic-less/getLeft LogicLessObj')
    <- resolving Step (tp-mode/prod lub/e) LogicLessObj (LogicLessObj' : logic-less L).
 
+
+%{
 2p1 : resolving 
        (step/getLeft-simp 
 	  (step/lam _)
 	  (not-val/@s : not-val (@s (lam F (used-neg/-+ UsedAsNegFoo _ ResultPos)) (V : tm T) S)))
-       Lpos 
+       Lpos
        (logic-less/lr-lazy _ _)
        (logic-less/getLeft (logic-less/app-+ ResultPos LogicLessV)) 
     <- unpack-used-as-neg' (UsedAsNegFoo T S V) UsedAsNeg
@@ -415,13 +454,22 @@ resolving : step (Ae : tm At) Be _
        (logic-less/lr-lazy LL_L Simp'' ) % : logic-less (getLeft (getLeft IMB')))
    <- concat-obj-simp/l Simp Simp' Simp''.
 
+% (obj-simp/l Simp') : obj-simp (getLeft (getLeft E2)) E3
+
+% LL_L : logic-less E3
+
+
+   
+
 
 2p4 : resolving
        (step/getLeft-simp Step _)
        Init_Result_Pos
        (logic-less/lr-lazy LL_L (obj-simp/l S))
        (logic-less/getLeft LL)
-   <- {LL_R} resolving Step (tp-mode/prod lub/e) (logic-less/obj LL_L LL_R) LL.
+   <- {LL_R} resolving Step (tp-mode/prod lub/e) (logic-less/obj LL_L LL_R) LL. 
+}%
+
 
 4 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
               Init_Result_Pos _ (logic-less/app++ tp-mode/sum Init_Result_Pos).
@@ -480,12 +528,13 @@ resolving : step (Ae : tm At) Be _
 % to get E_Is_Neg, we need to know that the input is Neg for logic-less.
 % perhaps LogicLessTmB should be entered?  (or not, it feels a bit weird doing that).
 
+
+%block getLR : some {MR}{Lt}{Rt}{L : tm Lt }{R : tm Rt}{TpLt: tp-mode Lt pos}{TpRt: tp-mode Rt MR} block {T}{E}{_: tp-mode T pos}{_:used-as-neg (obj L R : tm (prod TpLt TpRt)) (E : tm T)}.
+%worlds (getLR) (resolving _ _ _ _).
 %mode resolving +A +B +C -D.
-%block getLR : some {T}{L : tm T}{LL_L: logic-less L}{T'}{R : tm T'} block {LL_R: logic-less R}.
-%worlds () (resolving _ _ _ _).
 %total {A B} (resolving A _ B _).
 
-
+%{
 
 WHYY is this causing server timeouts?  its very clearly an error given that step/getLeft takes no arguments
 
