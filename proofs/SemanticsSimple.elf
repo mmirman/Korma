@@ -6,54 +6,27 @@ mode : type. %name mode Gs.
 %mode mode.
 pos : mode.
 neg : mode.
-%block m-b : block {_ : mode}.
-%worlds (m-b) (mode).
-%freeze mode.
-
 
 <m : mode -> mode -> type. %infix right 5 <m.  %name <m SubM.
 %mode <m +A +B. 
 <m/e : A <m A.
 <m/pn : pos <m neg.
-%block <m-b/<m : some {A : mode}{B : mode} block {_:A <m B}.
-%block <m-b = (<m-b/<m | m-b).
-%worlds (<m-b) (<m _ _).
 
 ub : mode -> mode -> mode -> type.  %name ub UB.
 ub/p : A <m C -> B <m C -> ub A B C.
-%block ub-b/ub : some {A}{B}{C} block {_ : ub A B C}.
-%block ub-b = (<m-b | ub-b/ub).
-%worlds (ub-b) (ub _ _ _).
-%freeze ub.
 
 lub : mode -> mode -> mode -> type. %name lub LUB. 
 %mode lub +A +B -C.  
-lub/e : lub A A A.
+lub/p : lub A A A.
 lub/pl : lub pos neg neg.
 lub/pr : lub neg pos neg.
-
-%worlds () (lub _ _ _). 
-%unique lub +A +B -1C.
-%total {A B} (lub A B _).
-%freeze lub.
 
 glb : mode -> mode -> mode -> type. %name glb GLB.
 %mode glb +A +B -C. 
 glb/e : glb A A A.
 glb/pl : glb pos neg pos.
 glb/pr : glb neg pos pos.
-%worlds () (glb _ _ _). 
-%unique glb +A +B -1C.
-%total {A B} (glb A B _).
-%freeze glb. 
 
-mode-sub-trans : A <m B -> B <m C -> A <m C -> type.
-%mode mode-sub-trans +A +B -C.
-mode-sub-trans/e :  mode-sub-trans <m/e A A.
-mode-sub-trans/pn : mode-sub-trans <m/pn <m/e <m/pn.
-%worlds (m-b | ub-b/ub) (mode-sub-trans _ _ _).
-%unique mode-sub-trans +A +B -1C.
-%total {A B} (mode-sub-trans A B _).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the types in the language %
@@ -61,6 +34,7 @@ mode-sub-trans/pn : mode-sub-trans <m/pn <m/e <m/pn.
 tp : type. %name tp T t.
 tp-mode : tp -> mode -> type. %name tp-mode TpM tpM.
 %mode tp-mode +A -B.
+
 
 ~> : tp -> tp -> tp. %infix right 6 ~>.
 unit : tp.
@@ -85,90 +59,105 @@ tp-mode/prod : tp-mode (prod (_ : tp-mode _ A) (_ : tp-mode _ B)) C <- lub A B C
         -> B =< B'
         -> (prod (_ : tp-mode A _) (_ : tp-mode B _)) =< (prod (_ : tp-mode A' _) (_ : tp-mode B' _)).
 
-%block tp-b/s : some {T}{M} block {_: tp-mode T M}.
-%block tp-b/moded : some  {M : mode} block {T : tp}{_ : tp-mode T M}.
-%block tp-b = (tp-b/moded | ub-b/ub | <m-b/<m).
-%block =<-bn : some {A}{A'} block {_ : A' =< A}.
-%block =<-b = ( =<-bn | tp-b).
-%worlds (=<-b) (tp-mode _ _) (=< _ _).
-%unique tp-mode +A -1B.
-%total {A} (tp-mode A _).
-
-=<-eq : {A} A =< A -> type.
-=<-eq/unit : =<-eq unit =</unit.
-=<-eq/~> : =<-eq (Ta ~> Tb) (=</~> A B) <- =<-eq Tb B <- =<-eq Ta A.
-=<-eq/sum : =<-eq (sum (_: tp-mode Ta _) (_ : tp-mode Tb _) _) (=</sum <m/e A B) 
-         <- =<-eq Tb B 
-         <- =<-eq Ta A.
-=<-eq/prod : =<-eq (prod (_: tp-mode Ta _) (_ : tp-mode Tb _)) (=</prod A B)  
-          <- =<-eq Tb B 
-          <- =<-eq Ta A.
-%mode =<-eq +T -A.
-%worlds (=<-bn) (=<-eq _ _).
-%unique =<-eq +T -1A.
-%total {A} (=<-eq A _).
 
 
-eq-gen : {Eq : A =< A} =<-eq A Eq -> type.
-%mode eq-gen +A -B.
-%worlds () (eq-gen _ _).
-%trustme %total {A} (eq-gen A _).
 
-=<-trans : A =< B -> B =< C -> A =< C -> type. 
-=<-trans' : B =< C -> A =< B -> A =< C -> type. 
-%mode =<-trans +A +B -C.
-%mode =<-trans' +A +B -C.
-- : =<-trans =</unit =</unit =</unit.
-- : =<-trans (=</~> AA' BB') (=</~> A'A'' B'B'') (=</~> AA'' BB'') <- =<-trans' AA' A'A'' AA'' <- =<-trans BB' B'B'' BB''.
-- : =<-trans (=</sum MM' AA' BB') (=</sum M'M'' A'A'' B'B'') (=</sum MM'' AA'' BB'') <- =<-trans AA' A'A'' AA'' <- =<-trans BB' B'B'' BB'' <- mode-sub-trans MM' M'M'' MM''. 
-- : =<-trans (=</prod AA' BB') (=</prod A'A'' B'B'') (=</prod AA'' BB'') <- =<-trans AA' A'A'' AA'' <- =<-trans BB' B'B'' BB''.
-
-- : =<-trans' =</unit =</unit =</unit.
-- : =<-trans' (=</~> A'A'' B'B'') (=</~> AA' BB') (=</~> AA'' BB'') <- =<-trans A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB''.
-- : =<-trans' (=</sum M'M'' A'A'' B'B'') (=</sum MM' AA' BB') (=</sum MM'' AA'' BB'') <- =<-trans' A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB'' <- mode-sub-trans MM' M'M'' MM''. 
-- : =<-trans' (=</prod A'A'' B'B'') (=</prod AA' BB') (=</prod AA'' BB'') <- =<-trans' A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB''.
-
-%block =<-eq-b' : some {A}{E:A =< A} block {_: =<-eq A E}.
-%worlds (m-b | ub-b/ub | tp-b/s | tp-b/moded | =<-eq-b') (=<-trans _ _ _) (=<-trans' _ _ _).
-%unique (=<-trans +A +B -1C) (=<-trans' +A' +B' -1C').
-%total (A B) (=<-trans A _ _) (=<-trans' B _ _).
-
-=<implies<m : A =< A' -> tp-mode A M -> tp-mode A' M' -> M <m M' -> type.
-
-%freeze =<implies<m.
 
 
 % The definition of a tm (again)
 % and other stuff with progress theorem
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-tm : tp -> type. %name tm E.
+tm : type. %name tm E.
 
+%{
 subRes : tp -> type.
-
 subRes/dual : {B} tm B -> B =< B'  -> subRes B'.
 
 getSubRes : subRes B' -> {B} tm B -> B =< B' -> type.
 %mode getSubRes +A -B -C -D.
 getSubRes/get : getSubRes (subRes/dual B TmB BsB') B TmB BsB'.
 
-used-neg : (subRes A ->  subRes B) -> type.
+}%
+
+
+lam : (tm -> tm) -> tp -> tm.
+
+empty : tm.
+obj : tm -> tm -> tm.
+getLeft : tm -> tm.
+getRight : tm -> tm.
+left : tm.
+right : tm.
+% switch should be GLB not LUB, but right now just making them equal seems good enough.
+switch : tm
+      -> tm
+      -> tm.
+logic-var : tm.
+@s : tm -> tm -> tm.
+
+
+assm : tm -> tp -> type.
+
+used-neg : (tm -> tm) -> type.
 %mode used-neg +A.
 
+of : tm -> tp -> type.
 
-lam : {F : subRes A -> subRes B } used-neg F -> tm (A ~> B).
-empty : tm unit.
-obj : tm A -> tm B -> tm (prod (A_m_Ma : tp-mode A _) (B_m_Mb : tp-mode B _)).
-getLeft : tm (prod (A_m_M : tp-mode A M) (_ : tp-mode _ M)) -> tm A.
-getRight : tm (prod (_ : tp-mode _ M) (B_m_M : tp-mode B M)) -> tm B.
-left : tm (A ~> sum (_ : tp-mode A _) _ _).
-right : tm (B ~> sum _ (_ : tp-mode B _) _).
+of/empty : of empty unit.
+of/obj : of L Tl -> of R Tr -> of (obj L R) (prod (_ : tp-mode Tl _) (_: tp-mode Tr _)).
+of/getLeft : of O (prod (A_m_M : tp-mode A M) (_ : tp-mode _ M)) -> of (getLeft O) A.
+of/getRight : of O (prod (_ : tp-mode _ M) (B_m_M : tp-mode B M)) -> of (getRight O) B.
+of/left : of left (A ~> sum (_ : tp-mode A _) _ _).
+of/right : of right (B ~> sum _ (_ : tp-mode B _) _).
 % switch should be GLB not LUB, but right now just making them equal seems good enough.
-switch : tm (A ~> C) 
-      -> tm (B ~> C) 
-      -> tm (sum (_ : tp-mode A MC) (_ : tp-mode B MC) (_ : ub _ _ MC) ~> C).
-logic-var : tp-mode B neg -> tm B.
-@s : tm (A ~> C) -> tm A' -> A' =< A -> tm C.
+of/switch : of L (A ~> C) 
+      -> of R (B ~> C) 
+      -> of (switch L R) (sum (_ : tp-mode A MC) (_ : tp-mode B MC) (_ : ub _ _ MC) ~> C).
+
+of/logic-var : tp-mode B neg -> of logic-var B.
+
+of/subsump : T =< T' -> of E T -> of E T'. % derivations can be specialized.
+of/var : assm E T -> of E T.               % assumptions can be specialized, but only provided that they are specialized all at once. 
+
+of/@s : of Ef (A ~> C) -> of Ev A' -> A' =< A -> of (@s Ef Ev) C.
+of/lam1 : of (lam F A) (A ~> B)
+      <- tp-mode A M
+      <- {Ev}{A'}{M'} M' <m M -> tp-mode A' M' -> A' =< A -> assm Ev A' -> of (F Ev) B.
+
+%block m-b : block {_ : mode}.
+%worlds (m-b) (mode).
+
+%block <m-b/<m : some {A : mode}{B : mode} block {_:A <m B}.
+%block <m-b = (<m-b/<m | m-b).
+%worlds (<m-b) (<m _ _).
+
+%block ub-b/ub : some {A}{B}{C} block {_ : ub A B C}.
+%block ub-b = (<m-b | ub-b/ub).
+%worlds (ub-b) (ub _ _ _).
+
+%block tm-b : block {x : tm}.
+%block assm-b : some {T}{M}{_:tp-mode T M} block {x : tm}{T' : tp}{M'}{_: M' <m M}{_: tp-mode T' M'}{_:T' =< T }{_:assm x T'}.
+%worlds (tm-b | assm-b) 
+                 (lub _ _ _)
+                 (glb _ _ _)
+                 (tp) (tp-mode _ _) (=< _ _) 
+                 (tm) 
+                 (assm _ _) (of _ _).
+
+%unique lub +A +B -1C.
+%total {A B} (lub A B _).
+
+%unique glb +A +B -1C.
+%total {A B} (glb A B _).
+
+
+%unique tp-mode +A -1B.
+%total {A} (tp-mode A _).
+
+%      <- used-neg F A B.
+
+
 
 
 used-as-neg : {Result : mode } tm A -> tm B -> type.
@@ -179,7 +168,6 @@ used-as-neg' : {Result : mode } tm A -> subRes B -> type.
 used-as-neg'/eval : used-as-neg' Result A SubResB 
                  <- getSubRes SubResB _ TmB _
                  <- used-as-neg Result A TmB.
-
 
 used-neg/+* : used-neg (L : subRes T -> subRes R) 
 
@@ -247,6 +235,62 @@ not-val/getLeft : not-val (getLeft _).
 not-val/getRight : not-val (getRight _).
 not-val/@s : not-val (@s _ _ _).
 %worlds () (not-val _).
+
+
+
+mode-sub-trans : A <m B -> B <m C -> A <m C -> type.
+%mode mode-sub-trans +A +B -C.
+mode-sub-trans/e :  mode-sub-trans <m/e A A.
+mode-sub-trans/pn : mode-sub-trans <m/pn <m/e <m/pn.
+%worlds (m-b | ub-b/ub) (mode-sub-trans _ _ _).
+%unique mode-sub-trans +A +B -1C.
+%total {A B} (mode-sub-trans A B _).
+
+
+
+=<-eq : {A} A =< A -> type.
+%mode =<-eq +T -A.
+=<-eq/unit : =<-eq unit =</unit.
+=<-eq/~> : =<-eq (Ta ~> Tb) (=</~> A B) <- =<-eq Tb B <- =<-eq Ta A.
+=<-eq/sum : =<-eq (sum (_: tp-mode Ta _) (_ : tp-mode Tb _) _) (=</sum <m/e A B) 
+         <- =<-eq Tb B 
+         <- =<-eq Ta A.
+=<-eq/prod : =<-eq (prod (_: tp-mode Ta _) (_ : tp-mode Tb _)) (=</prod A B)  
+          <- =<-eq Tb B 
+          <- =<-eq Ta A.
+
+%worlds (=<-bn) (=<-eq _ _).
+%unique =<-eq +T -1A.
+%total {A} (=<-eq A _).
+
+eq-gen : {Eq : A =< A} =<-eq A Eq -> type.
+%mode eq-gen +A -B.
+%worlds () (eq-gen _ _).
+%trustme %total {A} (eq-gen A _).
+
+=<-trans : A =< B -> B =< C -> A =< C -> type. 
+=<-trans' : B =< C -> A =< B -> A =< C -> type. 
+%mode =<-trans +A +B -C.
+%mode =<-trans' +A +B -C.
+- : =<-trans =</unit =</unit =</unit.
+- : =<-trans (=</~> AA' BB') (=</~> A'A'' B'B'') (=</~> AA'' BB'') <- =<-trans' AA' A'A'' AA'' <- =<-trans BB' B'B'' BB''.
+- : =<-trans (=</sum MM' AA' BB') (=</sum M'M'' A'A'' B'B'') (=</sum MM'' AA'' BB'') <- =<-trans AA' A'A'' AA'' <- =<-trans BB' B'B'' BB'' <- mode-sub-trans MM' M'M'' MM''. 
+- : =<-trans (=</prod AA' BB') (=</prod A'A'' B'B'') (=</prod AA'' BB'') <- =<-trans AA' A'A'' AA'' <- =<-trans BB' B'B'' BB''.
+
+- : =<-trans' =</unit =</unit =</unit.
+- : =<-trans' (=</~> A'A'' B'B'') (=</~> AA' BB') (=</~> AA'' BB'') <- =<-trans A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB''.
+- : =<-trans' (=</sum M'M'' A'A'' B'B'') (=</sum MM' AA' BB') (=</sum MM'' AA'' BB'') <- =<-trans' A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB'' <- mode-sub-trans MM' M'M'' MM''. 
+- : =<-trans' (=</prod A'A'' B'B'') (=</prod AA' BB') (=</prod AA'' BB'') <- =<-trans' A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB''.
+
+%block =<-eq-b' : some {A}{E:A =< A} block {_: =<-eq A E}.
+%worlds (m-b | ub-b/ub | tp-b/s | tp-b/moded | =<-eq-b') (=<-trans _ _ _) (=<-trans' _ _ _).
+%unique (=<-trans +A +B -1C) (=<-trans' +A' +B' -1C').
+%total (A B) (=<-trans A _ _) (=<-trans' B _ _).
+
+=<implies<m : A =< A' -> tp-mode A M -> tp-mode A' M' -> M <m M' -> type.
+
+%freeze =<implies<m.
+
 
 
 
@@ -401,53 +445,9 @@ resolving : step (Ae : tm At) Be _
 0 : resolving (_ : step (@s E1 _ _) (@s E1 _ _) _) _ (logic-less/app++ Arg_Pos Arg_Neg) (logic-less/app++ Arg_Pos Arg_Neg).
 
 % 1 : resolving (step/obj-simp _ Simp) Init_Result_Pos LogicLessLeft (logic-less/lr-lazy LogicLessLeft Simp).
-%{
-1 : resolving (step/getLeft _ : step (getLeft (obj L (R: tm Rt))) L _) Init_Result_Pos LL_L (logic-less/getLeft (logic-less/obj LL_L LL_R))
- <- tp-mode Rt neg
- <- tp-mode T pos
- <- used-as-neg pos (obj L R) (E : tm T)
- <- resolving _ _ _ _.
- }%
-
-
 
 2p0 : resolving (step/getLeft-simp Step NotValE1) Lpos (logic-less/getLeft LogicLessObj) (logic-less/getLeft LogicLessObj')
    <- resolving Step (tp-mode/prod lub/e) LogicLessObj (LogicLessObj' : logic-less L).
-
-
-%{
-2p1 : resolving 
-       (step/getLeft-simp 
-	  (step/lam _)
-	  (not-val/@s : not-val (@s (lam F (used-neg/-+ UsedAsNegFoo _ ResultPos)) (V : tm T) S)))
-       Lpos
-       (logic-less/lr-lazy _ _)
-       (logic-less/getLeft (logic-less/app-+ ResultPos LogicLessV)) 
-    <- unpack-used-as-neg' (UsedAsNegFoo T S V) UsedAsNeg
-    <- used-as-neg-2-logic-less UsedAsNeg Lpos LogicLessV.
-
-2p2 : resolving 
-       (step/getLeft-simp (step/lam _) (not-val/@s : not-val (@s (lam _ (used-neg/+* ArgPos)) _ _))) 
-       Lpos 
-       (logic-less/lr-lazy _ _)
-       (logic-less/getLeft (logic-less/app++ ArgPos (tp-mode/prod lub/e))).
-
-2p3 : resolving
-       (step/getLeft-simp (step/obj-simp Eq Simp) _)
-       (Init_Result_Pos : tp-mode Lt pos)
-       (logic-less/lr-lazy LL_L Simp' ) % : logic-less (getLeft IMB))
-       (logic-less/lr-lazy LL_L Simp'' ) % : logic-less (getLeft (getLeft IMB')))
-   <- concat-obj-simp/l Simp Simp' Simp''.
-
-
-2p4 : resolving
-       (step/getLeft-simp Step _)
-       Init_Result_Pos
-       (logic-less/lr-lazy LL_L (obj-simp/l S))
-       (logic-less/getLeft LL)
-   <- {LL_R} resolving Step (tp-mode/prod lub/e) (logic-less/obj LL_L LL_R) LL. 
-}%
-
 
 4 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
               Init_Result_Pos _ (logic-less/app++ tp-mode/sum Init_Result_Pos).
