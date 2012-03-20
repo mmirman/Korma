@@ -439,13 +439,6 @@ resolving : step (Ae : tm At) Be _
        (logic-less/lr-lazy LL_L Simp'' ) % : logic-less (getLeft (getLeft IMB')))
    <- concat-obj-simp/l Simp Simp' Simp''.
 
-% (obj-simp/l Simp') : obj-simp (getLeft (getLeft E2)) E3
-
-% LL_L : logic-less E3
-
-
-   
-
 
 2p4 : resolving
        (step/getLeft-simp Step _)
