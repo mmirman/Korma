@@ -180,7 +180,9 @@ used-as-neg'/eval : used-as-neg' Result A SubResB
                  <- getSubRes SubResB _ TmB _
                  <- used-as-neg Result A TmB.
 
+
 used-neg/+* : used-neg (L : subRes T -> subRes R) 
+
             <- tp-mode T pos.
 used-neg/-- : used-neg (L : subRes T -> subRes R) 
 	    <- tp-mode R neg
@@ -189,6 +191,7 @@ used-neg/-- : used-neg (L : subRes T -> subRes R)
 used-neg/-+ : used-neg (L : subRes T -> subRes R) 
 	    <- tp-mode R pos
 	    <- tp-mode T neg
+
 	    <- ({S}{t'}{a}{s} getSubRes S t' a s -> used-as-neg' pos a (L S)).
 
 used-as-neg/e : used-as-neg neg (A : tm T) A.
@@ -351,7 +354,6 @@ unpack-used-as-neg' : used-as-neg' Res TmA SubResB -> used-as-neg Res TmA TmB ->
 %worlds () (unpack-used-as-neg' _ _).
 %unique unpack-used-as-neg' +A -1C.
 %total {A} (unpack-used-as-neg' A _).
-
 
 
 
