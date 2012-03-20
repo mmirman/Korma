@@ -510,16 +510,3 @@ resolving : step (Ae : tm At) Be _
 %worlds () (resolving _ _ _ _).
 %mode resolving +A +B +C -D.
 %total {A B} (resolving A _ B _).
-
-%{
-
-WHYY is this causing server timeouts?  its very clearly an error given that step/getLeft takes no arguments
-
-2p3 : resolving 
-       (step/getLeft-simp Step not-val/getLeft)
-       Lpos
-       (logic-less/getLeft-lazy LogicLessLeft)
-       _
-   <- resolving (step/getLeft Step) (tp-mode/prod lub/e) LogicLessLeft LogicLessObj.
-
-}%
