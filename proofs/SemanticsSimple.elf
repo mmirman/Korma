@@ -6,26 +6,40 @@ mode : type. %name mode Gs.
 %mode mode.
 pos : mode.
 neg : mode.
+%block m-b : block {_ : mode}.
+%worlds (m-b) (mode).
 
 <m : mode -> mode -> type. %infix right 5 <m.  %name <m SubM.
 %mode <m +A +B. 
 <m/e : A <m A.
 <m/pn : pos <m neg.
+%block <m-b/<m : some {A : mode}{B : mode} block {_:A <m B}.
+%block <m-b = (<m-b/<m | m-b).
+%worlds (<m-b) (<m _ _).
 
 ub : mode -> mode -> mode -> type.  %name ub UB.
 ub/p : A <m C -> B <m C -> ub A B C.
+%block ub-b/ub : some {A}{B}{C} block {_ : ub A B C}.
+%block ub-b = (<m-b | ub-b/ub).
+%worlds (ub-b) (ub _ _ _).
 
 lub : mode -> mode -> mode -> type. %name lub LUB. 
 %mode lub +A +B -C.  
-lub/p : lub A A A.
+lub/e :  lub A A A.
 lub/pl : lub pos neg neg.
 lub/pr : lub neg pos neg.
+%worlds () (lub _ _ _).
+%unique lub +A +B -1C.
+%total {A B} (lub A B _).
 
 glb : mode -> mode -> mode -> type. %name glb GLB.
 %mode glb +A +B -C. 
 glb/e : glb A A A.
 glb/pl : glb pos neg pos.
 glb/pr : glb neg pos pos.
+%worlds () (glb _ _ _).
+%unique glb +A +B -1C.
+%total {A B} (glb A B _).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,7 +48,6 @@ glb/pr : glb neg pos pos.
 tp : type. %name tp T t.
 tp-mode : tp -> mode -> type. %name tp-mode TpM tpM.
 %mode tp-mode +A -B.
-
 
 ~> : tp -> tp -> tp. %infix right 6 ~>.
 unit : tp.
@@ -45,6 +58,8 @@ tp-mode/~> : tp-mode (B ~> A) pos.
 tp-mode/unit : tp-mode unit pos.
 tp-mode/sum : tp-mode (sum _ _ (_ : ub _ _ C)) C.
 tp-mode/prod : tp-mode (prod (_ : tp-mode _ A) (_ : tp-mode _ B)) C <- lub A B C.
+%block tp-b : block {T : tp}.
+%worlds (tp-b) (tp) (tp-mode _ _).
 
 
 =< : tp -> tp -> type. %infix right 5 =<.
@@ -58,30 +73,44 @@ tp-mode/prod : tp-mode (prod (_ : tp-mode _ A) (_ : tp-mode _ B)) C <- lub A B C
 =</prod :  A =< A'
         -> B =< B'
         -> (prod (_ : tp-mode A _) (_ : tp-mode B _)) =< (prod (_ : tp-mode A' _) (_ : tp-mode B' _)).
+%block sub-b : some {T}{T'} block {_: T =< T'}.
+%worlds (sub-b | tp-b) (=< _ _).
+
+
+%%$%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Some effectiveness lemmas %%
+%%%$%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+has-lub : {A}{B}{C} lub A B C -> type.
+%mode has-lub +A +B -C -L.
+- : has-lub A A A lub/e.
+- : has-lub pos neg neg lub/pl.
+- : has-lub neg pos neg lub/pr.
+%worlds () (has-lub _ _ _ _).
+%unique has-lub +A +B -1C -1L.
+%total {A B} (has-lub A B _ _).
+
+has-tp-mode : {T}{M} tp-mode T M -> type.
+%mode has-tp-mode +A -B -C.
+- : has-tp-mode unit pos tp-mode/unit.
+- : has-tp-mode (_ ~> _) pos tp-mode/~>.
+- : has-tp-mode (sum _ _ (_ : ub _ _ C)) C tp-mode/sum.
+- : has-tp-mode (prod _ _) C (tp-mode/prod L) <- has-lub A B C L.
+
+%worlds () (has-tp-mode _ _ _).
+%unique has-tp-mode +A -1M -1TpM.
+%total {A} (has-tp-mode A _ _).
 
 
 
-
-
-
-% The definition of a tm (again)
-% and other stuff with progress theorem
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% the definition of a tm (again)        %%
+%% and other stuff with progress theorem %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 tm : type. %name tm E.
 
-%{
-subRes : tp -> type.
-subRes/dual : {B} tm B -> B =< B'  -> subRes B'.
-
-getSubRes : subRes B' -> {B} tm B -> B =< B' -> type.
-%mode getSubRes +A -B -C -D.
-getSubRes/get : getSubRes (subRes/dual B TmB BsB') B TmB BsB'.
-
-}%
-
-
-lam : (tm -> tm) -> tp -> tm.
+lam : (tm -> tm) -> tp  -> tm.
 
 empty : tm.
 obj : tm -> tm -> tm.
@@ -96,13 +125,15 @@ switch : tm
 logic-var : tm.
 @s : tm -> tm -> tm.
 
+%block tm-b : block {x : tm}.
+%worlds (tm-b) (tm).
 
-assm : tm -> tp -> type.
 
-used-neg : (tm -> tm) -> type.
-%mode used-neg +A.
+used-neg : (tm -> tm) -> tp -> tp -> type.
+
 
 of : tm -> tp -> type.
+
 
 of/empty : of empty unit.
 of/obj : of L Tl -> of R Tr -> of (obj L R) (prod (_ : tp-mode Tl _) (_: tp-mode Tr _)).
@@ -118,95 +149,74 @@ of/switch : of L (A ~> C)
 of/logic-var : tp-mode B neg -> of logic-var B.
 
 of/subsump : T =< T' -> of E T -> of E T'. % derivations can be specialized.
-of/var : assm E T -> of E T.               % assumptions can be specialized, but only provided that they are specialized all at once. 
 
 of/@s : of Ef (A ~> C) -> of Ev A' -> A' =< A -> of (@s Ef Ev) C.
-of/lam1 : of (lam F A) (A ~> B)
-      <- tp-mode A M
-      <- {Ev}{A'}{M'} M' <m M -> tp-mode A' M' -> A' =< A -> assm Ev A' -> of (F Ev) B.
-
-%block m-b : block {_ : mode}.
-%worlds (m-b) (mode).
-
-%block <m-b/<m : some {A : mode}{B : mode} block {_:A <m B}.
-%block <m-b = (<m-b/<m | m-b).
-%worlds (<m-b) (<m _ _).
-
-%block ub-b/ub : some {A}{B}{C} block {_ : ub A B C}.
-%block ub-b = (<m-b | ub-b/ub).
-%worlds (ub-b) (ub _ _ _).
-
-%block tm-b : block {x : tm}.
-%block assm-b : some {T}{M}{_:tp-mode T M} block {x : tm}{T' : tp}{M'}{_: M' <m M}{_: tp-mode T' M'}{_:T' =< T }{_:assm x T'}.
-%worlds (tm-b | assm-b) 
-                 (lub _ _ _)
-                 (glb _ _ _)
-                 (tp) (tp-mode _ _) (=< _ _) 
-                 (tm) 
-                 (assm _ _) (of _ _).
-
-%unique lub +A +B -1C.
-%total {A B} (lub A B _).
-
-%unique glb +A +B -1C.
-%total {A B} (glb A B _).
+of/lam : of (lam F A) (A ~> B)
+      <- used-neg F A B
+      <- ({x}{A'} A' =< A -> of Ev A' -> of (F x) B).
 
 
-%unique tp-mode +A -1B.
-%total {A} (tp-mode A _).
-
-%      <- used-neg F A B.
+%block assm-b : some {T} block {x : tm}{T' : tp}{_:T' =< T }{_:of x T'}.
 
 
 
+%{
+subRes : tp -> type.
+subRes/dual : {B} tm B -> B =< B'  -> subRes B'.
 
-used-as-neg : {Result : mode } tm A -> tm B -> type.
-%mode used-as-neg +R +A +B.
+getSubRes : subRes B' -> {B} tm B -> B =< B' -> type.
+%mode getSubRes +A -B -C -D.
+getSubRes/get : getSubRes (subRes/dual B TmB BsB') B TmB BsB'.
 
-used-as-neg' : {Result : mode } tm A -> subRes B -> type.
-%mode used-as-neg' +R +A +B.
-used-as-neg'/eval : used-as-neg' Result A SubResB 
-                 <- getSubRes SubResB _ TmB _
-                 <- used-as-neg Result A TmB.
+}%
 
-used-neg/+* : used-neg (L : subRes T -> subRes R) 
 
+used-as-neg : {Result : mode } tp -> tm  -> tm -> type.
+
+
+used-neg/+* : used-neg L T R
             <- tp-mode T pos.
-used-neg/-- : used-neg (L : subRes T -> subRes R) 
+used-neg/-- : used-neg L T R
 	    <- tp-mode R neg
 	    <- tp-mode T neg
-	    <- ({S}{t'}{a}{s} getSubRes S t' a s -> used-as-neg' neg a (L S)).
-used-neg/-+ : used-neg (L : subRes T -> subRes R) 
+	    <- ({x}{T'} T' =< T -> of x T' -> used-as-neg neg T' x (L x)).
+used-neg/-+ : used-neg L T R
 	    <- tp-mode R pos
 	    <- tp-mode T neg
+	    <- ({x}{T'} T' =< T -> of x T' -> used-as-neg pos T' x (L x)).
 
-	    <- ({S}{t'}{a}{s} getSubRes S t' a s -> used-as-neg' pos a (L S)).
+used-as-neg/e : used-as-neg neg _ A A.
+used-as-neg/lam-inner : ({x}{T'} T' =< T -> of x T' -> used-as-neg ResM At A (F S)) 
+		      -> used-as-neg ResM At A (lam F T).
 
-used-as-neg/e : used-as-neg neg (A : tm T) A.
-used-as-neg/lam-inner : ({S} used-as-neg' ResM A (F S)) 
-		      -> used-as-neg ResM A (lam F _).
+used-as-neg/app-l : used-as-neg ResM At A E1 
+                 -> used-as-neg ResM At A (@s E1 E2).
 
-used-as-neg/app-l : used-as-neg ResM A E1 
-                 -> used-as-neg ResM A (@s E1 E2 _).
-used-as-neg/app-r : tp-mode T1 neg
-                 -> used-as-neg neg A E2
-                 -> used-as-neg ResM A (@s (E1 : tm (T1 ~> T2)) (E2 : tm T1') _).
+used-as-neg/app-r : used-as-neg ResM At A (@s E1 E2)
+                 <- of E1 (T1 ~> T2)
+                 <- used-as-neg neg At A E2
+                 <- tp-mode T1 neg.
 
-used-as-neg/objL : used-as-neg ResM A L 
-		-> tp-mode To neg
-                -> used-as-neg ResM A (obj (L : tm To) R).
+used-as-neg/objL : used-as-neg ResM At A (obj L R)
+                <- of L To
+		<- tp-mode To neg
+                <- used-as-neg ResM At A L.
 
-used-as-neg/objR : used-as-neg ResM A R 
-		-> tp-mode To neg
-                -> used-as-neg ResM A (obj L (R  : tm To)).
+used-as-neg/objR : used-as-neg ResM At A (obj L R)
+                <- of R To
+		<- tp-mode To neg
+                <- used-as-neg ResM At A R.
 
-used-as-neg/product : used-as-neg ResM (getLeft A) E 
-                   -> used-as-neg ResM (getRight A) E 
-                   -> used-as-neg ResM A E.
+used-as-neg/product : used-as-neg ResM Lt (getLeft A) E 
+                   -> used-as-neg ResM Rt (getRight A) E 
+                   -> used-as-neg ResM (prod (_:tp-mode Lt _) (_:tp-mode Rt _)) A E.
 
-used-as-neg/sum-unused : used-as-neg ResM A L1 
-                       -> used-as-neg ResM A L2 
-                       -> used-as-neg ResM A (switch L1 L2).
+used-as-neg/sum-unused : used-as-neg ResM At A L1 
+                       -> used-as-neg ResM At A L2 
+                       -> used-as-neg ResM At A (switch L1 L2).
+
+
+%worlds (assm-b) (of _ _) (used-neg _ _ _) (used-as-neg _ _ _ _).
 
 
 %block tp-introduce-b : some {A} block {S : subRes A}{t'}{a}{s}{_:getSubRes S t' a s}.
