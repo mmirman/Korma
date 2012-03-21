@@ -8,7 +8,10 @@ preservation : step E E' -> of E T -> of E T' -> T' =< T -> type.
 Some lemmas for unpacking and effectiveness
 }%
 
-used-as-neg-2-logic-less : {OfET : of E T} used-as-neg Result T E E' -> of E' T' -> tp-mode-safe T' pos -> logic-less OfET -> type.
+used-as-neg-2-logic-less : {OfET : of E T} used-as-neg Result T E E' 
+                        -> of E' T' 
+                        -> tp-mode-safe T' pos 
+                        -> logic-less OfET -> type.
 %mode used-as-neg-2-logic-less +OfET +UsedAsNeg +Of +Pos -LogicLess.
 
 %worlds () (used-as-neg-2-logic-less _ _ _ _ _).
