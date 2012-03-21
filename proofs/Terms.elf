@@ -25,7 +25,7 @@ value/lam : value (lam _ _).
 value/switch : value (switch _ _).
 value/left : value left.
 value/right : value right.
-value/unit : value empty.
+value/empty : value empty.
 value/obj : value (obj A B).
 %worlds (tm-b) (value _).
 
@@ -35,6 +35,7 @@ not-value : tm -> type.
 not-value/getLeft : not-value (getLeft _).
 not-value/getRight : not-value (getRight _).
 not-value/@s : not-value (@s _ _).
+not-value/logic-var : not-value logic-var.
 %worlds (tm-b) (not-value _).
 
 

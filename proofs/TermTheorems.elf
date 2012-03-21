@@ -1,1 +1,15 @@
 value-or-not : {T} maybe-value T -> type.
+%mode value-or-not +A -B.
+- : value-or-not (lam _ _) (maybe-value/is value/lam).
+- : value-or-not (switch _ _) (maybe-value/is value/switch).
+- : value-or-not left (maybe-value/is value/left).
+- : value-or-not right (maybe-value/is value/right).
+- : value-or-not empty (maybe-value/is value/empty).
+- : value-or-not (obj _ _) (maybe-value/is value/obj).
+- : value-or-not (getLeft _) (maybe-value/isn't not-value/getLeft).
+- : value-or-not (getRight _) (maybe-value/isn't not-value/getRight).
+- : value-or-not (@s _ _) (maybe-value/isn't not-value/@s).
+- : value-or-not logic-var (maybe-value/isn't not-value/logic-var).
+%worlds () (value-or-not _ _).
+%unique value-or-not +A -1B.
+%total {A} (value-or-not A _).
