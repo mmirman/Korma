@@ -1,0 +1,103 @@
+% twelf-server-send-command "set unsafe true"
+%%%%%%%%%%%%%%%%%%%%%%%%
+% what resolvedness is %
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+mode : type. %name mode Gs.
+pos : mode.
+neg : mode.
+
+<m : mode -> mode -> type. %infix right 5 <m.  %name <m SubM.
+%mode <m +A +B. 
+<m/e : A <m A.
+<m/pn : pos <m neg.
+
+ub : mode -> mode -> mode -> type.  %name ub UB.
+%mode ub +A +B +C.
+ub/p : A <m C -> B <m C -> ub A B C.
+
+lub : mode -> mode -> mode -> type. %name lub LUB. 
+%mode lub +A +B -C.  
+lub/e :  lub A A A.
+lub/pl : lub pos neg neg.
+lub/pr : lub neg pos neg.
+
+glb : mode -> mode -> mode -> type. %name glb GLB.
+%mode glb +A +B -C. 
+glb/e : glb A A A.
+glb/pl : glb pos neg pos.
+glb/pr : glb neg pos pos.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the types in the language %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+tp : type. %name tp T t.
+~> : tp -> tp -> tp. %infix right 6 ~>.
+unit : tp.
+sum : tp -> tp -> mode -> tp.
+prod : tp -> tp -> tp.
+
+
+
+tp-mode : tp -> mode -> type. %name tp-mode TpM tpM.
+%mode tp-mode +A -B.
+tp-mode/~> : tp-mode (B ~> A) pos.
+tp-mode/unit : tp-mode unit pos.
+tp-mode/sum : tp-mode (sum Lt Rt C) C.
+tp-mode/prod : tp-mode (prod Lt Rt) C <- tp-mode Rt Rm <- tp-mode Lt Lm <- lub Lm Rm C.
+
+tp-mode-safe : tp -> mode -> type. %name tp-mode-safe TpM tpM.
+%mode tp-mode-safe +A -B.
+tp-mode-safe/~> : tp-mode-safe (A ~> B) pos <- tp-mode-safe B _ <- tp-mode-safe A _.
+tp-mode-safe/unit : tp-mode-safe unit pos.
+tp-mode-safe/sum : tp-mode-safe (sum Lt Rt C) C <- tp-mode-safe Rt Rm <- tp-mode-safe Lt Lm <- ub Lm Rm C.
+tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C <- tp-mode-safe Rt Rm <- tp-mode-safe Lt Lm <- lub Lm Rm C.
+
+
+=< : tp -> tp -> type. %infix right 5 =<.
+%mode =< +A +B.
+=</unit : unit =< unit.
+=</~> : A' =< A -> B =< B' -> (A ~> B) =< (A' ~> B').
+=</sum :  M <m M'
+       -> A =< A'
+       -> B =< B'
+       -> (sum A B M) =< (sum A' B' M').
+=</prod :  A =< A'
+        -> B =< B'
+        -> (prod A B) =< (prod A' B').
+
+
+%block m-b : block {_ : mode}.
+%worlds () (mode).
+%freeze mode.
+
+
+%worlds (m-b) (<m _ _).
+%unique <m +A +B.
+%freeze <m.
+
+%worlds (m-b) (ub _ _ _).
+%unique ub +A +B +C.
+
+%worlds () (lub _ _ _).
+%unique lub +A +B -1C.
+%total {A B} (lub A B _).
+
+%worlds () (glb _ _ _).
+%unique glb +A +B -1C.
+%total {A B} (glb A B _).
+
+
+%block tp-b : block {T : tp}.
+%worlds (tp-b) (tp).
+
+%worlds (tp-b) (tp-mode _ _).
+%unique tp-mode +A -1B.
+
+%block tp-mode-always-safe : some {M} block {T}{_:tp-mode-safe T M}.
+%worlds (tp-b | tp-mode-always-safe) (tp-mode-safe _ _).
+%unique tp-mode-safe +A -1B.
+
+
+%block sub-b : some {T}{T'} block {_: T =< T'}.
+%worlds (sub-b | tp-b) (=< _ _).

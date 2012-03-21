@@ -1,0 +1,87 @@
+of : tm -> tp -> type.
+
+used-neg : (tm -> tm) -> tp -> tp -> type.
+
+of/empty : of empty unit.
+of/obj : of L Tl -> of R Tr -> of (obj L R) (prod Tl Tr).
+of/getLeft : of (getLeft O) A
+          <- of O (prod A B)
+          <- tp-mode B M
+          <- tp-mode A M.
+of/getRight : of (getRight O) B
+	    <- of O (prod A B)
+	    <- tp-mode B M
+	    <- tp-mode A M.
+of/left : of left (Ta ~> sum Ta Tb Mc)
+       <- tp-mode-safe Tb Mb
+       <- tp-mode-safe Ta Ma
+       <- ub Ma Mb Mc.
+of/right : of right (Tb ~> sum Ta Tb Mc)
+       <- tp-mode-safe Tb Mb
+       <- tp-mode-safe Ta Ma
+       <- ub Ma Mb Mc.
+% switch should be GLB not LUB, but right now just making them equal seems good enough.
+of/switch : of (switch L R) (sum A B MC ~> C)
+	 <- of R (B ~> C) 
+	 <- of L (A ~> C)
+	 <- tp-mode-safe B MC
+	 <- tp-mode-safe A MC
+	 <- tp-mode-safe C MD.
+
+of/logic-var : tp-mode-safe B neg -> of logic-var B.
+
+of/subsump : tp-mode-safe T' M -> T =< T' -> of E T -> of E T'. % derivations can be specialized.
+
+of/@s : of Ef (A ~> C) -> of Ev A' -> A' =< A -> of (@s Ef Ev) C.
+of/lam : of (lam F A) (A ~> B)
+      <- used-neg F A B
+      <- tp-mode-safe B _
+      <- tp-mode-safe A _
+      <- ({x}{A'} A' =< A -> of x A' -> of (F x) B).
+
+
+used-as-neg : {Result : mode } tp -> tm  -> tm -> type.
+
+used-neg/+* : used-neg L T R
+            <- tp-mode T pos.
+used-neg/-- : used-neg L T R
+	    <- tp-mode R neg
+	    <- tp-mode T neg
+	    <- ({x}{T'} T' =< T -> of x T' -> used-as-neg neg T' x (L x)).
+used-neg/-+ : used-neg L T R
+	    <- tp-mode R pos
+	    <- tp-mode T neg
+	    <- ({x}{T'} T' =< T -> of x T' -> used-as-neg pos T' x (L x)).
+
+used-as-neg/e : used-as-neg neg _ A A.
+used-as-neg/lam-inner : ({x}{T'} T' =< T -> of x T' -> used-as-neg ResM At A (F S)) 
+		      -> used-as-neg ResM At A (lam F T).
+
+used-as-neg/app-l : used-as-neg ResM At A E1 
+                 -> used-as-neg ResM At A (@s E1 E2).
+
+used-as-neg/app-r : used-as-neg ResM At A (@s E1 E2)
+                 <- of E1 (T1 ~> T2)
+                 <- used-as-neg neg At A E2
+                 <- tp-mode T1 neg.
+
+used-as-neg/objL : used-as-neg ResM At A (obj L R)
+                <- of L To
+		<- tp-mode To neg
+                <- used-as-neg ResM At A L.
+
+used-as-neg/objR : used-as-neg ResM At A (obj L R)
+                <- of R To
+		<- tp-mode To neg
+                <- used-as-neg ResM At A R.
+
+used-as-neg/product : used-as-neg ResM Lt (getLeft A) E 
+                   -> used-as-neg ResM Rt (getRight A) E 
+                   -> used-as-neg ResM (prod Lt Rt) A E.
+
+used-as-neg/sum-unused : used-as-neg ResM At A L1 
+                       -> used-as-neg ResM At A L2 
+                       -> used-as-neg ResM At A (switch L1 L2).
+
+%block assm-b : some {T} block {x : tm}{T' : tp}{_:T' =< T }{_:of x T'}.
+%worlds (assm-b | tp-mode-always-safe) (of _ _) (used-neg _ _ _) (used-as-neg _ _ _ _).

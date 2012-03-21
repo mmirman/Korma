@@ -1,0 +1,45 @@
+tm : type. %name tm E.
+
+lam : (tm -> tm) -> tp -> tm.
+
+empty : tm.
+obj : tm -> tm -> tm.
+getLeft : tm -> tm.
+getRight : tm -> tm.
+left : tm.
+right : tm.
+% switch should be GLB not LUB, but right now just making them equal seems good enough.
+switch : tm
+      -> tm
+      -> tm.
+logic-var : tm.
+@s : tm -> tm -> tm.
+
+%block tm-b : block {x : tm}.
+%worlds (tm-b | tp-mode-always-safe) (tm).
+
+
+value : tm -> type.
+%mode value +A.
+value/lam : value (lam _ _).
+value/switch : value (switch _ _).
+value/left : value left.
+value/right : value right.
+value/unit : value empty.
+value/obj : value (obj A B).
+%worlds (tm-b) (value _).
+
+
+not-value : tm -> type.
+%mode not-value +A.
+not-value/getLeft : not-value (getLeft _).
+not-value/getRight : not-value (getRight _).
+not-value/@s : not-value (@s _ _).
+%worlds (tm-b) (not-value _).
+
+
+maybe-value : tm -> type.
+%mode maybe-value +T.
+maybe-value/is    : value T -> maybe-value T.
+maybe-value/isn't : not-value T -> maybe-value T.
+%worlds (tm-b) (maybe-value _).

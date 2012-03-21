@@ -1,0 +1,155 @@
+
+<m-trans : A <m B -> B <m C -> A <m C -> type.
+%mode <m-trans +A +B -C.
+- : <m-trans <m/e A A.
+- : <m-trans <m/pn <m/e <m/pn.
+%worlds () (<m-trans _ _ _).
+%unique <m-trans +A +B -1C.
+%total {A B} (<m-trans A B _).
+
+lub-2-ub : lub A B C -> ub A B C -> type.
+%mode lub-2-ub +A -B.
+- : lub-2-ub lub/e (ub/p <m/e <m/e).
+- : lub-2-ub lub/pl (ub/p <m/pn <m/e).
+- : lub-2-ub lub/pr (ub/p <m/e <m/pn).
+%worlds () (lub-2-ub _ _).
+%unique lub-2-ub +A -1B.
+%total {A} (lub-2-ub A _).
+
+tms-2-tm : tp-mode-safe T M -> tp-mode T M -> type.
+%mode tms-2-tm +A -B.
+- : tms-2-tm (tp-mode-safe/~> _ _) tp-mode/~>.
+- : tms-2-tm (tp-mode-safe/unit) tp-mode/unit.
+- : tms-2-tm (tp-mode-safe/sum _ _ _) tp-mode/sum.
+- : tms-2-tm (tp-mode-safe/prod L A B) (tp-mode/prod L A' B') 
+ <- tms-2-tm B B'
+ <- tms-2-tm A A'.
+%worlds (tp-b) (tms-2-tm _ _).
+%unique tms-2-tm +A -1B.
+%total {A} (tms-2-tm A _).
+
+
+
+%%$%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Some effectiveness lemmas %%
+%%%$%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+has-lub : {A}{B}{C} lub A B C -> type.
+%mode has-lub +A +B -C -L.
+- : has-lub A A A lub/e.
+- : has-lub pos neg neg lub/pl.
+- : has-lub neg pos neg lub/pr.
+%worlds () (has-lub _ _ _ _).
+%unique has-lub +A +B -1C -1L.
+%total {A B} (has-lub A B _ _).
+
+has-tp-mode : {T}{M} tp-mode T M -> type.
+%mode has-tp-mode +A -B -C.
+- : has-tp-mode unit pos tp-mode/unit.
+- : has-tp-mode (_ ~> _) pos tp-mode/~>.
+- : has-tp-mode (sum _ _ C) C tp-mode/sum.
+- : has-tp-mode (prod A B) Cm (tp-mode/prod L A' B') 
+ <- has-tp-mode B Bm B'
+ <- has-tp-mode A Am A'
+ <- has-lub Am Bm Cm L.
+
+%worlds () (has-tp-mode _ _ _).
+%unique has-tp-mode +A -1M -1TpM.
+%total {A} (has-tp-mode A _ _).
+
+
+
+=<-2-<m : A =< A' -> tp-mode A M -> tp-mode A' M' -> M <m M' -> type.
+%mode =<-2-<m +A +B +C -D.
+- :  =<-2-<m =</unit tp-mode/unit tp-mode/unit <m/e.
+- :  =<-2-<m (=</~> _ _) tp-mode/~> tp-mode/~> <m/e.
+- :  =<-2-<m (=</sum M _ _) tp-mode/sum tp-mode/sum M.
+- : =<-2-<m (=</prod LL' RR') (tp-mode/prod lub/e L R) (tp-mode/prod Lub' L' R') MlC'
+  <- =<-2-<m LL' L L' MlMl'
+ <- lub-2-ub Lub' (ub/p Ml'C' _)
+  <- <m-trans MlMl' Ml'C' MlC'.
+
+- : =<-2-<m (=</prod LL' RR') (tp-mode/prod lub/pr L R) (tp-mode/prod Lub' L' R') MlC'
+  <- =<-2-<m LL' L L' MlMl'
+ <- lub-2-ub Lub' (ub/p Ml'C' _)
+  <- <m-trans MlMl' Ml'C' MlC'.
+
+- : =<-2-<m (=</prod LL' RR') (tp-mode/prod lub/pl L R) (tp-mode/prod Lub' L' R') MrC'
+  <- =<-2-<m RR' R R' MrMr'
+ <- lub-2-ub Lub' (ub/p _ Mr'C')
+  <- <m-trans MrMr' Mr'C' MrC'.
+
+%worlds (tp-mode-always-safe) (=<-2-<m _ _ _ _).
+%total {A B C} (=<-2-<m A B C _).
+
+=<-2-<m-s : A =< A' -> tp-mode-safe A M -> tp-mode-safe A' M' -> M <m M' -> type.
+%mode =<-2-<m-s +A +B +C -D.
+
+- :  =<-2-<m-s =</unit tp-mode-safe/unit tp-mode-safe/unit <m/e.
+- :  =<-2-<m-s (=</~> _ _) (tp-mode-safe/~> _ _) (tp-mode-safe/~> _ _) <m/e.
+- :  =<-2-<m-s (=</sum M _ _) (tp-mode-safe/sum _ _ _) (tp-mode-safe/sum _ _ _) M.
+- : =<-2-<m-s (=</prod LL' RR') (tp-mode-safe/prod lub/e L R) (tp-mode-safe/prod Lub' L' R') MlC'
+  <- =<-2-<m-s LL' L L' MlMl'
+ <- lub-2-ub Lub' (ub/p Ml'C' _)
+  <- <m-trans MlMl' Ml'C' MlC'.
+
+- : =<-2-<m-s (=</prod LL' RR') (tp-mode-safe/prod lub/pr L R) (tp-mode-safe/prod Lub' L' R') MlC'
+  <- =<-2-<m-s LL' L L' MlMl'
+ <- lub-2-ub Lub' (ub/p Ml'C' _)
+  <- <m-trans MlMl' Ml'C' MlC'.
+
+- : =<-2-<m-s (=</prod LL' RR') (tp-mode-safe/prod lub/pl L R) (tp-mode-safe/prod Lub' L' R') MrC'
+  <- =<-2-<m-s RR' R R' MrMr'
+  <- lub-2-ub Lub' (ub/p _ Mr'C')
+  <- <m-trans MrMr' Mr'C' MrC'.
+%worlds (tp-b | tp-mode-always-safe) (=<-2-<m-s _ _ _ _).
+%total {A B C} (=<-2-<m-s A B C _).
+
+=<-eq : {A} A =< A -> type.
+%mode =<-eq +T -A.
+=<-eq/unit : =<-eq unit =</unit.
+=<-eq/~> : =<-eq (Ta ~> Tb) (=</~> A B) <- =<-eq Tb B <- =<-eq Ta A.
+=<-eq/sum : =<-eq (sum Ta Tb _) (=</sum <m/e A B) 
+         <- =<-eq Tb B 
+         <- =<-eq Ta A.
+=<-eq/prod : =<-eq (prod Ta Tb) (=</prod A B)  
+          <- =<-eq Tb B 
+          <- =<-eq Ta A.
+
+%worlds () (=<-eq _ _).
+%unique =<-eq +T -1A.
+%total {A} (=<-eq A _).
+
+eq-gen : {Eq : A =< A} =<-eq A Eq -> type.
+%mode eq-gen +A -B.
+%worlds () (eq-gen _ _).
+%trustme %total {A} (eq-gen A _).
+
+
+=<-trans : A =< B -> B =< C -> A =< C -> type. 
+=<-trans' : B =< C -> A =< B -> A =< C -> type. 
+%mode =<-trans +A +B -C.
+%mode =<-trans' +A +B -C.
+- : =<-trans =</unit =</unit =</unit.
+- : =<-trans (=</~> AA' BB') (=</~> A'A'' B'B'') (=</~> AA'' BB'') <- =<-trans' AA' A'A'' AA'' <- =<-trans BB' B'B'' BB''.
+- : =<-trans (=</sum MM' AA' BB') (=</sum M'M'' A'A'' B'B'') (=</sum MM'' AA'' BB'') <- =<-trans AA' A'A'' AA'' <- =<-trans BB' B'B'' BB'' <- <m-trans MM' M'M'' MM''. 
+- : =<-trans (=</prod AA' BB') (=</prod A'A'' B'B'') (=</prod AA'' BB'') <- =<-trans AA' A'A'' AA'' <- =<-trans BB' B'B'' BB''.
+
+- : =<-trans' =</unit =</unit =</unit.
+- : =<-trans' (=</~> A'A'' B'B'') (=</~> AA' BB') (=</~> AA'' BB'') <- =<-trans A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB''.
+- : =<-trans' (=</sum M'M'' A'A'' B'B'') (=</sum MM' AA' BB') (=</sum MM'' AA'' BB'') <- =<-trans' A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB'' <- <m-trans MM' M'M'' MM''. 
+- : =<-trans' (=</prod A'A'' B'B'') (=</prod AA' BB') (=</prod AA'' BB'') <- =<-trans' A'A'' AA' AA'' <- =<-trans' B'B'' BB' BB''.
+
+%block =<-eq-b' : some {A}{E:A =< A} block {_: =<-eq A E}.
+%worlds (=<-eq-b') (=<-trans _ _ _) (=<-trans' _ _ _).
+%unique (=<-trans +A +B -1C) (=<-trans' +A' +B' -1C').
+%total (A B) (=<-trans A _ _) (=<-trans' B _ _).
+
+
+neg-is-top : A =< A' -> tp-mode A neg -> tp-mode A' neg -> type.
+%mode neg-is-top +A +B -C. %worlds () (neg-is-top _ _ _).
+%trustme %total {} (neg-is-top _ _ _).
+
+pos-is-bot : A =< A' -> tp-mode A' pos -> tp-mode A pos -> type.
+%mode pos-is-bot +A +B -C. %worlds () (pos-is-bot _ _ _).
+%trustme %total {} (pos-is-bot _ _ _).
