@@ -12,21 +12,24 @@ of/getRight : of (getRight O) B
 	    <- of O (prod A B)
 	    <- tp-mode B M
 	    <- tp-mode A M.
-of/left : of left (Ta ~> sum Ta Tb Mc)
+of/left : of (left L) (sum Ta Tb Mc)
+       <- of L Ta
        <- tp-mode-safe Tb Mb
        <- tp-mode-safe Ta Ma
        <- ub Ma Mb Mc.
-of/right : of right (Tb ~> sum Ta Tb Mc)
+of/right : of (right R) (sum Ta Tb Mc)
+       <- of R Tb
        <- tp-mode-safe Tb Mb
        <- tp-mode-safe Ta Ma
        <- ub Ma Mb Mc.
 % switch should be GLB not LUB, but right now just making them equal seems good enough.
-of/switch : of (switch L R) (sum A B MC ~> C)
-	 <- of R (B ~> C) 
-	 <- of L (A ~> C)
-	 <- tp-mode-safe B MC
-	 <- tp-mode-safe A MC
-	 <- tp-mode-safe C MD.
+of/switch : of (switch L R O) C
+	      <- of O (sum A B MC)
+	      <- of R (B ~> C) 
+	      <- of L (A ~> C)
+	      <- tp-mode-safe B MC
+	      <- tp-mode-safe A MC
+	      <- tp-mode-safe C MC.
 
 of/logic-var : tp-mode-safe B neg -> of logic-var B.
 
@@ -38,7 +41,6 @@ of/lam : of (lam F A) (A ~> B)
       <- tp-mode-safe B _
       <- tp-mode-safe A _
       <- ({x}{A'} A' =< A -> of x A' -> of (F x) B).
-
 
 used-as-neg : {Result : mode } tp -> tm  -> tm -> type.
 
@@ -80,8 +82,19 @@ used-as-neg/product : used-as-neg ResM Lt (getLeft A) E
                    -> used-as-neg ResM (prod Lt Rt) A E.
 
 used-as-neg/sum-unused : used-as-neg ResM At A L1 
-                       -> used-as-neg ResM At A L2 
-                       -> used-as-neg ResM At A (switch L1 L2).
+                      -> used-as-neg ResM At A L2 
+                      -> used-as-neg ResM At A (switch L1 L2 _).
+
+used-as-neg/sum-used : used-as-neg ResM At A I
+                    -> used-as-neg ResM At A (switch _ _ I).
+
+used-as-neg/left : used-as-neg ResM At A I
+                    -> used-as-neg ResM At A (left I).
+
+used-as-neg/right : used-as-neg ResM At A I
+      	         -> used-as-neg ResM At A (right I).
+
+
 
 %block assm-b : some {T} block {x : tm}{T' : tp}{_:T' =< T }{_:of x T'}.
 %worlds (assm-b | tp-mode-always-safe) (of _ _) (used-neg _ _ _) (used-as-neg _ _ _ _).

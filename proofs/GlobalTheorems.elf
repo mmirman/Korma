@@ -1,23 +1,3 @@
-preservation : step E E' -> of E T -> of E T' -> T' =< T -> type.
-%mode preservation +Step +T -T' -Sub.
-%worlds () (preservation _ _ _ _).
-%trustme %total {A B} (preservation A B _ _).
-%{
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Some lemmas for unpacking and effectiveness
-}%
-
-used-as-neg-2-logic-less : {OfET : of E T} used-as-neg Result T E E' 
-                        -> of E' T' 
-                        -> tp-mode-safe T' pos 
-                        -> logic-less OfET -> type.
-%mode used-as-neg-2-logic-less +OfET +UsedAsNeg +Of +Pos -LogicLess.
-
-%worlds () (used-as-neg-2-logic-less _ _ _ _ _).
-%trustme %total {O A B C} (used-as-neg-2-logic-less O A B C _).
-
-
 %{ 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -40,23 +20,129 @@ so we need a lemma that says (F I: A/+) => F:R/+ ~> O/+ => I:R/+.
 
 }%
 
-resolving : {OfAeAt: of Ae At}
+pres : step E E' -> of E T -> of E' T' -> T' =< T -> type.
+%mode pres +Step +T -T' -Sub.
+
+
+pres/sub : pres Step (of/subsump  TmsT SubT*T OfET* : of E T) 
+                     OfE'T' SubT'T
+        <- pres Step OfET* OfE'T' SubT'T*
+        <- =<-trans SubT'T* SubT*T SubT'T.
+
+pres/e : pres step/e Of Of Eq <- =<-eq _ Eq.
+
+pres/@s : pres (step/@s Step) (of/@s OfEf OfEv Subva) (of/@s OfEf' OfEv Subva') Subb'b
+       <- pres Step OfEf OfEf' (=</~> Subaa' Subb'b)
+       <- =<-trans Subva Subaa' Subva'.
+
+pres/lam : pres 
+            step/lam
+	    (of/@s (of/lam OfF _ _ _) OfVVt SubVtAt)
+	    (OfF E Vt SubVtAt OfVVt)
+	    Eq <- =<-eq _ Eq.
+
+pres/getLeft : pres step/getLeft (of/getLeft _ _ (of/obj OfL OfR)) OfL Eq <- =<-eq _ Eq. 
+pres/getRight : pres step/getRight (of/getRight _ _ (of/obj OfL OfR)) OfR Eq <- =<-eq _ Eq. 
+
+pres/getLeft-simp : pres (step/getLeft-simp Step _) (of/getLeft TmL TmR OfObj) (of/getLeft TmL' TmR' OfObj') SubL
+                 <- pres Step OfObj OfObj' (=</prod SubL SubR)
+                 <- of-safe OfObj' (tp-mode-safe/prod _ TmsL' TmsR')
+                 <- tms-2-tm TmsR' TmR'
+                 <- tms-2-tm TmsL' TmL'. 
+
+pres/getRight-simp : pres (step/getRight-simp Step _) (of/getRight TmL TmR OfObj) (of/getRight TmL' TmR' OfObj') SubR
+                 <- pres Step OfObj OfObj' (=</prod SubL SubR)
+                 <- of-safe OfObj' (tp-mode-safe/prod _ TmsL' TmsR')
+                 <- tms-2-tm TmsR' TmR'
+                 <- tms-2-tm TmsL' TmL'. 
+
+pres/switch-simp : 
+     pres (step/switch-simp Step _) 
+          (of/switch TmsC TmsL TmsR OfFl OfFr OfO) 
+	  (of/switch TmsC TmsL TmsR OfFl OfFr (of/subsump TmsOt SubO'O OfO'))
+          Eq
+  <- pres Step OfO OfO' SubO'O
+  <- of-safe OfO TmsOt
+  <- =<-eq _ Eq.
+
+pres/switch-subsump : pres 
+    Step
+    (of/switch TmsC TmsL TmsR OfFl OfFr (of/subsump (tp-mode-safe/sum UbM Tms'L Tms'R) (=</sum SubM'M SubL'L SubR'R) OfO'))
+    Of'
+    Sub
+ <- =<-eq _ Eq
+ <- pres Step (of/switch TmsC TmsL TmsR 
+          (of/subsump (tp-mode-safe/~> TmsL TmsC) (=</~> SubL'L Eq) OfFl) 
+          (of/subsump (tp-mode-safe/~> TmsR TmsC) (=</~> SubR'R Eq) OfFr) 
+          OfO') Of' Sub.
+
+pres/switch-left : pres 
+    step/switch-left 
+    (of/switch _ TmsL TmsR OfFl OfFr (of/left _ _ _ OfL))
+    (of/@s OfFl OfL Eq')
+    Eq
+ <- =<-eq _ Eq'
+ <- =<-eq _ Eq.
+
+pres/switch-right : pres 
+    step/switch-right
+    (of/switch _ TmsL TmsR OfFl OfFr (of/right _ _ _ OfR))
+    (of/@s OfFr OfR Eq')
+    Eq
+ <- =<-eq _ Eq'
+ <- =<-eq _ Eq.
+
+%worlds () (pres _ _ _ _).
+%trustme %terminates {A B} (pres A B _ _).
+%covers pres +A +B -C -D.
+%freeze pres.
+
+%{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Some lemmas for unpacking and effectiveness
+}%
+
+used-as-neg-2-logic-less : {OfET : of E T} used-as-neg Result T E E' 
+                        -> of E' T' 
+                        -> tp-mode-safe T' pos 
+                        -> logic-less OfET -> type.
+%mode used-as-neg-2-logic-less +OfET +UsedAsNeg +Of +Pos -LogicLess.
+
+%worlds () (used-as-neg-2-logic-less _ _ _ _ _).
+%trustme %total {O A B C} (used-as-neg-2-logic-less O A B C _).
+
+used-as-neg-somewhere : type.
+used-as-neg-somewhere/d : used-as-neg-somewhere
+                       <- step E V
+                       <- value V
+                       <- of E Et
+                       <- tp-mode-safe Et pos
+                       <- ({A}{At} of A At -> tp-mode-safe At neg -> used-as-neg pos At A E).
+
+resolving : used-as-neg-somewhere
+         -> {OfAeAt : of Ae At}
 	    step Ae Be
-         -> {OfBeBt: of Be Bt}
+         -> {OfBeBt : of Be Bt}
 	    Bt =< At
          -> tp-mode-safe At pos
          -> logic-less OfBeBt
          -> logic-less OfAeAt
          -> type.
 
-- : resolving _ step/e _ _ _ A A. 
+- : resolving _ _ step/e _ _ _ A A. 
 
-0 : resolving _ (_ : step (@s E1 _) (@s E1 _)) _ _ _ (logic-less/app++ Arg_Pos Arg_Neg) (logic-less/app++ Arg_Pos Arg_Neg).
+0 : resolving _ _ (_ : step (@s E1 _) (@s E1 _)) _ _ _ (logic-less/app++ Arg_Pos Arg_Neg) (logic-less/app++ Arg_Pos Arg_Neg).
 
-% 1 : resolving (step/obj-simp _ Simp) Init_Result_Pos LogicLessLeft (logic-less/lr-lazy LogicLessLeft Simp).
-
-2p0 : resolving (step/getLeft-simp Step NotValE1) Lpos (logic-less/getLeft LogicLessObj) (logic-less/getLeft LogicLessObj')
-   <- resolving Step (tp-mode/prod lub/e) LogicLessObj (LogicLessObj' : logic-less L).
+2p0 : resolving UAN 
+                (of/getLeft TpmL TpmR OfProd)
+                (step/getLeft-simp Step NotValE1) 
+                (of/getLeft TpmL' TpmR' OfProd')
+                _
+                Lpos 
+                (logic-less/getLeft LogicLessObj) 
+                (logic-less/getLeft LogicLessObj')
+   <- resolving UAN _ Step _ _ (tp-mode/prod lub/e) LogicLessObj (LogicLessObj' : logic-less L).
 
 4 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
               Init_Result_Pos _ (logic-less/app++ tp-mode/sum Init_Result_Pos).

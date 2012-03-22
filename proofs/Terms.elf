@@ -6,10 +6,11 @@ empty : tm.
 obj : tm -> tm -> tm.
 getLeft : tm -> tm.
 getRight : tm -> tm.
-left : tm.
-right : tm.
+left : tm -> tm.
+right : tm -> tm.
 % switch should be GLB not LUB, but right now just making them equal seems good enough.
 switch : tm
+      -> tm
       -> tm
       -> tm.
 logic-var : tm.
@@ -22,9 +23,8 @@ logic-var : tm.
 value : tm -> type.
 %mode value +A.
 value/lam : value (lam _ _).
-value/switch : value (switch _ _).
-value/left : value left.
-value/right : value right.
+value/left : value (left _).
+value/right : value (right _).
 value/empty : value empty.
 value/obj : value (obj A B).
 %worlds (tm-b) (value _).
@@ -32,6 +32,7 @@ value/obj : value (obj A B).
 
 not-value : tm -> type.
 %mode not-value +A.
+not-value/switch : not-value (switch _ _ _).
 not-value/getLeft : not-value (getLeft _).
 not-value/getRight : not-value (getRight _).
 not-value/@s : not-value (@s _ _).
