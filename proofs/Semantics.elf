@@ -2,6 +2,11 @@ step : tm -> tm -> type. %name step Step.
 
 %mode step +A -B.
 
+step/compose : step A C
+	    <- step A B 
+            <- step B C.
+            
+
 step/@s : step (@s E1 E2) (@s E1' E2)
        <- step E1 E1'.
 
@@ -9,8 +14,6 @@ step/lam : step (@s (lam V _) E) (V E).
 
 
 step/getLeft : step (getLeft (obj L _)) L.
-
-step/e : step A A.
 
 step/getLeft-simp : step (getLeft A) (getLeft A')
                  <- not-value A 

@@ -7,6 +7,8 @@ absurd : type.
 logic-less : of A T -> type. %name logic-less LL.
 %mode logic-less +A.
 
+logic-less/sub : logic-less (of/subsump _ _ Of) <- logic-less Of.
+
 logic-less/app-+ : logic-less (of/@s _ OfIe _ : of (@s Fe Ie) Bt)
 		<- logic-less OfIe
 		<- tp-mode-safe Bt pos.
@@ -16,7 +18,7 @@ logic-less/app++ : logic-less (of/@s _ _ (_ : _ =< At) : of (@s Fe Ie) Bt)
                 <- tp-mode-safe Bt pos
                 <- tp-mode-safe At pos.
 
-logic-less/app : logic-less (of/@s OfFe OfIe _)
+logic-less/app : logic-less (of/@s OfFe OfIe _ : of _ Bt) 
               <- logic-less OfIe
               <- logic-less OfFe.
 
@@ -29,10 +31,17 @@ logic-less/obj : logic-less (of/obj OfA OfB)
               <- logic-less OfB 
               <- logic-less OfA.
 
+logic-less/obj-l : logic-less (of/obj OfA (OfB : of B Bt)) 
+		<- tp-mode-safe Bt pos
+		<- logic-less OfA.
 
-logic-less/getLeft : logic-less OfA -> logic-less (of/getLeft _ _ OfA).
+logic-less/obj-r : logic-less (of/obj (OfA : of A At) OfB) 
+		<- logic-less OfB
+		<- tp-mode-safe At pos.
 
-logic-less/getRight : logic-less OfA -> logic-less (of/getRight _ _ OfA).
+logic-less/getLeft : logic-less OfA -> logic-less (of/getLeft OfA).
+
+logic-less/getRight : logic-less OfA -> logic-less (of/getRight OfA).
 
 logic-less/left : logic-less (of/left _ _ _ OfL) <- logic-less OfL.
 logic-less/right : logic-less (of/right _ _ _ OfR) <- logic-less OfR.

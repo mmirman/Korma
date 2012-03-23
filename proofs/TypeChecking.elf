@@ -5,13 +5,9 @@ used-neg : (tm -> tm) -> tp -> tp -> type.
 of/empty : of empty unit.
 of/obj : of L Tl -> of R Tr -> of (obj L R) (prod Tl Tr).
 of/getLeft : of (getLeft O) A
-          <- of O (prod A B)
-          <- tp-mode B M
-          <- tp-mode A M.
+          <- of O (prod A B).
 of/getRight : of (getRight O) B
-	    <- of O (prod A B)
-	    <- tp-mode B M
-	    <- tp-mode A M.
+	    <- of O (prod A B).
 of/left : of (left L) (sum Ta Tb Mc)
        <- of L Ta
        <- tp-mode-safe Tb Mb
@@ -24,12 +20,11 @@ of/right : of (right R) (sum Ta Tb Mc)
        <- ub Ma Mb Mc.
 % switch should be GLB not LUB, but right now just making them equal seems good enough.
 of/switch : of (switch L R O) C
-	      <- of O (sum A B MC)
+	      <- of O (sum A B M)
 	      <- of R (B ~> C) 
 	      <- of L (A ~> C)
-	      <- tp-mode-safe B MC
-	      <- tp-mode-safe A MC
-	      <- tp-mode-safe C MC.
+	      <- tp-mode B M
+	      <- tp-mode A M.
 
 of/logic-var : tp-mode-safe B neg -> of logic-var B.
 
@@ -65,7 +60,7 @@ used-as-neg/app-l : used-as-neg ResM At A E1
 used-as-neg/app-r : used-as-neg ResM At A (@s E1 E2)
                  <- of E1 (T1 ~> T2)
                  <- used-as-neg neg At A E2
-                 <- tp-mode T1 neg.
+		 <- tp-mode T1 neg.
 
 used-as-neg/objL : used-as-neg ResM At A (obj L R)
                 <- of L To

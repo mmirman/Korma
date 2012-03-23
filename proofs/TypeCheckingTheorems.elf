@@ -6,14 +6,15 @@ of-safe : of E T -> tp-mode-safe T M -> type.
  <- of-safe OfR TmsR
  <- of-safe OfL TmsL
  <- has-lub _ _ _ Lub.
-- : of-safe (of/getLeft _ _ OfProd) TmsL
+- : of-safe (of/getLeft OfProd) TmsL
  <- of-safe OfProd (tp-mode-safe/prod _ TmsL TmsR).
-- : of-safe (of/getRight _ _ OfProd) TmsR
+- : of-safe (of/getRight OfProd) TmsR
  <- of-safe OfProd (tp-mode-safe/prod _ TmsL TmsR).
 - : of-safe (of/left Ub TmsA TmsB _) (tp-mode-safe/sum Ub TmsA TmsB).
 - : of-safe (of/right Ub TmsA TmsB _) (tp-mode-safe/sum Ub TmsA TmsB).
 
-- : of-safe (of/switch TmsC TmsA TmsB OfL OfR OfO) TmsC.
+- : of-safe (of/switch TmA TmB OfL OfR OfO) TmsC
+ <- of-safe OfL (tp-mode-safe/~> _ TmsC).
 
 - : of-safe (of/logic-var Tms) Tms.
 

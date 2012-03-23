@@ -23,17 +23,23 @@ so we need a lemma that says (F I: A/+) => F:R/+ ~> O/+ => I:R/+.
 pres : step E E' -> of E T -> of E' T' -> T' =< T -> type.
 %mode pres +Step +T -T' -Sub.
 
+pres/compose : pres (step/compose StepBC StepAB) OfA OfC SubCA
+            <- pres StepAB OfA OfB SubBA
+            <- pres StepBC OfB OfC SubCB
+            <- =<-trans SubCB SubBA SubCA.
 
-pres/sub : pres Step (of/subsump  TmsT SubT*T OfET* : of E T) 
-                     OfE'T' SubT'T
+pres/sub : pres Step (of/subsump TmsT SubT*T OfET*) OfE'T' SubT'T
         <- pres Step OfET* OfE'T' SubT'T*
         <- =<-trans SubT'T* SubT*T SubT'T.
-
-pres/e : pres step/e Of Of Eq <- =<-eq _ Eq.
 
 pres/@s : pres (step/@s Step) (of/@s OfEf OfEv Subva) (of/@s OfEf' OfEv Subva') Subb'b
        <- pres Step OfEf OfEf' (=</~> Subaa' Subb'b)
        <- =<-trans Subva Subaa' Subva'.
+
+pres/lam-subsump 
+   : pres Step (of/@s (of/subsump TmsF (=</~> SubAA' SubB'B) OfFA'B') OfVVt SubVtAt) Of Sub
+  <- of-safe (of/subsump TmsF (=</~> SubAA' SubB'B) OfFA'B') (tp-mode-safe/~> TmsAt TmsBt)
+  <- pres Step (of/subsump TmsBt SubB'B (of/@s OfFA'B' (of/subsump TmsAt SubVtAt OfVVt) SubAA')) Of Sub.
 
 pres/lam : pres 
             step/lam
@@ -41,16 +47,29 @@ pres/lam : pres
 	    (OfF E Vt SubVtAt OfVVt)
 	    Eq <- =<-eq _ Eq.
 
-pres/getLeft : pres step/getLeft (of/getLeft _ _ (of/obj OfL OfR)) OfL Eq <- =<-eq _ Eq. 
-pres/getRight : pres step/getRight (of/getRight _ _ (of/obj OfL OfR)) OfR Eq <- =<-eq _ Eq. 
+pres/getLeft-subsump 
+  : pres Step (of/getLeft (of/subsump (tp-mode-safe/prod _ TmsL TmsR) (=</prod SubL'L SubR'R) OfO')) Of Sub
+ <- of-safe OfO' (tp-mode-safe/prod _ TmsL' TmsR')
+ <- pres Step (of/subsump TmsL SubL'L (of/getLeft OfO')) Of Sub.
 
-pres/getLeft-simp : pres (step/getLeft-simp Step _) (of/getLeft TmL TmR OfObj) (of/getLeft TmL' TmR' OfObj') SubL
+pres/getLeft : pres step/getLeft (of/getLeft (of/obj OfL OfR)) OfL Eq <- =<-eq _ Eq. 
+
+pres/getRight-subsump
+  : pres Step (of/getRight (of/subsump (tp-mode-safe/prod _ TmsL TmsR) (=</prod SubL'L SubR'R) OfO')) Of Sub
+ <- of-safe OfO' (tp-mode-safe/prod _ TmsL' TmsR')
+ <- tms-2-tm TmsR' TmR'
+ <- tms-2-tm TmsL' TmL'
+ <- pres Step (of/subsump TmsR SubR'R (of/getRight OfO')) Of Sub.
+
+pres/getRight : pres step/getRight (of/getRight (of/obj OfL OfR)) OfR Eq <- =<-eq _ Eq. 
+
+pres/getLeft-simp : pres (step/getLeft-simp Step _) (of/getLeft OfObj) (of/getLeft OfObj') SubL
                  <- pres Step OfObj OfObj' (=</prod SubL SubR)
                  <- of-safe OfObj' (tp-mode-safe/prod _ TmsL' TmsR')
                  <- tms-2-tm TmsR' TmR'
                  <- tms-2-tm TmsL' TmL'. 
 
-pres/getRight-simp : pres (step/getRight-simp Step _) (of/getRight TmL TmR OfObj) (of/getRight TmL' TmR' OfObj') SubR
+pres/getRight-simp : pres (step/getRight-simp Step _) (of/getRight OfObj) (of/getRight OfObj') SubR
                  <- pres Step OfObj OfObj' (=</prod SubL SubR)
                  <- of-safe OfObj' (tp-mode-safe/prod _ TmsL' TmsR')
                  <- tms-2-tm TmsR' TmR'
@@ -58,27 +77,40 @@ pres/getRight-simp : pres (step/getRight-simp Step _) (of/getRight TmL TmR OfObj
 
 pres/switch-simp : 
      pres (step/switch-simp Step _) 
-          (of/switch TmsC TmsL TmsR OfFl OfFr OfO) 
-	  (of/switch TmsC TmsL TmsR OfFl OfFr (of/subsump TmsOt SubO'O OfO'))
+          (of/switch TmsL TmsR OfFl OfFr OfO) 
+	  (of/switch TmsL TmsR OfFl OfFr (of/subsump TmsOt SubO'O OfO'))
           Eq
   <- pres Step OfO OfO' SubO'O
   <- of-safe OfO TmsOt
   <- =<-eq _ Eq.
 
-pres/switch-subsump : pres 
-    Step
-    (of/switch TmsC TmsL TmsR OfFl OfFr (of/subsump (tp-mode-safe/sum UbM Tms'L Tms'R) (=</sum SubM'M SubL'L SubR'R) OfO'))
-    Of'
-    Sub
- <- =<-eq _ Eq
- <- pres Step (of/switch TmsC TmsL TmsR 
-          (of/subsump (tp-mode-safe/~> TmsL TmsC) (=</~> SubL'L Eq) OfFl) 
-          (of/subsump (tp-mode-safe/~> TmsR TmsC) (=</~> SubR'R Eq) OfFr) 
-          OfO') Of' Sub.
+pres/switch-subsump 
+   : pres 
+      Step
+      (of/switch TmL TmR OfFl OfFr
+	 (of/subsump (tp-mode-safe/sum UbM Tms'L Tms'R) (=</sum SubM'M SubL'L SubR'R) OfO'))
+      Of'
+      Sub 
+  <- =<-eq _ Eq
+  <- of-safe OfO' (tp-mode-safe/sum _ TmsL' TmsR')
+  <- of-safe (of/switch TmL TmR OfFl OfFr
+	        (of/subsump (tp-mode-safe/sum UbM Tms'L Tms'R) (=</sum SubM'M SubL'L SubR'R) OfO'))
+     TmsC
+  <- tms-2-tm TmsR' TmR'
+  <- tms-2-tm TmsL' TmL'
+  <- pres
+     Step
+     (of/switch TmL' TmR'
+	(of/subsump (tp-mode-safe/~> TmsL' TmsC) (=</~> SubL'L Eq) OfFl)
+	(of/subsump (tp-mode-safe/~> TmsR' TmsC) (=</~> SubR'R Eq) OfFr)
+	OfO' 
+     ) 
+     Of' 
+     Sub.
 
 pres/switch-left : pres 
     step/switch-left 
-    (of/switch _ TmsL TmsR OfFl OfFr (of/left _ _ _ OfL))
+    (of/switch TmsL TmsR OfFl OfFr (of/left _ _ _ OfL))
     (of/@s OfFl OfL Eq')
     Eq
  <- =<-eq _ Eq'
@@ -86,66 +118,214 @@ pres/switch-left : pres
 
 pres/switch-right : pres 
     step/switch-right
-    (of/switch _ TmsL TmsR OfFl OfFr (of/right _ _ _ OfR))
+    (of/switch TmsL TmsR OfFl OfFr (of/right _ _ _ OfR))
     (of/@s OfFr OfR Eq')
     Eq
  <- =<-eq _ Eq'
  <- =<-eq _ Eq.
 
 %worlds () (pres _ _ _ _).
-%trustme %terminates {A B} (pres A B _ _).
-%covers pres +A +B -C -D.
+%{ 
+we will need a lemma to get terminates working, 
+but for now, we know it works 
+for the pres/switch-subsump cases because 
+we always move the of/subsump to the OfFl and OfFr from the OfO'
+so eventually we will match again'st something with of/left or of/right instead of of/subsump for OfO'
+and in those two cases, we don't match against OfFl or OfFr.
+
+The same goes for lam, getLeft and getRight.
+
+We also never match on the outputs except where it obviously works, so output coverage should succeed.
+}%
+%covers pres +A +B -C -D. 
+%trustme %total {A B} (pres A B _ _).
 %freeze pres.
+
+get-pres : {Step: step E E' } {Of : of E T} pres Step Of Of' Sub -> type.
+%mode get-pres +A +B -C.
+%trustme %total {A B} (get-pres A B _).
+
 
 %{
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Some lemmas for unpacking and effectiveness
 }%
+not-stuck : tm -> type.
+not-stuck/value : value A -> not-stuck A.
+not-stuck/step : step E E' -> not-stuck E.
 
-used-as-neg-2-logic-less : {OfET : of E T} used-as-neg Result T E E' 
-                        -> of E' T' 
-                        -> tp-mode-safe T' pos 
-                        -> logic-less OfET -> type.
-%mode used-as-neg-2-logic-less +OfET +UsedAsNeg +Of +Pos -LogicLess.
+progress : of E Xt -> not-stuck E -> type.
+%mode progress +A -B.
+%worlds () (progress _ _).
+%trustme %total {A} (progress A _).
 
-%worlds () (used-as-neg-2-logic-less _ _ _ _ _).
+resolving-value : of X Xt -> used-as-neg Result Xt X V -> logic-less (_ : of V _) -> logic-less (_ : of X _) -> type.
+
+%mode resolving-value +OfX +UanXV +LLV -LLX.
+%worlds () (resolving-value _ _ _ _).
+%trustme %total {O A B} (resolving-value O A B _).
+resolving : of X Xt
+         -> used-as-neg Result Xt X E 
+	 -> pres (Step : step E V) (OfE : of E Et) OfV SubVE
+	 -> tp-mode-safe Et pos
+	 -> logic-less OfV
+	 -> logic-less OfX 
+	 -> type.
+%mode resolving +OfX +UanXE +Pres +TmsEp +LLV -LLX.
+
+res/comp : resolving OfX UanXE (pres/compose (_ : =<-trans SubCB SubBA SubCA) (PresBC: pres _ OfB _ _) PresAB) TmsA_pos LLC LLA
+        <- pos-is-bot SubBA TmsA_pos TmsB_pos
+        <- resolving OfB used-as-neg/e PresBC TmsB_pos LLC LLB
+        <- resolving OfX UanXE PresAB TmsA_pos LLB LLA.
+
+res/@s/app-l
+  : resolving OfX (used-as-neg/app-l UanXE1) (pres/@s Trans (Pres : pres _ OfEf _ _)) TmsA_pos (logic-less/app LLFe LLIe) LLX
+ <- of-safe OfEf (tp-mode-safe/~> TmsA TmsB)
+ <- resolving OfX UanXE1 Pres (tp-mode-safe/~> TmsA TmsB) LLFe LLX.
+
+res/@s/app-r
+  : resolving 
+     (OfX : of X Xt)
+     (used-as-neg/app-r TmA- UanXEv OfEf_A~>B  : used-as-neg _ Xt X (@s Ef Ev))
+     (pres/@s Trans Pres : pres _ (of/@s _ OfEv _) _ _)
+     TmsB+
+     (logic-less/app LLEf' LLEv : logic-less (_: of (@s Ef' Ev) _)) 
+     LLX
+ <- resolving-value OfX UanXEv LLEv LLX.
+
+
+res/@s/-+ 
+ : resolving Context (pres/@s Trans Pres) TmsA_pos 
+    (logic-less/app-+ TmsA_pos' LLIe)
+    (logic-less/app-+ TmsA_pos LLIe).
+
+res/@s/++ 
+ : resolving Context (pres/@s (Trans : =<-trans Subva Subaa' Subva') Pres ) TmsB+
+    (logic-less/app++ TmsA'+ TmsB'+)
+    (logic-less/app++ TmsA+ TmsB+)
+ <- pos-is-bot Subaa' TmsA'+ TmsA+.
+
+res/getLeft/r-pos
+  : resolving Context
+              (pres/getLeft _ : pres step/getLeft (of/getLeft (of/obj OfL (OfR : of R Rt))) OfL Eq) 
+              TmsL_pos 
+              LL_L 
+              (logic-less/getLeft (logic-less/obj-l LL_L TmsR_pos))
+ <- of-safe OfR TmsR_pos.
+
+
+%worlds () (resolving _ _ _ _ _).
 %trustme %total {O A B C} (used-as-neg-2-logic-less O A B C _).
 
-used-as-neg-somewhere : type.
-used-as-neg-somewhere/d : used-as-neg-somewhere
-                       <- step E V
-                       <- value V
-                       <- of E Et
-                       <- tp-mode-safe Et pos
-                       <- ({A}{At} of A At -> tp-mode-safe At neg -> used-as-neg pos At A E).
 
-resolving : used-as-neg-somewhere
-         -> {OfAeAt : of Ae At}
-	    step Ae Be
-         -> {OfBeBt : of Be Bt}
-	    Bt =< At
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+used-as-neg-context : type.
+uan-context/d : used-as-neg-context
+	     <- step E V
+	     <- logic-less (OfV : of V Vt)
+             <- of E Et
+             <- tp-mode-safe Et pos
+             <- ({A}{At} of A At -> tp-mode-safe At neg -> used-as-neg pos At A E).
+
+
+resolving : used-as-neg-context
+         -> pres Step (OfAeAt : of _ At) OfBeBt SubBtAt
          -> tp-mode-safe At pos
          -> logic-less OfBeBt
          -> logic-less OfAeAt
          -> type.
 
-- : resolving _ _ step/e _ _ _ A A. 
+%mode resolving +C +Pres +TmsP +LL -LL'.
 
-0 : resolving _ _ (_ : step (@s E1 _) (@s E1 _)) _ _ _ (logic-less/app++ Arg_Pos Arg_Neg) (logic-less/app++ Arg_Pos Arg_Neg).
+
+res/getLeft/r-pos
+  : resolving Context
+              (pres/getLeft _ : pres step/getLeft (of/getLeft (of/obj OfL (OfR : of R Rt))) OfL Eq) 
+              TmsL_pos 
+              LL_L 
+              (logic-less/getLeft (logic-less/obj-l LL_L TmsR_pos))
+ <- of-safe OfR TmsR_pos.
+
+res/getLeft/r-neg
+  : resolving (uan-context/d Foo TmsE+ OfE LLV StepEV) 
+              (pres/getLeft _ : pres step/getLeft (of/getLeft (of/obj OfL (OfR : of R Rt))) OfL Eq) 
+              TmsL_pos 
+              LL_L
+              (logic-less/getLeft (logic-less/obj LL_L LL_R))
+ <- of-safe OfR TmsR_neg
+ <- {E}{V}{Step : step E V}{Vt}{OfV : of V Vt}{LLV : logic-less OfV} (Context R Rt OfR TmsR_neg) 
+
+%{ <- get-pres StepEV OfE PresEV
+ <- resolving (uan-context/d LLV Foo TmsE+ OfE ValV StepEV) PresEV TmsE+ LLV LLE
+ <- used-as-neg.
+ <- used-as-neg-2-logic-less OfR (Foo R Rt OfR TmsR_neg) OfE TmsE+ LL_R. }%
+
+res/subsump : resolving Context Pres TmsA_pos (logic-less/sub Of) Of.
+
+res/pres : resolving Context (pres/compose (_ : =<-trans SubCB SubBA SubCA) PresBC PresAB) TmsA_pos LLC LLA
+        <- pos-is-bot SubBA TmsA_pos TmsB_pos
+        <- resolving Context PresBC TmsB_pos LLC LLB
+        <- resolving Context PresAB TmsA_pos LLB LLA.
+
+res/sub
+  : resolving Context (pres/sub _ Pres) TmsA_pos LL (logic-less/sub LL')
+ <- resolving Context Pres TmsA_pos LL LL'.
+
+res/@s/app 
+  : resolving Context (pres/@s Trans (Pres : pres _ OfEf _ _)) TmsA_pos (logic-less/app LLFe LLIe) (logic-less/app LLFe' LLIe)
+ <- of-safe OfEf (tp-mode-safe/~> TmsA TmsB)
+ <- resolving Context Pres (tp-mode-safe/~> TmsA TmsB) LLFe LLFe'.
+
+res/@s/-+ 
+ : resolving Context (pres/@s Trans Pres) TmsA_pos 
+    (logic-less/app-+ TmsA_pos' LLIe)
+    (logic-less/app-+ TmsA_pos LLIe).
+
+res/@s/++ 
+ : resolving Context (pres/@s (Trans : =<-trans Subva Subaa' Subva') Pres ) TmsB+
+    (logic-less/app++ TmsA'+ TmsB'+)
+    (logic-less/app++ TmsA+ TmsB+)
+ <- pos-is-bot Subaa' TmsA'+ TmsA+.
+
+     
+
+
+%worlds () (resolving _ _ _ _ _).
+% %total {A B C D} (resolving A B C D _).
+
+
 
 2p0 : resolving UAN 
-                (of/getLeft TpmL TpmR OfProd)
                 (step/getLeft-simp Step NotValE1) 
-                (of/getLeft TpmL' TpmR' OfProd')
-                _
+                (of/getLeft TmL TmR OfO)
                 Lpos 
                 (logic-less/getLeft LogicLessObj) 
                 (logic-less/getLeft LogicLessObj')
-   <- resolving UAN _ Step _ _ (tp-mode/prod lub/e) LogicLessObj (LogicLessObj' : logic-less L).
+   <- of-safe OfO TmsO
+   <- resolving UAN Step OfO TmsO LogicLessObj LogicLessObj'.
 
-4 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
+4 : resolving _ (step/switch-left _ _ )
+                : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
               Init_Result_Pos _ (logic-less/app++ tp-mode/sum Init_Result_Pos).
+
 5 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
               Init_Result_Pos
               (logic-less/app-+ Init_Result_Pos Ie)
@@ -166,17 +346,9 @@ resolving : used-as-neg-somewhere
               (logic-less/app _ Ie)
               (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/right Ie)).
 
-10 : resolving (step/@s _ StepE1tE1') Init_Result_Pos (logic-less/app LLFe LLIe) (logic-less/app LLFe' LLIe) 
-  <- resolving StepE1tE1' tp-mode/~> LLFe LLFe'.
-
-11 : resolving
-      (step/@s Trans Step)
-      Init_Result_Pos
-      (logic-less/app-+ Init_Result_Pos' LLIe)
-      (logic-less/app-+ Init_Result_Pos LLIe).
-
 %% somehow the positivity of the result, 
 %% and the positivity of the first argument imply the non check of the logic-less
+
 
 12 : resolving 
      (step/lam (GetSubRes : getSubRes (V (subRes/dual T E S)) _ TmB B'eB) : step (@s (lam V (used-neg/+* Arg_Is_Pos)) E S) TmB B'eB)
@@ -203,5 +375,4 @@ resolving : used-as-neg-somewhere
 
 
 %worlds () (resolving _ _ _ _).
-%mode resolving +A +B +C -D.
 %total {A B} (resolving A _ B _).
