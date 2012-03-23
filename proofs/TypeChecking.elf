@@ -30,7 +30,7 @@ of/logic-var : tp-mode-safe B neg -> of logic-var B.
 
 of/subsump : tp-mode-safe T' M -> T =< T' -> of E T -> of E T'. % derivations can be specialized.
 
-of/@s : of Ef (A ~> C) -> of Ev A' -> A' =< A -> of (@s Ef Ev) C.
+of/@s : of Ef (A ~> C) -> of Ev A' -> of (@s Ef Ev) C.
 of/lam : of (lam F A) (A ~> B)
       <- used-neg F A B
       <- tp-mode-safe B _

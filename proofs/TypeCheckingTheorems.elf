@@ -18,7 +18,7 @@ of-safe : of E T -> tp-mode-safe T M -> type.
 
 - : of-safe (of/logic-var Tms) Tms.
 
-- : of-safe (of/@s OfEf OfEv Sub) R
+- : of-safe (of/@s OfEf OfEv) R
  <- of-safe OfEf (tp-mode-safe/~> _ R).
 
 - : of-safe (of/lam FoOf TmsA TmsB (_ : used-neg F _ _)) (tp-mode-safe/~> TmsA TmsB).

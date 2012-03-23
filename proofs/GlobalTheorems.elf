@@ -32,20 +32,20 @@ pres/sub : pres Step (of/subsump TmsT SubT*T OfET*) OfE'T' SubT'T
         <- pres Step OfET* OfE'T' SubT'T*
         <- =<-trans SubT'T* SubT*T SubT'T.
 
-pres/@s : pres (step/@s Step) (of/@s OfEf OfEv Subva) (of/@s OfEf' OfEv Subva') Subb'b
-       <- pres Step OfEf OfEf' (=</~> Subaa' Subb'b)
-       <- =<-trans Subva Subaa' Subva'.
+pres/@s : pres (step/@s Step) (of/@s OfEf OfEv) (of/@s OfEf' OfEv) Subb'b
+       <- pres Step OfEf OfEf' (=</~> Subaa' Subb'b).
 
 pres/lam-subsump 
-   : pres Step (of/@s (of/subsump TmsF (=</~> SubAA' SubB'B) OfFA'B') OfVVt SubVtAt) Of Sub
-  <- of-safe (of/subsump TmsF (=</~> SubAA' SubB'B) OfFA'B') (tp-mode-safe/~> TmsAt TmsBt)
-  <- pres Step (of/subsump TmsBt SubB'B (of/@s OfFA'B' (of/subsump TmsAt SubVtAt OfVVt) SubAA')) Of Sub.
+   : pres Step (of/@s (of/subsump TmsF (=</~> SubAA' SubB'B) OfFA'B') OfVA) Of Sub
+  <- of-safe (of/subsump TmsF (=</~> SubAA' SubB'B) OfFA'B') (tp-mode-safe/~> TmsA TmsB)
+  <- of-safe OfFA'B'  (tp-mode-safe/~> TmsA' _)
+  <- pres Step (of/subsump TmsB SubB'B (of/@s OfFA'B' (of/subsump TmsA' SubAA' OfVA))) Of Sub.
 
 pres/lam : pres 
             step/lam
-	    (of/@s (of/lam OfF _ _ _) OfVVt SubVtAt)
-	    (OfF E Vt SubVtAt OfVVt)
-	    Eq <- =<-eq _ Eq.
+	    (of/@s (of/lam OfF _ _ _) OfVVt)
+	    (OfF E Vt Eq' OfVVt)
+	    Eq <- =<-eq _ Eq <- =<-eq _ Eq'.
 
 pres/getLeft-subsump 
   : pres Step (of/getLeft (of/subsump (tp-mode-safe/prod _ TmsL TmsR) (=</prod SubL'L SubR'R) OfO')) Of Sub
@@ -111,17 +111,15 @@ pres/switch-subsump
 pres/switch-left : pres 
     step/switch-left 
     (of/switch TmsL TmsR OfFl OfFr (of/left _ _ _ OfL))
-    (of/@s OfFl OfL Eq')
+    (of/@s OfFl OfL)
     Eq
- <- =<-eq _ Eq'
  <- =<-eq _ Eq.
 
 pres/switch-right : pres 
     step/switch-right
     (of/switch TmsL TmsR OfFl OfFr (of/right _ _ _ OfR))
-    (of/@s OfFr OfR Eq')
+    (of/@s OfFr OfR)
     Eq
- <- =<-eq _ Eq'
  <- =<-eq _ Eq.
 
 %worlds () (pres _ _ _ _).
