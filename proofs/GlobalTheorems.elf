@@ -36,16 +36,18 @@ pres/@s : pres (step/@s Step) (of/@s OfEf OfEv) (of/@s OfEf' OfEv) Subb'b
        <- pres Step OfEf OfEf' (=</~> Subaa' Subb'b).
 
 pres/lam-subsump 
-   : pres Step (of/@s (of/subsump TmsF (=</~> SubAA' SubB'B) OfFA'B') OfVA) Of Sub
-  <- of-safe (of/subsump TmsF (=</~> SubAA' SubB'B) OfFA'B') (tp-mode-safe/~> TmsA TmsB)
-  <- of-safe OfFA'B'  (tp-mode-safe/~> TmsA' _)
-  <- pres Step (of/subsump TmsB SubB'B (of/@s OfFA'B' (of/subsump TmsA' SubAA' OfVA))) Of Sub.
+   : pres step/lam (of/@s (of/subsump _ (=</~> SubAA' SubB'B) OfFA'B') OfA) OfB* SubB*B
+  <- of-safe OfFA'B' (tp-mode-safe/~> TmsA' TmsB')
+  <- pres step/lam (of/@s OfFA'B' (of/subsump TmsA' SubAA' OfA)) OfB* SubB*B'
+  <- =<-trans SubB*B' SubB'B SubB*B.
 
 pres/lam : pres 
             step/lam
-	    (of/@s (of/lam OfF _ _ _) OfVVt)
-	    (OfF E Vt Eq' OfVVt)
-	    Eq <- =<-eq _ Eq <- =<-eq _ Eq'.
+	    (of/@s (of/lam OfF InMode OutMode UAN-F) (OfVVt))
+	    (OfF V Vt Eq' OfVVt)
+	    Eq
+         <- =<-eq Vt Eq'
+         <- =<-eq Ot Eq.
 
 pres/getLeft-subsump 
   : pres Step (of/getLeft (of/subsump (tp-mode-safe/prod _ TmsL TmsR) (=</prod SubL'L SubR'R) OfO')) Of Sub
@@ -141,6 +143,7 @@ We also never match on the outputs except where it obviously works, so output co
 
 get-pres : {Step: step E E' } {Of : of E T} pres Step Of Of' Sub -> type.
 %mode get-pres +A +B -C.
+%worlds () (get-pres _ _ _).
 %trustme %total {A B} (get-pres A B _).
 
 
@@ -158,11 +161,21 @@ progress : of E Xt -> not-stuck E -> type.
 %worlds () (progress _ _).
 %trustme %total {A} (progress A _).
 
-resolving-value : of X Xt -> used-as-neg Result Xt X V -> logic-less (_ : of V _) -> logic-less (_ : of X _) -> type.
+uan-2-ll : of X Xt -> used-as-neg R Xt X V -> logic-less (OfV : of V Vt) -> logic-less (_ : of X Xt) -> type.
+%mode uan-2-ll +OfX +UanXV +LLV -LLX.
+%worlds () (uan-2-ll _ _ _ _).
+%trustme %total {I A B} (uan-2-ll I A B _).
 
-%mode resolving-value +OfX +UanXV +LLV -LLX.
-%worlds () (resolving-value _ _ _ _).
-%trustme %total {O A B} (resolving-value O A B _).
+logic-less-value : of X Xt -> value V -> used-as-neg R Xt X V -> logic-less ( OfV : of V Vt) -> logic-less (_ : of X Xt) -> type.
+%mode logic-less-value +OfX +V +UanXV +LLV -LLX.
+%worlds () (logic-less-value _ _ _ _ _).
+%trustme %total {I A B C} (logic-less-value I A B C _).
+
+
+
+resolving-value : of X Xt -> used-as-neg _ Xt X V -> tp-mode-safe Vt pos -> logic-less (_ : of V Vt) -> logic-less (_ : of X Xt) -> type.
+%mode resolving-value +OfX +UanXV +TmsV +LLV -LLX.
+
 resolving : of X Xt
          -> used-as-neg Result Xt X E 
 	 -> pres (Step : step E V) (OfE : of E Et) OfV SubVE
@@ -172,13 +185,24 @@ resolving : of X Xt
 	 -> type.
 %mode resolving +OfX +UanXE +Pres +TmsEp +LLV -LLX.
 
+
+- : resolving-value OfX UanXV TmsV+ (LLV : logic-less OfV) LLX 
+ <- progress OfV (not-stuck/value V)
+ <- logic-less-value OfX V UanXV LLV LLX.
+
+- : resolving-value OfX UanXV TmsV+ (LLV : logic-less OfV) LLX 
+ <- progress OfV (not-stuck/step Step)
+ <- get-pres Step OfV Pres
+ <- resolving OfX UanXV Pres TmsV+ LLV LLX.
+
+
 res/comp : resolving OfX UanXE (pres/compose (_ : =<-trans SubCB SubBA SubCA) (PresBC: pres _ OfB _ _) PresAB) TmsA_pos LLC LLA
         <- pos-is-bot SubBA TmsA_pos TmsB_pos
         <- resolving OfB used-as-neg/e PresBC TmsB_pos LLC LLB
         <- resolving OfX UanXE PresAB TmsA_pos LLB LLA.
 
 res/@s/app-l
-  : resolving OfX (used-as-neg/app-l UanXE1) (pres/@s Trans (Pres : pres _ OfEf _ _)) TmsA_pos (logic-less/app LLFe LLIe) LLX
+  : resolving OfX (used-as-neg/app-l UanXE1) (pres/@s (Pres : pres _ OfEf _ _)) TmsA_pos (logic-less/app LLFe LLIe) LLX
  <- of-safe OfEf (tp-mode-safe/~> TmsA TmsB)
  <- resolving OfX UanXE1 Pres (tp-mode-safe/~> TmsA TmsB) LLFe LLX.
 
@@ -186,47 +210,52 @@ res/@s/app-r
   : resolving 
      (OfX : of X Xt)
      (used-as-neg/app-r TmA- UanXEv OfEf_A~>B  : used-as-neg _ Xt X (@s Ef Ev))
-     (pres/@s Trans Pres : pres _ (of/@s _ OfEv _) _ _)
+     (pres/@s Pres : pres _ (of/@s _ OfEv) _ _)
      TmsB+
      (logic-less/app LLEf' LLEv : logic-less (_: of (@s Ef' Ev) _)) 
      LLX
- <- resolving-value OfX UanXEv LLEv LLX.
+ <- resolving-value OfX UanXEv TmsB+ LLEv LLX.
+
+res/@s/app-r/-+
+ : resolving 
+    (OfX  : of X Xt)
+    (used-as-neg/app-r TmA- UanXEv OfEf_A~>B  : used-as-neg _ Xt X (@s Ef Ev))
+    Pres
+    TmsB+
+    (logic-less/app-+ _ LLEv)
+    LLX
+ <- resolving-value OfX UanXEv TmsB+ LLEv LLX.
+
+res/@s/app-r/lam
+ : resolving 
+    OfX 
+    (used-as-neg/app-r _ UanXEv (of/lam _ _ _ (used-neg/- UanF _ _)))
+    (_ : pres _ (of/@s _ (OfEv : of Ev Vt)) _ Eq)
+    TmsB+
+    LLr
+    LLX
+ <- resolving-value OfEv (UanF Ev Vt Eq OfEv) TmsB+ LLr LLV
+ <- uan-2-ll OfX UanXEv LLV LLX.
 
 
-res/@s/-+ 
- : resolving Context (pres/@s Trans Pres) TmsA_pos 
-    (logic-less/app-+ TmsA_pos' LLIe)
-    (logic-less/app-+ TmsA_pos LLIe).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-res/@s/++ 
- : resolving Context (pres/@s (Trans : =<-trans Subva Subaa' Subva') Pres ) TmsB+
-    (logic-less/app++ TmsA'+ TmsB'+)
-    (logic-less/app++ TmsA+ TmsB+)
- <- pos-is-bot Subaa' TmsA'+ TmsA+.
+%worlds () (resolving _ _ _ _ _ _) (resolving-value _ _ _ _ _).
+%trustme %total {O A B C} (resolving-value O A B C _).
 
-res/getLeft/r-pos
-  : resolving Context
-              (pres/getLeft _ : pres step/getLeft (of/getLeft (of/obj OfL (OfR : of R Rt))) OfL Eq) 
-              TmsL_pos 
-              LL_L 
-              (logic-less/getLeft (logic-less/obj-l LL_L TmsR_pos))
- <- of-safe OfR TmsR_pos.
-
-
-%worlds () (resolving _ _ _ _ _).
-%trustme %total {O A B C} (used-as-neg-2-logic-less O A B C _).
-
-
-
-
-
-
-
-
+% %total {O A B C} (resolving O A B C _).
 
 
 
 
+
+
+
+
+
+
+
+%{
 
 
 
@@ -269,7 +298,7 @@ res/getLeft/r-neg
               LL_L
               (logic-less/getLeft (logic-less/obj LL_L LL_R))
  <- of-safe OfR TmsR_neg
- <- {E}{V}{Step : step E V}{Vt}{OfV : of V Vt}{LLV : logic-less OfV} (Context R Rt OfR TmsR_neg) 
+ <- {E}{V}{Step : step E V}{Vt}{OfV : of V Vt}{LLV : logic-less OfV} (Context R Rt OfR TmsR_neg) .
 
 %{ <- get-pres StepEV OfE PresEV
  <- resolving (uan-context/d LLV Foo TmsE+ OfE ValV StepEV) PresEV TmsE+ LLV LLE
@@ -374,3 +403,4 @@ res/@s/++
 
 %worlds () (resolving _ _ _ _).
 %total {A B} (resolving A _ B _).
+}%

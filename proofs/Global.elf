@@ -13,10 +13,14 @@ logic-less/app-+ : logic-less (of/@s _ OfIe : of (@s Fe Ie) Bt)
 		<- logic-less OfIe
 		<- tp-mode-safe Bt pos.
 
-% in this case, we simply don't care what happens.
+%{ 
+In this case, we simply don't care what happens.
+Ignore this case momentarily.
 logic-less/app++ : logic-less (of/@s _ (_ : of _ At) : of (@s Fe Ie) Bt)
                 <- tp-mode-safe Bt pos
                 <- tp-mode-safe At pos.
+
+}%
 
 logic-less/app : logic-less (of/@s OfFe OfIe : of _ Bt) 
               <- logic-less OfIe

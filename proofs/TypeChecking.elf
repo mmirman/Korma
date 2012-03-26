@@ -30,25 +30,24 @@ of/logic-var : tp-mode-safe B neg -> of logic-var B.
 
 of/subsump : tp-mode-safe T' M -> T =< T' -> of E T -> of E T'. % derivations can be specialized.
 
-of/@s : of Ef (A ~> C) -> of Ev A' -> of (@s Ef Ev) C.
+of/@s : of Ef (A ~> C) -> of Ev A -> of (@s Ef Ev) C.
+
 of/lam : of (lam F A) (A ~> B)
       <- used-neg F A B
-      <- tp-mode-safe B _
-      <- tp-mode-safe A _
+      <- tp-mode-safe B OutMode
+      <- tp-mode-safe A InMode
       <- ({x}{A'} A' =< A -> of x A' -> of (F x) B).
 
 used-as-neg : {Result : mode } tp -> tm  -> tm -> type.
 
 used-neg/+* : used-neg L T R
             <- tp-mode T pos.
-used-neg/-- : used-neg L T R
-	    <- tp-mode R neg
+
+used-neg/- : used-neg L T R
+	    <- tp-mode R M
 	    <- tp-mode T neg
-	    <- ({x}{T'} T' =< T -> of x T' -> used-as-neg neg T' x (L x)).
-used-neg/-+ : used-neg L T R
-	    <- tp-mode R pos
-	    <- tp-mode T neg
-	    <- ({x}{T'} T' =< T -> of x T' -> used-as-neg pos T' x (L x)).
+	    <- ({x}{T'} T' =< T -> of x T' -> used-as-neg M T' x (L x)).
+
 
 used-as-neg/e : used-as-neg neg _ A A.
 used-as-neg/lam-inner : ({x}{T'} T' =< T -> of x T' -> used-as-neg ResM At A (F S)) 
