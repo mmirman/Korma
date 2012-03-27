@@ -309,7 +309,7 @@ res/@s/++
 %worlds () (resolving _ _ _ _ _).
 % %total {A B C D} (resolving A B C D _).
 
-
+%{
 
 2p0 : resolving UAN 
                 (step/getLeft-simp Step NotValE1) 
@@ -374,3 +374,4 @@ res/@s/++
 
 %worlds () (resolving _ _ _ _).
 %total {A B} (resolving A _ B _).
+}%
