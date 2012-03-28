@@ -125,6 +125,7 @@ pres/switch-right : pres
  <- =<-eq _ Eq.
 
 %worlds () (pres _ _ _ _).
+
 %{ 
 we will need a lemma to get terminates working, 
 but for now, we know it works 
@@ -140,6 +141,12 @@ We also never match on the outputs except where it obviously works, so output co
 %covers pres +A +B -C -D. 
 %trustme %total {A B} (pres A B _ _).
 %freeze pres.
+
+pres-wm : pres _ OfA OfB _ -> well-moded OfA -> well-moded OfB -> type.
+%mode pres-wm +A +B -C.
+%worlds () (pres-wm _ _ _).
+%trustme %total {A B} (pres-wm A B _).
+
 
 get-pres : {Step: step E E' } {Of : of E T} pres Step Of Of' Sub -> type.
 %mode get-pres +A +B -C.
@@ -236,33 +243,19 @@ uan-2-ll : used-as-neg R OfX OfV
 %worlds (uan-2-ll-b) (uan-2-ll _ _ _).
 %trustme %total {A B} (uan-2-ll A B _).
 
-logic-less-value : of X Xt -> value V -> used-as-neg R Xt X V -> logic-less ( OfV : of V Vt) -> logic-less (_ : of X Xt) -> type.
-%mode logic-less-value +OfX +V +UanXV +LLV -LLX.
-%worlds (uan-2-ll-b) (logic-less-value _ _ _ _ _).
-%trustme %total {I A B C} (logic-less-value I A B C _).
 
 
-resolving-value : of X Xt -> used-as-neg _ Xt X V -> tp-mode-safe Vt pos -> logic-less (_ : of V Vt) -> logic-less (_ : of X Xt) -> type.
-%mode resolving-value +OfX +UanXV +TmsV +LLV -LLX.
-
-resolving : of X Xt
-         -> used-as-neg Result Xt X E 
+resolving : used-as-neg Result OfX OfE 
 	 -> pres (Step : step E V) (OfE : of E Et) OfV SubVE
 	 -> tp-mode-safe Et pos
+
+         -> well-moded OfX
+         -> well-moded OfE
+
 	 -> logic-less OfV
 	 -> logic-less OfX 
 	 -> type.
-%mode resolving +OfX +UanXE +Pres +TmsEp +LLV -LLX.
-
-- : resolving-value OfX UanXV TmsV+ (LLV : logic-less OfV) LLX 
- <- progress OfV (not-stuck/value V)
- <- logic-less-value OfX V UanXV LLV LLX.
-
-- : resolving-value OfX UanXV TmsV+ (LLV : logic-less OfV) LLX 
- <- progress OfV (not-stuck/step Step)
- <- get-pres Step OfV Pres
- <- resolving OfX UanXV Pres TmsV+ LLV LLX.
-
+%mode resolving +OfX +UanXE +Pres +TmsEp +WM_X +WM_E +LLV -LLX.
 res/comp : resolving OfX UanXE (pres/compose (_ : =<-trans SubCB SubBA SubCA) (PresBC: pres _ OfB _ _) PresAB) TmsA_pos LLC LLA
         <- pos-is-bot SubBA TmsA_pos TmsB_pos
         <- resolving OfB used-as-neg/e PresBC TmsB_pos LLC LLB
@@ -281,7 +274,7 @@ res/@s/app-r
      TmsB+
      (logic-less/app LLEf' LLEv : logic-less (_: of (@s Ef' Ev) _)) 
      LLX
- <- resolving-value OfX UanXEv TmsB+ LLEv LLX.
+ <- uan-2-ll UanXEv LLEv LLX.
 
 res/@s/app-r/lam
  : resolving 
