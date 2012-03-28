@@ -1,31 +1,13 @@
-absurd : type.
-%mode absurd.
-%worlds () (absurd).
-%freeze absurd.
-
-
 logic-less : of A T -> type. %name logic-less LL.
 %mode logic-less +A.
 
 logic-less/sub : logic-less (of/subsump _ _ Of) <- logic-less Of.
-%{ 
-logic-less/app-+ : logic-less (of/@s _ OfIe : of (@s Fe Ie) Bt)
-		<- logic-less OfIe
-		<- tp-mode-safe Bt pos.
-
-
-In this case, we simply don't care what happens.
-Ignore this case momentarily.
-logic-less/app++ : logic-less (of/@s _ (_ : of _ At) : of (@s Fe Ie) Bt)
-                <- tp-mode-safe Bt pos
-                <- tp-mode-safe At pos.
-}%
 
 logic-less/app : logic-less (of/@s OfFe OfIe : of _ Bt) 
               <- logic-less OfIe
               <- logic-less OfFe.
 
-logic-less/lam : logic-less (of/lam F _ _ _) 
+logic-less/lam : logic-less (of/lam F _ _) 
    <- {x}{t'}{s}{OfXt' : of x t'} logic-less OfXt' -> logic-less (F x t' s OfXt').
 
 logic-less/empty : logic-less of/empty.

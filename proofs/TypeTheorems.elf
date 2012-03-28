@@ -1,3 +1,8 @@
+absurd : type.
+%mode absurd.
+%worlds () (absurd).
+%freeze absurd.
+
 
 <m-trans : A <m B -> B <m C -> A <m C -> type.
 %mode <m-trans +A +B -C.

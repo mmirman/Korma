@@ -43,7 +43,7 @@ pres/lam-subsump
 
 pres/lam : pres 
             step/lam
-	    (of/@s (of/lam OfF InMode OutMode UAN-F) (OfVVt))
+	    (of/@s (of/lam OfF InMode OutMode) (OfVVt))
 	    (OfF V Vt Eq' OfVVt)
 	    Eq
          <- =<-eq Vt Eq'
@@ -143,7 +143,7 @@ We also never match on the outputs except where it obviously works, so output co
 
 get-pres : {Step: step E E' } {Of : of E T} pres Step Of Of' Sub -> type.
 %mode get-pres +A +B -C.
-%worlds () (get-pres _ _ _).
+%worlds (assm-b) (get-pres _ _ _).
 %trustme %total {A B} (get-pres A B _).
 
 
@@ -161,65 +161,85 @@ progress : of E Xt -> not-stuck E -> type.
 %worlds () (progress _ _).
 %trustme %total {A} (progress A _).
 
+%block ll'-b : some {t} block {x}{t'}{_: t' =< t} {Of: of x t'}{_ : logic-less Of}.
+%block uan-2-ll-b = (ll'-b).
+
+tms-unique : tp-mode-safe A pos -> tp-mode-safe A neg -> absurd -> type.
+%mode tms-unique +A +B -C.
+%worlds (uan-2-ll-b) (tms-unique _ _ _).
+%total {A B} (tms-unique A B _).
+
+tm-unique : tp-mode A pos -> tp-mode A neg -> absurd -> type.
+%mode tm-unique +A +B -C.
+%worlds (uan-2-ll-b) (tm-unique _ _ _).
+%total {A B} (tm-unique A B _).
+
+from-absurd-ll : {OfX} absurd -> logic-less OfX -> type.
+%mode from-absurd-ll +Of +A -L.
+%worlds (uan-2-ll-b) (from-absurd-ll _ _ _).
+%total {O A} (from-absurd-ll O A _).
+
 %{
 This theorem essentially ensures used-as-neg and logic-less have corrosponding interests in 
 logicless and used as negative terms.
 }%
-uan-2-ll : of X Xt 
-         -> used-as-neg R Xt X V 
-         -> logic-less (OfV : of V Vt) 
-         -> logic-less (_ : of X Xt)
-         -> type.
-- : uan-2-ll OfX used-as-neg/e LLV LLV.
-- : uan-2-ll OfX used-as-neg/e (logic-less/switch LL1 LL2 LL3) (logic-less/switch LL1 LL2 LL3).
+uan-2-ll : used-as-neg R OfX OfV 
+        -> logic-less OfV
+        -> logic-less OfX
+        -> type.
 
-- : uan-2-ll OfX (used-as-neg/app-l UAN_F) (logic-less/app LL_F LL_V) LL_X
- <- uan-2-ll OfX UAN_F LL_F LL_X.
-- : uan-2-ll OfX (used-as-neg/app-r UAN_V TmsV- OfV) (logic-less/app LL_F LL_V) LL_X
- <- uan-2-ll OfX UAN_V LL_V LL_X.
-%% used-as-neg/objL and logic-less/obj-r would cause a contradiction.  
-%% Might have to prove this, despite tp-mode-safe being unique.
-- : uan-2-ll OfX (used-as-neg/objL UAN_L TmsL- OfL) (logic-less/obj LL_L LL_R) LL_X
- <- uan-2-ll OfX UAN_L LL_L LL_X.
-- : uan-2-ll OfX (used-as-neg/objL UAN_L TmsL- OfL) (logic-less/obj-l LL_L _) LL_X
- <- uan-2-ll OfX UAN_L LL_L LL_X.
+- : uan-2-ll used-as-neg/e LLV LLV.
 
-- : uan-2-ll OfX (used-as-neg/objR UAN_R TmsL- OfL) (logic-less/obj LL_L LL_R) LL_X
- <- uan-2-ll OfX UAN_R LL_R LL_X.
-- : uan-2-ll OfX (used-as-neg/objR UAN_R TmsL- OfL) (logic-less/obj-r LL_R _) LL_X
- <- uan-2-ll OfX UAN_R LL_R LL_X.
+- : uan-2-ll (used-as-neg/app-l UAN_F) (logic-less/app LL_F LL_V) LL_X
+ <- uan-2-ll UAN_F LL_F LL_X.
+- : uan-2-ll (used-as-neg/app-r UAN_V TmsV-) (logic-less/app LL_F LL_V) LL_X
+ <- uan-2-ll UAN_V LL_V LL_X.
+- : uan-2-ll (used-as-neg/objL UAN_L TmL-) (logic-less/obj LL_L LL_R) LL_X
+ <- uan-2-ll UAN_L LL_L LL_X.
+- : uan-2-ll (used-as-neg/objL UAN_L TmL-) (logic-less/obj-l LL_L _) LL_X
+ <- uan-2-ll UAN_L LL_L LL_X.
+- : uan-2-ll (used-as-neg/objL UAN_L TmL-) (logic-less/obj-r LL_R TmsL+) LL_X
+ <- tms-2-tm TmsL+ TmL+
+ <- tm-unique TmL+ TmL- Absurd
+ <- from-absurd-ll _ Absurd LL_X.
 
-- : uan-2-ll OfX (used-as-neg/product UAN_XL UAN_XR) LL_E LL_X
- <- uan-2-ll (of/getRight OfX) UAN_XR LL_E (logic-less/getRight LL_X).
-- : uan-2-ll OfX (used-as-neg/product UAN_XL UAN_XR) LL_E LL_X
- <- uan-2-ll (of/getLeft OfX) UAN_XL LL_E (logic-less/getLeft LL_X).
+- : uan-2-ll (used-as-neg/objR UAN_R TmR-) (logic-less/obj LL_L LL_R) LL_X
+ <- uan-2-ll UAN_R LL_R LL_X.
+- : uan-2-ll (used-as-neg/objR UAN_R TmR-) (logic-less/obj-r LL_R _) LL_X
+ <- uan-2-ll UAN_R LL_R LL_X.
+- : uan-2-ll (used-as-neg/objR UAN_R TmR-) (logic-less/obj-l LL_L TmsR+) LL_X
+ <- tms-2-tm TmsR+ TmR+
+ <- tm-unique TmR+ TmR- Absurd
+ <- from-absurd-ll _ Absurd LL_X.
 
-- : uan-2-ll OfX (used-as-neg/sum-unused UAN_XL UAN_XR) (logic-less/switch LL_L LL_R LL_I) LL_X
- <- uan-2-ll OfX UAN_XL LL_L LL_X.
+- : uan-2-ll (used-as-neg/product UAN_XL UAN_XR) LL_E LL_X
+ <- uan-2-ll UAN_XR LL_E (logic-less/getRight LL_X).
+- : uan-2-ll (used-as-neg/product UAN_XL UAN_XR) LL_E LL_X
+ <- uan-2-ll UAN_XL LL_E (logic-less/getLeft LL_X).
 
-- : uan-2-ll OfX (used-as-neg/sum-used UAN_XI) (logic-less/switch LL_L LL_R LL_I) LL_X
- <- uan-2-ll OfX UAN_XI LL_I LL_X.
+- : uan-2-ll (used-as-neg/sum-unused UAN_XL UAN_XR) (logic-less/switch LL_L LL_R LL_I) LL_X
+ <- uan-2-ll UAN_XL LL_L LL_X.
 
-- : uan-2-ll OfX (used-as-neg/left UAN_XI) (logic-less/left LL_I) LL_X
- <- uan-2-ll OfX UAN_XI LL_I LL_X.
+- : uan-2-ll (used-as-neg/sum-used UAN_XI) (logic-less/switch LL_L LL_R LL_I) LL_X
+ <- uan-2-ll UAN_XI LL_I LL_X.
 
-- : uan-2-ll OfX (used-as-neg/right UAN_XI) (logic-less/right LL_I) LL_X
- <- uan-2-ll OfX UAN_XI LL_I LL_X.
+- : uan-2-ll (used-as-neg/left UAN_XI) (logic-less/left LL_I) LL_X
+ <- uan-2-ll UAN_XI LL_I LL_X.
 
-- : uan-2-ll OfX (used-as-neg/lam-inner F_UAN) (logic-less/lam F_LL_I) LL_X
- <- {x}{t'}{s}{ofx}{ll_x} uan-2-ll OfX (F_UAN x t' s ofx) (F_LL_I x t' s ofx ll_x) LL_X.
+- : uan-2-ll (used-as-neg/right UAN_XI) (logic-less/right LL_I) LL_X
+ <- uan-2-ll UAN_XI LL_I LL_X.
 
-%mode uan-2-ll +OfX +UanXV +LLV -LLX.
-%block assm'-b : some {T} block {x : tm}{T' : tp}{_ : T' =< T}{_ : of x T'}.
-%block ll'-b : some {x}{t'}{Of: of x t'} block {_ : logic-less Of}.
-%worlds (assm'-b | ll'-b) (uan-2-ll _ _ _ _).
-%total {A B I} (uan-2-ll I A B _).
+- : uan-2-ll (used-as-neg/lam-inner F_UAN) (logic-less/lam F_LL_I) LL_X
+ <- {x}{t'}{s}{ofx}{ll_x} uan-2-ll (F_UAN x t' s ofx) (F_LL_I x t' s ofx ll_x) LL_X.
+
+%mode uan-2-ll +UanXV +LLV -LLX.
+%worlds (uan-2-ll-b) (uan-2-ll _ _ _).
+%trustme %total {A B} (uan-2-ll A B _).
 
 logic-less-value : of X Xt -> value V -> used-as-neg R Xt X V -> logic-less ( OfV : of V Vt) -> logic-less (_ : of X Xt) -> type.
 %mode logic-less-value +OfX +V +UanXV +LLV -LLX.
-%worlds () (logic-less-value _ _ _ _ _).
+%worlds (uan-2-ll-b) (logic-less-value _ _ _ _ _).
 %trustme %total {I A B C} (logic-less-value I A B C _).
-
 
 
 resolving-value : of X Xt -> used-as-neg _ Xt X V -> tp-mode-safe Vt pos -> logic-less (_ : of V Vt) -> logic-less (_ : of X Xt) -> type.
