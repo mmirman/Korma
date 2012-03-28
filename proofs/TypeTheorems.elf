@@ -29,7 +29,7 @@ tms-2-tm : tp-mode-safe T M -> tp-mode T M -> type.
 - : tms-2-tm (tp-mode-safe/prod L A B) (tp-mode/prod L A' B') 
  <- tms-2-tm B B'
  <- tms-2-tm A A'.
-%worlds (tp-b) (tms-2-tm _ _).
+%worlds (tp-mode-always-safe) (tms-2-tm _ _).
 %unique tms-2-tm +A -1B.
 %total {A} (tms-2-tm A _).
 
@@ -107,7 +107,7 @@ has-tp-mode : {T}{M} tp-mode T M -> type.
   <- =<-2-<m-s RR' R R' MrMr'
   <- lub-2-ub Lub' (ub/p _ Mr'C')
   <- <m-trans MrMr' Mr'C' MrC'.
-%worlds (tp-b | tp-mode-always-safe) (=<-2-<m-s _ _ _ _).
+%worlds (tp-mode-always-safe) (=<-2-<m-s _ _ _ _).
 %total {A B C} (=<-2-<m-s A B C _).
 
 =<-eq : {A} A =< A -> type.

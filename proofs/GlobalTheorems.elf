@@ -1,24 +1,4 @@
-%{ 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-we need step and  "logic-less Be"
-so that we know that Ae, despite being positively moded is actually 
-free of logic variables by having progress.  
-The existence of logic variables should hinder progress in a positively moded "thing"
-so the existence of progress should imply no logic variables.
-
-Since the existence of progress implies no logic variables, 
-then the A that "findAll F" returns 
-(where A is such that "step (F A) Success" and F returns positive and success contains no logic variables) 
-must also contain no logic variables.
-
-i think (@s (A: _/+ ~> _/+) (B : _/-) _) : _/- for this all to work.  which is an odd exception case, 
-more accurately, "+ ~> +" is actually "- ~> -"
-but corresponds to not actually being negative. that, or no right hand side steps. 
-that InputIsPos is an argument to resolving why we need this stuff.
-so we need a lemma that says (F I: A/+) => F:R/+ ~> O/+ => I:R/+.
-
-}%
+% Fun fact: percent dot ends the file
 
 pres : step E E' -> of E T -> of E' T' -> T' =< T -> type.
 %mode pres +Step +T -T' -Sub.
@@ -44,7 +24,7 @@ pres/lam-subsump
 pres/lam : pres 
             step/lam
 	    (of/@s (of/lam OfF InMode OutMode) (OfVVt))
-	    (OfF V Vt Eq' OfVVt)
+	    (OfF V Vt (sm InMode) Eq' OfVVt)
 	    Eq
          <- =<-eq Vt Eq'
          <- =<-eq Ot Eq.
@@ -138,7 +118,7 @@ The same goes for lam, getLeft and getRight.
 
 We also never match on the outputs except where it obviously works, so output coverage should succeed.
 }%
-%covers pres +A +B -C -D. 
+%covers pres +A +B -C -D.
 %trustme %total {A B} (pres A B _ _).
 %freeze pres.
 
@@ -150,7 +130,7 @@ pres-wm : pres _ OfA OfB _ -> well-moded OfA -> well-moded OfB -> type.
 
 get-pres : {Step: step E E' } {Of : of E T} pres Step Of Of' Sub -> type.
 %mode get-pres +A +B -C.
-%worlds (assm-b) (get-pres _ _ _).
+%worlds (all-b') (get-pres _ _ _).
 %trustme %total {A B} (get-pres A B _).
 
 
@@ -168,22 +148,21 @@ progress : of E Xt -> not-stuck E -> type.
 %worlds () (progress _ _).
 %trustme %total {A} (progress A _).
 
-%block ll'-b : some {t} block {x}{t'}{_: t' =< t} {Of: of x t'}{_ : logic-less Of}.
-%block uan-2-ll-b = (ll'-b).
+
 
 tms-unique : tp-mode-safe A pos -> tp-mode-safe A neg -> absurd -> type.
 %mode tms-unique +A +B -C.
-%worlds (uan-2-ll-b) (tms-unique _ _ _).
+%worlds (all-b'') (tms-unique _ _ _).
 %total {A B} (tms-unique A B _).
 
 tm-unique : tp-mode A pos -> tp-mode A neg -> absurd -> type.
 %mode tm-unique +A +B -C.
-%worlds (uan-2-ll-b) (tm-unique _ _ _).
+%worlds (all-b'') (tm-unique _ _ _).
 %total {A B} (tm-unique A B _).
 
 from-absurd-ll : {OfX} absurd -> logic-less OfX -> type.
 %mode from-absurd-ll +Of +A -L.
-%worlds (uan-2-ll-b) (from-absurd-ll _ _ _).
+%worlds (all-b'') (from-absurd-ll _ _ _).
 %total {O A} (from-absurd-ll O A _).
 
 %{
@@ -237,12 +216,19 @@ uan-2-ll : used-as-neg R OfX OfV
  <- uan-2-ll UAN_XI LL_I LL_X.
 
 - : uan-2-ll (used-as-neg/lam-inner F_UAN) (logic-less/lam F_LL_I) LL_X
- <- {x}{t'}{s}{ofx}{ll_x} uan-2-ll (F_UAN x t' s ofx) (F_LL_I x t' s ofx ll_x) LL_X.
+ <- {x}{t'}{sm_t'}{s}{ofx}{ll_x} uan-2-ll (F_UAN x t' sm_t' s ofx) (F_LL_I x t' sm_t' s ofx ll_x) LL_X.
 
 %mode uan-2-ll +UanXV +LLV -LLX.
-%worlds (uan-2-ll-b) (uan-2-ll _ _ _).
-%trustme %total {A B} (uan-2-ll A B _).
 
+%block uan-2-ll-b : some {t} block {x}{t'}{_: safe-moded t'}{_:t' =< t}{of: of x t'}{_ : logic-less of}.
+
+%worlds (tm-b | sub-b | tp-mode-always-safe | assm-b | uan-2-ll-b ) (uan-2-ll _ _ _).
+%covers uan-2-ll +UanXV +LLV -LLX.
+%terminates {A B} (uan-2-ll A B _).
+%total {A B} (uan-2-ll A B _). 
+
+
+%.
 
 
 resolving : used-as-neg Result OfX OfE 
@@ -255,7 +241,9 @@ resolving : used-as-neg Result OfX OfE
 	 -> logic-less OfV
 	 -> logic-less OfX 
 	 -> type.
-%mode resolving +OfX +UanXE +Pres +TmsEp +WM_X +WM_E +LLV -LLX.
+%mode resolving +UanXE +Pres +TmsEp +WM_X +WM_E +LLV -LLX.
+
+
 res/comp : resolving OfX UanXE (pres/compose (_ : =<-trans SubCB SubBA SubCA) (PresBC: pres _ OfB _ _) PresAB) TmsA_pos LLC LLA
         <- pos-is-bot SubBA TmsA_pos TmsB_pos
         <- resolving OfB used-as-neg/e PresBC TmsB_pos LLC LLB
@@ -276,17 +264,6 @@ res/@s/app-r
      LLX
  <- uan-2-ll UanXEv LLEv LLX.
 
-res/@s/app-r/lam
- : resolving 
-    OfX 
-    (used-as-neg/app-r UanXEv _ (of/lam _ _ _ (used-neg/- UanF _ _)))
-    (_ : pres _ (of/@s _ (OfEv : of Ev Vt)) _ Eq)
-    TmsB+
-    LLr
-    LLX
- <- resolving-value OfEv (UanF Ev Vt Eq OfEv) TmsB+ LLr LLV
- <- uan-2-ll OfX UanXEv LLV LLX.
-
 res/switch-left
  : resolving 
     OfX
@@ -303,9 +280,22 @@ res/switch-right
     (used-as-neg/sum-unused UAN-L UAN-R)
     (_ : pres step/switch-right _ _ _)
     TmsB+
+    _
+    _
     (logic-less/app LL-Fe LL-Ie)
     LL-X
  <- uan-2-ll OfX UAN-R LL-Fe LL-X.
+
+res/@s/app-r/lam
+ : resolving 
+    (used-as-neg/app-r UanXEv _ (of/lam _ _ _ (used-neg/- UanF _ _)))
+    (_ : pres _ (of/@s _ (OfEv : of Ev Vt)) _ Eq)
+    TmsB+
+    _ _
+    LLr
+    LLX
+ <- uan-2-ll (UanF Ev Vt Eq OfEv) LLr LLV
+ <- uan-2-ll UanXEv LLV LLX.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

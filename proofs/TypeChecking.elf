@@ -6,16 +6,16 @@ of/getLeft : of (getLeft O) A
           <- of O (prod A B).
 of/getRight : of (getRight O) B
 	    <- of O (prod A B).
-of/left : of (left L) (sum Ta Tb Mc)
-       <- of L Ta
-       <- tp-mode-safe Tb Mb
-       <- tp-mode-safe Ta Ma
-       <- ub Ma Mb Mc.
-of/right : of (right R) (sum Ta Tb Mc)
-       <- of R Tb
-       <- tp-mode-safe Tb Mb
-       <- tp-mode-safe Ta Ma
-       <- ub Ma Mb Mc.
+of/left : of (left L) (sum Lt Rt M)
+       <- of L Lt
+       <- tp-mode-safe Rt Rm
+       <- tp-mode-safe Lt Lm
+       <- ub Lm Rm M.
+of/right : of (right R)  (sum Lt Rt M)
+       <- of R Rt
+       <- tp-mode-safe Rt Rm
+       <- tp-mode-safe Lt Lm
+       <- ub Lm Rm M.
 % switch should be GLB not LUB, but right now just making them equal seems good enough.
 of/switch : of (switch L R O) C
 	      <- of O (sum A B M)
@@ -26,24 +26,28 @@ of/switch : of (switch L R O) C
 
 of/logic-var : tp-mode-safe B neg -> of logic-var B.
 
-of/subsump : tp-mode-safe T' M -> T =< T' -> of E T -> of E T'. % derivations can be specialized.
+of/subsump : of E T'
+          <- of E T
+          <- T =< T'
+          <- tp-mode-safe T' M. % derivations can be specialized.
 
 of/@s : of Ef (A ~> C) -> of Ev A -> of (@s Ef Ev) C.
 
 of/lam : of (lam F A) (A ~> B)
       <- tp-mode-safe B OutMode
       <- tp-mode-safe A InMode
-      <- ({x}{A'} A' =< A -> of x A' -> of (F x) B).
+      <- ({x}{a} safe-moded a -> a =< A -> of x a -> of (F x) B).
 
-%block assm-b : some {T} block {x : tm}{T' : tp}{_:T' =< T }{_:of x T'}.
-%worlds (assm-b | tp-mode-always-safe) (of _ _).
+%block assm-b : some {x : tm}{t} block {_:of x t}.
+%block all-b = ( assm-b | sub-b | tp-mode-always-safe | tm-b).
+%worlds (all-b) (of _ _).
 
 
 used-as-neg : {Result : mode } of E T -> of E' T' -> type.
 
 used-as-neg/e : used-as-neg neg A A.
 
-used-as-neg/lam-inner : ({x}{T'}{s}{OfX} used-as-neg ResM OfA (F_Of x T' s OfX)) 
+used-as-neg/lam-inner : ({x}{a}{sm_a}{s}{of_x} used-as-neg ResM OfA (F_Of x a sm_a s of_x)) 
 		      -> used-as-neg ResM OfA (of/lam F_Of _ _).
 
 used-as-neg/app-l : used-as-neg ResM OfX OfE1
@@ -78,7 +82,7 @@ used-as-neg/left : used-as-neg ResM OfA OfI
 used-as-neg/right : used-as-neg ResM OfA OfI
       	         -> used-as-neg ResM OfA (of/right _ _ _ OfI).
 
-%worlds (assm-b | tp-mode-always-safe) (used-as-neg _ _ _).
+%worlds (all-b) (used-as-neg _ _ _).
 
 well-moded : of E T -> type.
 wm/empty : well-moded of/empty.
@@ -92,10 +96,11 @@ wm/logic-var : well-moded (of/logic-var _).
 wm/subsump : well-moded (of/subsump _ _ Of) <- well-moded Of.
 wm/@s : well-moded (of/@s OfF OFV) <- well-moded OfV <- well-moded OfF.
 wm/lam/+* : well-moded (of/lam F_Of (TmsA : tp-mode-safe A pos) TmsB)
-         <- ({x}{A'}{s}{OfX} well-moded OfX -> well-moded (F_Of x A' s OfX)).
+         <- ({x}{a}{sm_a}{s}{of_x} well-moded of_x -> well-moded (F_Of x a sm_a s of_x)).
 wm/lam/- : well-moded (of/lam F_Of (TmsA : tp-mode-safe A neg) (TmsB : tp-mode-safe B M) )
-      <- ({x}{A'}{s}{OfX} used-as-neg M OfX (F_Of x A' s OfX))
-      <- ({x}{A'}{s}{OfX} well-moded OfX -> well-moded (F_Of x A' s OfX)).
+      <- ({x}{a}{sm_a}{s}{of_x} used-as-neg M of_x (F_Of x a sm_a s of_x))
+      <- ({x}{a}{sm_a}{s}{of_x} well-moded of_x -> well-moded (F_Of x a sm_a s of_x)).
 
-%block wm-assm-b : some {T} block {x : tm}{T' : tp}{_:T' =< T }{OfX:of x T'}{_:well-moded OfX}.
-%worlds (wm-assm-b | assm-b | tp-mode-always-safe) (well-moded _).
+%block wm-assm-b : some {x}{t}{of_x:of x t} block {_:well-moded of_x}.
+%block all-b' = (all-b | wm-assm-b).
+%worlds (all-b') (well-moded _).

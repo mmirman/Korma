@@ -67,10 +67,10 @@ tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C <- tp-mode-safe Rt Rm <- tp-mode
         -> (prod A B) =< (prod A' B').
 
 
-%block m-b : block {_ : mode}.
-%worlds () (mode).
-%freeze mode.
 
+%block m-b : block {_ : mode}.
+%worlds (m-b) (mode).
+%freeze mode.
 
 %worlds (m-b) (<m _ _).
 %unique <m +A +B.
@@ -79,25 +79,28 @@ tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C <- tp-mode-safe Rt Rm <- tp-mode
 %worlds (m-b) (ub _ _ _).
 %unique ub +A +B +C.
 
-%worlds () (lub _ _ _).
+safe-moded : tp -> type.
+sm : safe-moded T <- tp-mode-safe T M.
+
+%block tp-mode-always-safe : block {T}{_:safe-moded T}.
+
+%worlds (tp-mode-always-safe) (lub _ _ _).
 %unique lub +A +B -1C.
 %total {A B} (lub A B _).
 
-%worlds () (glb _ _ _).
+%worlds (tp-mode-always-safe) (glb _ _ _).
 %unique glb +A +B -1C.
 %total {A B} (glb A B _).
 
+%worlds (tp-mode-always-safe) (tp).
 
-%block tp-b : block {T : tp}.
-%worlds (tp-b) (tp).
-
-%worlds (tp-b) (tp-mode _ _).
+%worlds (tp-mode-always-safe) (tp-mode _ _).
 %unique tp-mode +A -1B.
 
-%block tp-mode-always-safe : some {M} block {T}{_:tp-mode-safe T M}.
-%worlds (tp-b | tp-mode-always-safe) (tp-mode-safe _ _).
+
+%worlds (tp-mode-always-safe) (tp-mode-safe _ _).
 %unique tp-mode-safe +A -1B.
 
 
 %block sub-b : some {T}{T'} block {_: T =< T'}.
-%worlds (sub-b | tp-b) (=< _ _).
+%worlds (sub-b | tp-mode-always-safe) (=< _ _).
