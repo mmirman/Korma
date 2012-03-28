@@ -8,18 +8,17 @@ logic-less : of A T -> type. %name logic-less LL.
 %mode logic-less +A.
 
 logic-less/sub : logic-less (of/subsump _ _ Of) <- logic-less Of.
-
+%{ 
 logic-less/app-+ : logic-less (of/@s _ OfIe : of (@s Fe Ie) Bt)
 		<- logic-less OfIe
 		<- tp-mode-safe Bt pos.
 
-%{ 
+
 In this case, we simply don't care what happens.
 Ignore this case momentarily.
 logic-less/app++ : logic-less (of/@s _ (_ : of _ At) : of (@s Fe Ie) Bt)
                 <- tp-mode-safe Bt pos
                 <- tp-mode-safe At pos.
-
 }%
 
 logic-less/app : logic-less (of/@s OfFe OfIe : of _ Bt) 
@@ -27,8 +26,7 @@ logic-less/app : logic-less (of/@s OfFe OfIe : of _ Bt)
               <- logic-less OfFe.
 
 logic-less/lam : logic-less (of/lam F _ _ _) 
-	      <- {x}{t'}{s}{OfXt' : of x t'} 
-		 logic-less OfXt' -> logic-less (F x t' s OfXt').
+   <- {x}{t'}{s}{OfXt' : of x t'} logic-less OfXt' -> logic-less (F x t' s OfXt').
 
 logic-less/empty : logic-less of/empty.
 logic-less/obj : logic-less (of/obj OfA OfB) 
@@ -40,8 +38,8 @@ logic-less/obj-l : logic-less (of/obj OfA (OfB : of B Bt))
 		<- logic-less OfA.
 
 logic-less/obj-r : logic-less (of/obj (OfA : of A At) OfB) 
-		<- logic-less OfB
-		<- tp-mode-safe At pos.
+		<- tp-mode-safe At pos
+		<- logic-less OfB.
 
 logic-less/getLeft : logic-less OfA -> logic-less (of/getLeft OfA).
 
@@ -49,3 +47,8 @@ logic-less/getRight : logic-less OfA -> logic-less (of/getRight OfA).
 
 logic-less/left : logic-less (of/left _ _ _ OfL) <- logic-less OfL.
 logic-less/right : logic-less (of/right _ _ _ OfR) <- logic-less OfR.
+
+logic-less/switch : logic-less (of/switch _ _ OfL OfR OfI) 
+                 <- logic-less OfI
+		 <- logic-less OfR
+		 <- logic-less OfL.

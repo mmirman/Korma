@@ -48,9 +48,8 @@ used-neg/- : used-neg L T R
 	    <- tp-mode T neg
 	    <- ({x}{T'} T' =< T -> of x T' -> used-as-neg M T' x (L x)).
 
-
 used-as-neg/e : used-as-neg neg _ A A.
-used-as-neg/lam-inner : ({x}{T'} T' =< T -> of x T' -> used-as-neg ResM At A (F S)) 
+used-as-neg/lam-inner : ({x}{T'} T' =< T -> of x T' -> used-as-neg ResM At A (F x)) 
 		      -> used-as-neg ResM At A (lam F T).
 
 used-as-neg/app-l : used-as-neg ResM At A E1 
@@ -58,8 +57,8 @@ used-as-neg/app-l : used-as-neg ResM At A E1
 
 used-as-neg/app-r : used-as-neg ResM At A (@s E1 E2)
                  <- of E1 (T1 ~> T2)
-                 <- used-as-neg neg At A E2
-		 <- tp-mode T1 neg.
+		 <- tp-mode T1 neg
+                 <- used-as-neg neg At A E2.
 
 used-as-neg/objL : used-as-neg ResM At A (obj L R)
                 <- of L To
