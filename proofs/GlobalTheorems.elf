@@ -1,7 +1,7 @@
 % Fun fact: percent dot ends the file
 
 subst : of E1 T
-      -> ({x:tm}{t}{sm_t: safe-moded t}{s:t =< T} assm x t -> of (E2 x) Ot)
+      -> ({x:tm} assm x T -> of (E2 x) Ot)
       -> of (E2 E1) Ot
       -> type.
 %mode subst +D1 +D2 -D3.
@@ -10,6 +10,14 @@ subst : of E1 T
 
 pres : step E E' -> of E T -> of E' T' -> T' =< T -> type.
 %mode pres +Step +T -T' -Sub.
+
+pres/lam : pres 
+            (step/lam : step (@s (lam E2 _) E1) (E2 E1))
+	    (of/@s (of/lam ([x][dx] Foo_OfF x dx) TmsV TmsO) (OfV : of E1 Vt))
+	    (OfR : of (E2 E1) Ot)
+	    Eq
+         <- subst OfV Foo_OfF OfR
+         <- =<-eq Ot Eq.
 
 pres/compose : pres (step/compose StepBC StepAB) OfA OfC SubCA
             <- pres StepAB OfA OfB SubBA
@@ -28,14 +36,6 @@ pres/lam-subsump
   <- of-safe OfFA'B' (tp-mode-safe/~> TmsA' TmsB')
   <- pres step/lam (of/@s OfFA'B' (of/subsump TmsA' SubAA' OfA)) OfB* SubB*B'
   <- =<-trans SubB*B' SubB'B SubB*B.
-
-pres/lam : pres 
-            (step/lam : step (@s (lam E2 _) E1) (E2 E1))
-	    (of/@s (of/lam OfF TmsV TmsO) (OfV : of E1 Vt))
-	    (OfR : of (E2 E1) Ot) % (OfF V Vt (sm TmsV) Eq' _ : of (E2 E1) Ot)
-	    Eq
-         <- subst OfV OfF OfR
-         <- =<-eq Ot Eq.
 
 pres/getLeft-subsump 
   : pres Step (of/getLeft (of/subsump (tp-mode-safe/prod _ TmsL TmsR) (=</prod SubL'L SubR'R) OfO')) Of Sub
@@ -157,21 +157,41 @@ progress : of E Xt -> not-stuck E -> type.
 %trustme %total {A} (progress A _).
 
 
-%{
-This theorem essentially ensures used-as-neg and logic-less have corrosponding interests in 
-logicless and used as negative terms.
-}%
-uan-2-ll : used-as-neg R X V
-        -> logic-less V
-        -> logic-less X
+tms-unique : tp-mode-safe A pos -> tp-mode-safe A neg -> absurd -> type.
+%mode tms-unique +A +B -C.
+%worlds (all-b'') (tms-unique _ _ _).
+%total {A B} (tms-unique A B _).
+
+tm-unique : tp-mode A pos -> tp-mode A neg -> absurd -> type.
+%mode tm-unique +A +B -C.
+%worlds (all-b'') (tm-unique _ _ _).
+%total {A B} (tm-unique A B _).
+
+from-absurd-ll : {X} absurd -> logic-less X -> type.
+%mode from-absurd-ll +X +A -L.
+%worlds (all-b'') (from-absurd-ll _ _ _).
+%total {A O} (from-absurd-ll A O _).
+
+subst-l : logic-less (OfX : of X T)
+       -> ({x}{dx : assm x T} ll-assm dx -> logic-less (OfY x : of (F x) Ot))
+       -> logic-less (OfY X : of (F X) Ot)
+       -> type.
+%mode subst-l +D1 +D2 -D3.
+%worlds (ll-b | all-b) (subst-l _ _ _).
+%trustme %total {A B} (subst-l A B _).
+
+uan-2-ll : used-as-neg R OfX OfV
+        -> logic-less OfV
+        -> logic-less OfX
         -> type.
 
-%block uan-2-ll-b : block {x}{_ : logic-less x}.
-
 - : uan-2-ll (used-as-neg/lam-inner F_UAN)
-             (logic-less/lam F_LL_I) 
-             (LL_X empty logic-less/empty)
- <- {x}{ll_x} uan-2-ll (F_UAN x) (F_LL_I x ll_x ) (LL_X x ll_x).
+             (logic-less/lam F_LL_I : logic-less (of/lam _ TmsA _)) 
+             LL_X
+ <- ({x}{dx : assm x T}{ll_x} uan-2-ll (F_UAN x dx) (F_LL_I x dx ll_x) (F_LL_X x dx ll_x))
+ <- subst-l (logic-less/unsafe : logic-less (of/unsafe TmsA)) F_LL_X LL_X.
+
+
 
 - : uan-2-ll (used-as-neg/product UAN_XL UAN_XR) LL_E LL_X
  <- uan-2-ll UAN_XR LL_E (logic-less/getRight LL_X).
@@ -180,13 +200,26 @@ uan-2-ll : used-as-neg R X V
 
 - : uan-2-ll (used-as-neg/app-l UAN_F) (logic-less/app LL_F LL_V) LL_X
  <- uan-2-ll UAN_F LL_F LL_X.
-- : uan-2-ll (used-as-neg/app-r UAN_V TmsV- _) (logic-less/app LL_F LL_V) LL_X
+- : uan-2-ll (used-as-neg/app-r UAN_V TmsV-) (logic-less/app LL_F LL_V) LL_X
  <- uan-2-ll UAN_V LL_V LL_X.
-- : uan-2-ll (used-as-neg/objL UAN_L TmL- _) (logic-less/obj LL_L LL_R) LL_X
+- : uan-2-ll (used-as-neg/objL UAN_L TmL-) (logic-less/obj LL_L LL_R) LL_X
  <- uan-2-ll UAN_L LL_L LL_X.
+- : uan-2-ll (used-as-neg/objL UAN_L TmL-) (logic-less/obj-l LL_L TmsR+) LL_X
+ <- uan-2-ll UAN_L LL_L LL_X.
+- : uan-2-ll (used-as-neg/objL UAN_L TmL-) (logic-less/obj-r LL_R TmsL+) LL_X
+ <- tms-2-tm TmsL+ TmL+
+ <- tm-unique TmL+ TmL- Absurd
+ <- from-absurd-ll _ Absurd LL_X.
 
-- : uan-2-ll (used-as-neg/objR UAN_R TmR- _) (logic-less/obj LL_L LL_R) LL_X
+
+- : uan-2-ll (used-as-neg/objR UAN_R TmR-) (logic-less/obj LL_L LL_R) LL_X
  <- uan-2-ll UAN_R LL_R LL_X.
+- : uan-2-ll (used-as-neg/objR UAN_R TmR-) (logic-less/obj-r LL_R TmsL+) LL_X
+ <- uan-2-ll UAN_R LL_R LL_X.
+- : uan-2-ll (used-as-neg/objR UAN_R TmR-) (logic-less/obj-l LL_L TmsR+) LL_X
+ <- tms-2-tm TmsR+ TmR+
+ <- tm-unique TmR+ TmR- Absurd
+ <- from-absurd-ll _ Absurd LL_X.
 
 - : uan-2-ll (used-as-neg/sum-unused UAN_XL UAN_XR) (logic-less/switch LL_L LL_R LL_I) LL_X
  <- uan-2-ll UAN_XL LL_L LL_X.
@@ -197,14 +230,21 @@ uan-2-ll : used-as-neg R X V
 - : uan-2-ll (used-as-neg/left UAN_XI) (logic-less/left LL_I) LL_X
  <- uan-2-ll UAN_XI LL_I LL_X.
 
+
 - : uan-2-ll (used-as-neg/right UAN_XI) (logic-less/right LL_I) LL_X
  <- uan-2-ll UAN_XI LL_I LL_X.
 
 
-%mode (uan-2-ll +UanXV +LLV -LLX).
-%worlds (uan-2-ll-b) (uan-2-ll _ _ _).
-%total {A B} (uan-2-ll A B _).
+- : uan-2-ll (used-as-neg/getRight UAN_XI) (logic-less/getRight LL_I) LL_X
+ <- uan-2-ll UAN_XI LL_I LL_X.
 
+- : uan-2-ll (used-as-neg/getLeft UAN_XI) (logic-less/getLeft LL_I) LL_X
+ <- uan-2-ll UAN_XI LL_I LL_X.
+
+%mode (uan-2-ll +UanXV +LLV -LLX).
+%block ll-b' : some {t} block {e}{of_x: assm e t}{ _ : ll-assm of_x}.
+%worlds (ll-b') (uan-2-ll _ _ _).
+%total {A B} (uan-2-ll A B _).
 
 
 
@@ -220,15 +260,14 @@ resolving : used-as-neg Result X E
 %mode resolving +UanXE +Pres +TmsEp +WM_X +WM_E +LLV -LLX.
 
 res/getLeft/r-pos
-  : resolving UanXE
-              (pres/getLeft _ : pres step/getLeft (of/getLeft (of/obj OfL (OfR : of R Rt))) OfL Eq) 
-              TmsE+
+  : resolving (used-as-neg/getLeft UanObj)
+              (pres/getLeft _ : pres (step/getLeft (getLeft (obj L R)) L) _ _ _) 
+              TmsL+
               WmOfX
               WmOfE
-              TmsL_pos 
-              LL_L 
-              (logic-less/getLeft (logic-less/obj-l LL_L TmsR_pos))
- <- of-safe OfR TmsR_pos.
+              LL_L
+              LL_X
+ <- uan-2-ll _ LL_L LL_X.
 
 res/comp : resolving OfX UanXE (pres/compose (_ : =<-trans SubCB SubBA SubCA) (PresBC: pres _ OfB _ _) PresAB) TmsA_pos LLC LLA
         <- pos-is-bot SubBA TmsA_pos TmsB_pos

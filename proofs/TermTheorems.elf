@@ -10,6 +10,7 @@ value-or-not : {T} maybe-value T -> type.
 - : value-or-not (getRight _) (maybe-value/isn't not-value/getRight).
 - : value-or-not (@s _ _) (maybe-value/isn't not-value/@s).
 - : value-or-not logic-var (maybe-value/isn't not-value/logic-var).
+- : value-or-not unsafe (maybe-value/isn't not-value/unsafe).
 %worlds () (value-or-not _ _).
 %unique value-or-not +A -1B.
 %total {A} (value-or-not A _).

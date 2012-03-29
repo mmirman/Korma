@@ -2,6 +2,8 @@ tm : type. %name tm E.
 
 lam : (tm -> tm) -> tp -> tm.
 
+unsafe : tm.
+
 empty : tm.
 obj : tm -> tm -> tm.
 getLeft : tm -> tm.
@@ -37,6 +39,7 @@ not-value/getLeft : not-value (getLeft _).
 not-value/getRight : not-value (getRight _).
 not-value/@s : not-value (@s _ _).
 not-value/logic-var : not-value logic-var.
+not-value/unsafe : not-value unsafe.
 %worlds (tm-b) (not-value _).
 
 

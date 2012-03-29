@@ -1,31 +1,46 @@
-logic-less : tm -> type. %name logic-less LL.
-%mode logic-less +A.
 
+ll-assm : assm E T -> type.
 
-logic-less/app : logic-less (@s Fe Ie)
-              <- logic-less Ie
-              <- logic-less Fe.
+logic-less : of E T -> type. %name logic-less LL.
 
-logic-less/lam : logic-less (lam F _) 
-   <- {x} logic-less x -> logic-less (F x).
+logic-less/var : ll-assm AsE -> logic-less (of/var AsE).
 
-logic-less/empty : logic-less empty.
-logic-less/obj : logic-less (obj L R)
+logic-less/unsafe : logic-less (of/unsafe Tms).
+
+logic-less/app : logic-less (of/@s OfFe OfIe)
+              <- logic-less OfIe
+              <- logic-less OfFe.
+
+logic-less/lam : logic-less (of/lam F _ _) 
+   <- {x}{dx} ll-assm dx -> logic-less (F x dx).
+
+logic-less/empty : logic-less of/empty.
+logic-less/obj : logic-less (of/obj L R)
               <- logic-less R
               <- logic-less L.
 
-logic-less/getLeft : logic-less A -> logic-less (getLeft A).
+logic-less/getLeft : logic-less A -> logic-less (of/getLeft A).
 
-logic-less/getRight : logic-less A -> logic-less (getRight A).
+logic-less/getRight : logic-less A -> logic-less (of/getRight A).
 
-logic-less/left : logic-less (left L) <- logic-less L.
-logic-less/right : logic-less (right R) <- logic-less R.
+logic-less/left : logic-less (of/left _ _ _ L) <- logic-less L.
+logic-less/right : logic-less (of/right _ _ _ R) <- logic-less R.
 
-logic-less/switch : logic-less (switch L R I)
+logic-less/obj-l : logic-less (of/obj L (R : of _ Rt)) 
+                <- tp-mode-safe Rt pos
+                <- logic-less L.
+
+logic-less/obj-r : logic-less (of/obj (L : of _ Lt) R) 
+                <- tp-mode-safe Lt pos
+                <- logic-less R.
+
+logic-less/switch : logic-less (of/switch _ _ L R I)
                  <- logic-less I
 		 <- logic-less R
 		 <- logic-less L.
 
 
-%block ll-b : some {x} block {_ : logic-less x}.
+%block ll-b : some {e}{t}{of_x: assm e t} block {_ : ll-assm of_x}.
 %block all-b'' = (all-b' | ll-b | tm-b).
+%worlds (all-b'') (ll-assm _).
+%worlds (all-b'') (logic-less _).
