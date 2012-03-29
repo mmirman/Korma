@@ -165,6 +165,10 @@ from-absurd-ll : {OfX} absurd -> logic-less OfX -> type.
 %worlds (all-b'') (from-absurd-ll _ _ _).
 %total {O A} (from-absurd-ll O A _).
 
+
+
+
+
 %{
 This theorem essentially ensures used-as-neg and logic-less have corrosponding interests in 
 logicless and used as negative terms.
@@ -173,6 +177,17 @@ uan-2-ll : used-as-neg R OfX OfV
         -> logic-less OfV
         -> logic-less OfX
         -> type.
+
+
+%block uan-2-ll-b : some {t} block {x}{t'}{_: safe-moded t'}{_:t' =< t}{of: of x t'}{_ : logic-less of}.
+
+- : {x}{t'}{sm_t'}{s}{ofx}{ll_x} 
+    uan-2-ll (F_UAN x t' sm_t' s ofx) (F_LL_I x t' sm_t' s ofx ll_x) (LL_X x t' sm_t' s ofx ll_x)
+ -> uan-2-ll (used-as-neg/lam-inner F_UAN) (logic-less/lam F_LL_I) (LL_X x t' sm_t' s ofx ll_x) .
+
+- : uan-2-ll (used-as-neg/product UAN_XL UAN_XR) LL_E LL_X
+ <- uan-2-ll UAN_XR LL_E (logic-less/getRight LL_X).
+
 
 - : uan-2-ll used-as-neg/e LLV LLV.
 
@@ -198,11 +213,6 @@ uan-2-ll : used-as-neg R OfX OfV
  <- tm-unique TmR+ TmR- Absurd
  <- from-absurd-ll _ Absurd LL_X.
 
-- : uan-2-ll (used-as-neg/product UAN_XL UAN_XR) LL_E LL_X
- <- uan-2-ll UAN_XR LL_E (logic-less/getRight LL_X).
-- : uan-2-ll (used-as-neg/product UAN_XL UAN_XR) LL_E LL_X
- <- uan-2-ll UAN_XL LL_E (logic-less/getLeft LL_X).
-
 - : uan-2-ll (used-as-neg/sum-unused UAN_XL UAN_XR) (logic-less/switch LL_L LL_R LL_I) LL_X
  <- uan-2-ll UAN_XL LL_L LL_X.
 
@@ -215,17 +225,10 @@ uan-2-ll : used-as-neg R OfX OfV
 - : uan-2-ll (used-as-neg/right UAN_XI) (logic-less/right LL_I) LL_X
  <- uan-2-ll UAN_XI LL_I LL_X.
 
-- : uan-2-ll (used-as-neg/lam-inner F_UAN) (logic-less/lam F_LL_I) LL_X
- <- {x}{t'}{sm_t'}{s}{ofx}{ll_x} uan-2-ll (F_UAN x t' sm_t' s ofx) (F_LL_I x t' sm_t' s ofx ll_x) LL_X.
 
-%mode uan-2-ll +UanXV +LLV -LLX.
-
-%block uan-2-ll-b : some {t} block {x}{t'}{_: safe-moded t'}{_:t' =< t}{of: of x t'}{_ : logic-less of}.
-
-%worlds (tm-b | sub-b | tp-mode-always-safe | assm-b | uan-2-ll-b ) (uan-2-ll _ _ _).
-%covers uan-2-ll +UanXV +LLV -LLX.
-%terminates {A B} (uan-2-ll A B _).
-%total {A B} (uan-2-ll A B _). 
+%mode (uan-2-ll +UanXV +LLV -LLX).
+%worlds (uan-2-ll-b) (uan-2-ll _ _ _).
+%total {A B} (uan-2-ll A B _).
 
 
 %.
