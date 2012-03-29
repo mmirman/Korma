@@ -1,9 +1,4 @@
-
-ll-assm : assm E T -> type.
-
 logic-less : of E T -> type. %name logic-less LL.
-
-logic-less/var : ll-assm AsE -> logic-less (of/var AsE).
 
 logic-less/unsafe : logic-less (of/unsafe Tms).
 
@@ -12,7 +7,7 @@ logic-less/app : logic-less (of/@s OfFe OfIe)
               <- logic-less OfFe.
 
 logic-less/lam : logic-less (of/lam F _ _) 
-   <- {x}{dx} ll-assm dx -> logic-less (F x dx).
+   <- {x}{of_x} logic-less of_x -> logic-less (F x of_x).
 
 logic-less/empty : logic-less of/empty.
 logic-less/obj : logic-less (of/obj L R)
@@ -40,7 +35,50 @@ logic-less/switch : logic-less (of/switch _ _ L R I)
 		 <- logic-less L.
 
 
-%block ll-b : some {e}{t}{of_x: assm e t} block {_ : ll-assm of_x}.
-%block all-b'' = (all-b' | ll-b | tm-b).
-%worlds (all-b'') (ll-assm _).
-%worlds (all-b'') (logic-less _).
+%block ll-b : some {t} block {e}{of_x: of e t}{_ : logic-less of_x}.
+
+
+
+unsafe-free : tm -> type.
+
+unsafe-free/lam 
+   : unsafe-free (lam F _)
+  <- {x} unsafe-free x -> unsafe-free (F x).
+unsafe-free/empty 
+   : unsafe-free empty.
+unsafe-free/obj 
+   : unsafe-free (obj L R) 
+  <- unsafe-free R
+  <- unsafe-free L.
+unsafe-free/getLeft 
+   : unsafe-free (getLeft I)
+  <- unsafe-free I.
+unsafe-free/getRight 
+   : unsafe-free (getRight I)
+  <- unsafe-free I.
+unsafe-free/left
+   : unsafe-free (left I)
+  <- unsafe-free I.
+unsafe-free/right
+   : unsafe-free (right I)
+  <- unsafe-free I.
+unsafe-free/switch
+   : unsafe-free (switch L R I)
+  <- unsafe-free I
+  <- unsafe-free R
+  <- unsafe-free L.
+unsafe-free/logic-var 
+   : unsafe-free logic-var.
+unsafe-free/@s
+   : unsafe-free (@s F V)
+  <- unsafe-free V
+  <- unsafe-free F.
+
+%block unsafe-free-b : block {x}{_:unsafe-free x}.
+
+
+
+not-stuck : tm -> type.
+not-stuck/value : value A -> not-stuck A.
+not-stuck/step : step E E' -> not-stuck E.
+%freeze not-stuck.

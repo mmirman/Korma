@@ -1,6 +1,4 @@
-assm : tm -> tp -> type.
 of : tm -> tp -> type.
-
 
 of/empty : of empty unit.
 of/obj : of L Tl -> of R Tr -> of (obj L R) (prod Tl Tr).
@@ -35,22 +33,16 @@ of/subsump : of E T'
           <- T =< T'
           <- tp-mode-safe T' M. % derivations can be specialized.
 
-of/var : of E T
-      <- assm E T. % derivations can be specialized.
-
 of/@s : of Ef (A ~> C) -> of Ev A -> of (@s Ef Ev) C.
 
 of/lam : of (lam F A) (A ~> B)
       <- tp-mode-safe B OutMode
       <- tp-mode-safe A InMode
-      <- ({x} assm x A -> of (F x) B).
+      <- ({x} of x A -> of (F x) B).
 
-%block assm-b : some {t}{x : tm} block {_:assm x t}.
-%block all-b = ( assm-b | sub-b | tp-mode-always-safe | tm-b).
-%worlds (all-b) (assm _ _).
-%worlds (all-b) (of _ _).
-
-%block assm-unit-tp-b : some {t} block {_ : of empty t}.
+%block of-b : some {t}{x : tm} block {_:of x t}.
+%block all-b = ( of-b | sub-b | tp-mode-always-safe | tm-b).
+% %worlds (all-b) (of _ _).
 
 used-as-neg : {Result : mode } of A T -> of A' T' -> type.
 
@@ -97,12 +89,12 @@ used-as-neg/left : used-as-neg ResM A I
 used-as-neg/right : used-as-neg ResM A I
       	         -> used-as-neg ResM A (of/right _ _ _ I).
 
-%worlds (all-b) (used-as-neg _ _ _).
+
+
+
 
 well-moded : of E T -> type.
-wm-assm : assm E T -> type.
 
-wm/var : wm-assm AsE -> well-moded (of/var AsE).
 wm/empty : well-moded of/empty.
 wm/obj : well-moded (of/obj OfL OfR) <- well-moded OfR <- well-moded OfL.
 wm/getLeft : well-moded (of/getLeft Of) <- well-moded Of.
@@ -114,16 +106,10 @@ wm/logic-var : well-moded (of/logic-var _).
 wm/subsump : well-moded (of/subsump _ _ Of) <- well-moded Of.
 wm/@s : well-moded (of/@s OfF OFV) <- well-moded OfV <- well-moded OfF.
 wm/lam/+* : well-moded (of/lam F_Of (TmsA : tp-mode-safe A pos) TmsB)
-         <- ({x}{of_x} wm-assm of_x -> well-moded (F_Of x of_x)).
+         <- ({x}{of_x} well-moded of_x -> well-moded (F_Of x of_x)).
 
 wm/lam/- : well-moded (of/lam F_Of (TmsA : tp-mode-safe A neg) (TmsB : tp-mode-safe B M) )
-      <- ({x}{of_x} used-as-neg M (of/var of_x) (F_Of x of_x))
-      <- ({x}{of_x} wm-assm of_x -> well-moded (F_Of x of_x)).
+      <- ({x}{of_x} used-as-neg M of_x (F_Of x of_x))
+      <- ({x}{of_x} well-moded of_x -> well-moded (F_Of x of_x)).
 
-%block wm-assm-b : some {t}{x}{of_x:assm x t} block {_:wm-assm of_x}.
-%block all-b' = (all-b | wm-assm-b).
-%worlds (all-b') (wm-assm _).
-%worlds (all-b') (well-moded _).
-
-
-%freeze assm.
+%block wm-assm-b : some {t} block {x}{of_x:of x t}{_:well-moded of_x}.

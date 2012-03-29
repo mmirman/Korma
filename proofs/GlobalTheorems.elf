@@ -1,12 +1,13 @@
 % Fun fact: percent dot ends the file
 
-subst : of E1 T
-      -> ({x:tm} assm x T -> of (E2 x) Ot)
-      -> of (E2 E1) Ot
+subst-of : of V T
+      -> ({x} of x T -> of (F x) Ot)
+      -> of (F V) Ot
       -> type.
-%mode subst +D1 +D2 -D3.
-%worlds (assm-b) (subst _ _ _).
-%trustme %total {A B} (subst A B _).
+- : subst-of (Of : of V T) F (F V Of).
+%mode subst-of +D1 +D2 -D3.
+%worlds () (subst-of _ _ _).
+%total {A B} (subst-of A B _).
 
 pres : step E E' -> of E T -> of E' T' -> T' =< T -> type.
 %mode pres +Step +T -T' -Sub.
@@ -16,7 +17,7 @@ pres/lam : pres
 	    (of/@s (of/lam ([x][dx] Foo_OfF x dx) TmsV TmsO) (OfV : of E1 Vt))
 	    (OfR : of (E2 E1) Ot)
 	    Eq
-         <- subst OfV Foo_OfF OfR
+         <- subst-of OfV Foo_OfF OfR
          <- =<-eq Ot Eq.
 
 pres/compose : pres (step/compose StepBC StepAB) OfA OfC SubCA
@@ -138,47 +139,34 @@ pres-wm : pres _ OfA OfB _ -> well-moded OfA -> well-moded OfB -> type.
 
 get-pres : {Step: step E E' } {Of : of E T} pres Step Of Of' Sub -> type.
 %mode get-pres +A +B -C.
-%worlds (all-b') (get-pres _ _ _).
+%worlds () (get-pres _ _ _).
 %trustme %total {A B} (get-pres A B _).
-
-
-%{
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Some lemmas for unpacking and effectiveness
-}%
-not-stuck : tm -> type.
-not-stuck/value : value A -> not-stuck A.
-not-stuck/step : step E E' -> not-stuck E.
-
-progress : of E Xt -> not-stuck E -> type.
-%mode progress +A -B.
-%worlds () (progress _ _).
-%trustme %total {A} (progress A _).
 
 
 tms-unique : tp-mode-safe A pos -> tp-mode-safe A neg -> absurd -> type.
 %mode tms-unique +A +B -C.
-%worlds (all-b'') (tms-unique _ _ _).
+%worlds () (tms-unique _ _ _).
 %total {A B} (tms-unique A B _).
 
 tm-unique : tp-mode A pos -> tp-mode A neg -> absurd -> type.
 %mode tm-unique +A +B -C.
-%worlds (all-b'') (tm-unique _ _ _).
+%worlds () (tm-unique _ _ _).
 %total {A B} (tm-unique A B _).
 
 from-absurd-ll : {X} absurd -> logic-less X -> type.
 %mode from-absurd-ll +X +A -L.
-%worlds (all-b'') (from-absurd-ll _ _ _).
+%worlds (ll-b) (from-absurd-ll _ _ _).
 %total {A O} (from-absurd-ll A O _).
 
-subst-l : logic-less (OfX : of X T)
-       -> ({x}{dx : assm x T} ll-assm dx -> logic-less (OfY x : of (F x) Ot))
+subst-logic-less : logic-less (OfX : of X T)
+       -> ({x}{dx : of x T} logic-less dx -> logic-less (OfY x : of (F x) Ot))
        -> logic-less (OfY X : of (F X) Ot)
        -> type.
-%mode subst-l +D1 +D2 -D3.
-%worlds (ll-b | all-b) (subst-l _ _ _).
-%trustme %total {A B} (subst-l A B _).
+
+- : subst-logic-less (LL : logic-less (OfX : of X _)) Foo (Foo X OfX LL).
+%mode subst-logic-less +D1 +D2 -D3.
+%worlds (ll-b) (subst-logic-less _ _ _).
+%total {A B} (subst-logic-less A B _).
 
 uan-2-ll : used-as-neg R OfX OfV
         -> logic-less OfV
@@ -188,9 +176,8 @@ uan-2-ll : used-as-neg R OfX OfV
 - : uan-2-ll (used-as-neg/lam-inner F_UAN)
              (logic-less/lam F_LL_I : logic-less (of/lam _ TmsA _)) 
              LL_X
- <- ({x}{dx : assm x T}{ll_x} uan-2-ll (F_UAN x dx) (F_LL_I x dx ll_x) (F_LL_X x dx ll_x))
- <- subst-l (logic-less/unsafe : logic-less (of/unsafe TmsA)) F_LL_X LL_X.
-
+ <- ({x}{dx : of x T}{ll_x} uan-2-ll (F_UAN x dx) (F_LL_I x dx ll_x) (F_LL_X x dx ll_x))
+ <- subst-logic-less (logic-less/unsafe : logic-less (of/unsafe TmsA)) F_LL_X LL_X.
 
 
 - : uan-2-ll (used-as-neg/product UAN_XL UAN_XR) LL_E LL_X
@@ -230,10 +217,8 @@ uan-2-ll : used-as-neg R OfX OfV
 - : uan-2-ll (used-as-neg/left UAN_XI) (logic-less/left LL_I) LL_X
  <- uan-2-ll UAN_XI LL_I LL_X.
 
-
 - : uan-2-ll (used-as-neg/right UAN_XI) (logic-less/right LL_I) LL_X
  <- uan-2-ll UAN_XI LL_I LL_X.
-
 
 - : uan-2-ll (used-as-neg/getRight UAN_XI) (logic-less/getRight LL_I) LL_X
  <- uan-2-ll UAN_XI LL_I LL_X.
@@ -241,13 +226,10 @@ uan-2-ll : used-as-neg R OfX OfV
 - : uan-2-ll (used-as-neg/getLeft UAN_XI) (logic-less/getLeft LL_I) LL_X
  <- uan-2-ll UAN_XI LL_I LL_X.
 
-%mode (uan-2-ll +UanXV +LLV -LLX).
-%block ll-b' : some {t} block {e}{of_x: assm e t}{ _ : ll-assm of_x}.
-%worlds (ll-b') (uan-2-ll _ _ _).
+%mode uan-2-ll +UanXV +LLV -LLX.
+
+%worlds (ll-b) (uan-2-ll _ _ _).
 %total {A B} (uan-2-ll A B _).
-
-
-
 
 resolving : used-as-neg Result X E 
 	 -> pres (Step : step E V) (OfE : of E Et) (OfV : of V Vt) SubVE
