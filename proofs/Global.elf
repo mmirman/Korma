@@ -1,40 +1,31 @@
-logic-less : of A T -> type. %name logic-less LL.
+logic-less : tm -> type. %name logic-less LL.
 %mode logic-less +A.
 
-logic-less/sub : logic-less (of/subsump _ _ Of) <- logic-less Of.
 
-logic-less/app : logic-less (of/@s OfFe OfIe : of _ Bt) 
-              <- logic-less OfIe
-              <- logic-less OfFe.
+logic-less/app : logic-less (@s Fe Ie)
+              <- logic-less Ie
+              <- logic-less Fe.
 
-logic-less/lam : logic-less (of/lam F _ _) 
-   <- {x}{t'}{sm_t}{s}{of_x : of x t'} logic-less of_x -> logic-less (F x t' sm_t s of_x).
+logic-less/lam : logic-less (lam F _) 
+   <- {x} logic-less x -> logic-less (F x).
 
-logic-less/empty : logic-less of/empty.
-logic-less/obj : logic-less (of/obj OfA OfB) 
-              <- logic-less OfB 
-              <- logic-less OfA.
+logic-less/empty : logic-less empty.
+logic-less/obj : logic-less (obj L R)
+              <- logic-less R
+              <- logic-less L.
 
-logic-less/obj-l : logic-less (of/obj OfA (OfB : of B Bt)) 
-		<- tp-mode-safe Bt pos
-		<- logic-less OfA.
+logic-less/getLeft : logic-less A -> logic-less (getLeft A).
 
-logic-less/obj-r : logic-less (of/obj (OfA : of A At) OfB) 
-		<- tp-mode-safe At pos
-		<- logic-less OfB.
+logic-less/getRight : logic-less A -> logic-less (getRight A).
 
-logic-less/getLeft : logic-less OfA -> logic-less (of/getLeft OfA).
+logic-less/left : logic-less (left L) <- logic-less L.
+logic-less/right : logic-less (right R) <- logic-less R.
 
-logic-less/getRight : logic-less OfA -> logic-less (of/getRight OfA).
-
-logic-less/left : logic-less (of/left _ _ _ OfL) <- logic-less OfL.
-logic-less/right : logic-less (of/right _ _ _ OfR) <- logic-less OfR.
-
-logic-less/switch : logic-less (of/switch _ _ OfL OfR OfI) 
-                 <- logic-less OfI
-		 <- logic-less OfR
-		 <- logic-less OfL.
+logic-less/switch : logic-less (switch L R I)
+                 <- logic-less I
+		 <- logic-less R
+		 <- logic-less L.
 
 
-%block ll-b : some {x}{t}{of: of x t} block {_ : logic-less of}.
-%block all-b'' = (all-b' | ll-b).
+%block ll-b : some {x} block {_ : logic-less x}.
+%block all-b'' = (all-b' | ll-b | tm-b).
