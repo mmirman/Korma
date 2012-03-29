@@ -189,6 +189,14 @@ uan-2-ll : used-as-neg R OfX OfV
  <- uan-2-ll UAN_F LL_F LL_X.
 - : uan-2-ll (used-as-neg/app-r UAN_V TmsV-) (logic-less/app LL_F LL_V) LL_X
  <- uan-2-ll UAN_V LL_V LL_X.
+
+- : uan-2-ll (used-as-neg/obj UAN_L UAN_R) (logic-less/obj LL_L LL_R) LL_X
+ <- uan-2-ll UAN_L LL_L LL_X.
+- : uan-2-ll (used-as-neg/obj UAN_L UAN_R) (logic-less/obj-l LL_L TmsR+) LL_X
+ <- uan-2-ll UAN_L LL_L LL_X.
+- : uan-2-ll (used-as-neg/obj UAN_L UAN_R) (logic-less/obj-r LL_R TmsL+) LL_X
+ <- uan-2-ll UAN_R LL_R LL_X.
+
 - : uan-2-ll (used-as-neg/objL UAN_L TmL-) (logic-less/obj LL_L LL_R) LL_X
  <- uan-2-ll UAN_L LL_L LL_X.
 - : uan-2-ll (used-as-neg/objL UAN_L TmL-) (logic-less/obj-l LL_L TmsR+) LL_X
@@ -197,7 +205,6 @@ uan-2-ll : used-as-neg R OfX OfV
  <- tms-2-tm TmsL+ TmL+
  <- tm-unique TmL+ TmL- Absurd
  <- from-absurd-ll _ Absurd LL_X.
-
 
 - : uan-2-ll (used-as-neg/objR UAN_R TmR-) (logic-less/obj LL_L LL_R) LL_X
  <- uan-2-ll UAN_R LL_R LL_X.
@@ -231,25 +238,49 @@ uan-2-ll : used-as-neg R OfX OfV
 %worlds (ll-b) (uan-2-ll _ _ _).
 %total {A B} (uan-2-ll A B _).
 
-resolving : used-as-neg Result X E 
-	 -> pres (Step : step E V) (OfE : of E Et) (OfV : of V Vt) SubVE
+resolving : used-as-neg Result OfX OfE 
+	 -> pres Step (OfE : of _ Et) OfV SubVE
 	 -> tp-mode-safe Et pos
-         -> well-moded (OfX : of X Xt)
+         -> well-moded OfX
          -> well-moded OfE
-	 -> logic-less V
-	 -> logic-less X 
+	 -> logic-less OfV
+	 -> logic-less OfX 
 	 -> type.
 %mode resolving +UanXE +Pres +TmsEp +WM_X +WM_E +LLV -LLX.
 
+
 res/getLeft/r-pos
-  : resolving (used-as-neg/getLeft UanObj)
-              (pres/getLeft _ : pres (step/getLeft (getLeft (obj L R)) L) _ _ _) 
-              TmsL+
-              WmOfX
-              WmOfE
-              LL_L
-              LL_X
- <- uan-2-ll _ LL_L LL_X.
+  : resolving 
+     (used-as-neg/getLeft (used-as-neg/objL UanX_V TmV-))
+     (pres/getLeft _ 
+	: pres (step/getLeft : step (getLeft (obj L R)) L) (of/getLeft (of/obj OfV OfR)) OfV SubVE) 
+     TmsE+
+     WmOfX
+     WmOfE
+     LL_V
+     LL_X
+ <- pos-is-bot SubVE TmsE+ TmsV+
+ <- tms-2-tm TmsV+ TmV+
+ <- tms-2-tm TmsV+ TmV+
+ <- tm-unique TmV+ TmV- Absurd
+ <- from-absurd-ll _ Absurd LL_X.
+
+res/getLeft/r-pos
+  : resolving 
+     (used-as-neg/getLeft (UanObj : used-as-neg _ OfX (OfObj : of (obj L R) _)))
+     (pres/getLeft _ 
+	: pres 
+	   (step/getLeft : step (getLeft (obj L R)) L) 
+	   (of/getLeft (of/obj OfV OfR)) 
+	   OfV 
+	   SubVE) 
+     TmsE+
+     WmOfX
+     WmOfE
+     LL_V
+     LL_X
+ <- pos-is-bot SubVE TmsE+ TmsV+ 
+ <- uan-2-ll (used-as-neg/getLeft UanObj) LL_V LL_X.
 
 res/comp : resolving OfX UanXE (pres/compose (_ : =<-trans SubCB SubBA SubCA) (PresBC: pres _ OfB _ _) PresAB) TmsA_pos LLC LLA
         <- pos-is-bot SubBA TmsA_pos TmsB_pos
@@ -304,12 +335,11 @@ res/@s/app-r/lam
  <- uan-2-ll (UanF Ev Vt Eq OfEv) LLr LLV
  <- uan-2-ll UanXEv LLV LLX.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%worlds () (resolving _ _ _ _ _ _) (resolving-value _ _ _ _ _).
-%trustme %total {O A B C} (resolving-value O A B C _).
 
-% %total {O A B C} (resolving O A B C _).
+%worlds () (resolving _ _ _ _ _ _ _).
+
+%total {O A B C D E} (resolving O A B C D E _).
 
 
 

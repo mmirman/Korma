@@ -41,8 +41,6 @@ of/lam : of (lam F A) (A ~> B)
       <- ({x} of x A -> of (F x) B).
 
 %block of-b : some {t}{x : tm} block {_:of x t}.
-%block all-b = ( of-b | sub-b | tp-mode-always-safe | tm-b).
-% %worlds (all-b) (of _ _).
 
 used-as-neg : {Result : mode } of A T -> of A' T' -> type.
 
@@ -64,15 +62,19 @@ used-as-neg/app-r : used-as-neg ResM X (of/@s (F : of _ (Vt ~> _)) V)
 		 <- tp-mode Vt neg
                  <- used-as-neg neg X V.
 
-used-as-neg/objL : used-as-neg ResM X (of/obj (L : of _ Lt) R)
+used-as-neg/objL : used-as-neg ResM X (of/obj (L : of _ Lt) (R : of _ Rt))
 		<- tp-mode Lt neg
                 <- used-as-neg ResM X L.
 
-used-as-neg/objR : used-as-neg ResM X (of/obj L (R : of _ Rt))
+used-as-neg/objR : used-as-neg ResM X (of/obj (L : of _ Lt) (R : of _ Rt))
 		<- tp-mode Rt neg
                 <- used-as-neg ResM X R.
 
-used-as-neg/product : used-as-neg ResM (of/getLeft A) E 
+used-as-neg/obj : used-as-neg ResM X (of/obj L R)
+                <- used-as-neg ResM X R
+                <- used-as-neg ResM X L.
+
+used-as-neg/product : used-as-neg ResM (of/getLeft A ) E 
                    -> used-as-neg ResM (of/getRight A) E 
                    -> used-as-neg ResM A E.
 
