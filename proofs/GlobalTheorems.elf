@@ -20,11 +20,6 @@ pres/lam : pres
          <- subst-of OfV Foo_OfF OfR
          <- =<-eq Ot Eq.
 
-pres/compose : pres (step/compose StepBC StepAB) OfA OfC SubCA
-            <- pres StepAB OfA OfB SubBA
-            <- pres StepBC OfB OfC SubCB
-            <- =<-trans SubCB SubBA SubCA.
-
 pres/sub : pres Step (of/subsump TmsT SubT*T OfET*) OfE'T' SubT'T
         <- pres Step OfET* OfE'T' SubT'T*
         <- =<-trans SubT'T* SubT*T SubT'T.
@@ -115,6 +110,11 @@ pres/switch-right : pres
 
 %worlds () (pres _ _ _ _).
 
+pres-wm : pres Step OfE OFV _ -> well-moded OfE -> well-moded OfV -> type.
+%mode pres-wm +A +B -C.
+%worlds () (pres-wm _ _ _).
+%trustme %total {A} (pres-wm A _ _).
+
 %{ 
 we will need a lemma to get terminates working, 
 but for now, we know it works 
@@ -197,20 +197,20 @@ uan-2-ll : used-as-neg R OfX OfV
 - : uan-2-ll (used-as-neg/obj UAN_L UAN_R) (logic-less/obj-r LL_R TmsL+) LL_X
  <- uan-2-ll UAN_R LL_R LL_X.
 
-- : uan-2-ll (used-as-neg/objL UAN_L TmL-) (logic-less/obj LL_L LL_R) LL_X
+- : uan-2-ll (used-as-neg/objL UAN_L TmL- TmR-) (logic-less/obj LL_L LL_R) LL_X
  <- uan-2-ll UAN_L LL_L LL_X.
-- : uan-2-ll (used-as-neg/objL UAN_L TmL-) (logic-less/obj-l LL_L TmsR+) LL_X
+- : uan-2-ll (used-as-neg/objL UAN_L TmL- TmR-) (logic-less/obj-l LL_L TmsR+) LL_X
  <- uan-2-ll UAN_L LL_L LL_X.
-- : uan-2-ll (used-as-neg/objL UAN_L TmL-) (logic-less/obj-r LL_R TmsL+) LL_X
+- : uan-2-ll (used-as-neg/objL UAN_L TmL- TmR-) (logic-less/obj-r LL_R TmsL+) LL_X
  <- tms-2-tm TmsL+ TmL+
  <- tm-unique TmL+ TmL- Absurd
  <- from-absurd-ll _ Absurd LL_X.
 
-- : uan-2-ll (used-as-neg/objR UAN_R TmR-) (logic-less/obj LL_L LL_R) LL_X
+- : uan-2-ll (used-as-neg/objR UAN_R TmL- TmR-) (logic-less/obj LL_L LL_R) LL_X
  <- uan-2-ll UAN_R LL_R LL_X.
-- : uan-2-ll (used-as-neg/objR UAN_R TmR-) (logic-less/obj-r LL_R TmsL+) LL_X
+- : uan-2-ll (used-as-neg/objR UAN_R TmL- TmR-) (logic-less/obj-r LL_R TmsL+) LL_X
  <- uan-2-ll UAN_R LL_R LL_X.
-- : uan-2-ll (used-as-neg/objR UAN_R TmR-) (logic-less/obj-l LL_L TmsR+) LL_X
+- : uan-2-ll (used-as-neg/objR UAN_R TmL- TmR-) (logic-less/obj-l LL_L TmsR+) LL_X
  <- tms-2-tm TmsR+ TmR+
  <- tm-unique TmR+ TmR- Absurd
  <- from-absurd-ll _ Absurd LL_X.
@@ -241,262 +241,141 @@ uan-2-ll : used-as-neg R OfX OfV
 resolving : used-as-neg Result OfX OfE 
 	 -> pres Step (OfE : of _ Et) OfV SubVE
 	 -> tp-mode-safe Et pos
-         -> well-moded OfX
          -> well-moded OfE
-	 -> logic-less OfV
+         -> logic-less OfV
 	 -> logic-less OfX 
 	 -> type.
-%mode resolving +UanXE +Pres +TmsEp +WM_X +WM_E +LLV -LLX.
+%mode resolving +UanXE +Pres +TmsEp +WM_E +LLV -LLX.
 
 
-res/getLeft/r-pos
+res/getLeft/r-pos/obj
   : resolving 
-     (used-as-neg/getLeft (used-as-neg/objL UanX_V TmV-))
+     (used-as-neg/getLeft (used-as-neg/obj UanX_V UanX_R))
+     (pres/getLeft _ )
+     TmsE+
+     WmOfE
+     LL_V
+     LL_X
+ <- uan-2-ll UanX_V LL_V LL_X.
+
+res/getLeft/r-pos/objL
+  : resolving 
+     (used-as-neg/getLeft (used-as-neg/objL _ TmV- TmR-))
      (pres/getLeft _ 
 	: pres (step/getLeft : step (getLeft (obj L R)) L) (of/getLeft (of/obj OfV OfR)) OfV SubVE) 
      TmsE+
-     WmOfX
      WmOfE
      LL_V
      LL_X
  <- pos-is-bot SubVE TmsE+ TmsV+
  <- tms-2-tm TmsV+ TmV+
+ <- tm-unique TmV+ TmV- Absurd
+ <- from-absurd-ll _ Absurd LL_X.
+
+res/getLeft/r-pos/objR
+  : resolving 
+     (used-as-neg/getLeft (used-as-neg/objR _ TmV- TmR-))
+     (pres/getLeft _ : pres _ _ _ SubVE) 
+     TmsE+
+     WmOfE
+     LL_V
+     LL_X
+ <- pos-is-bot SubVE TmsE+ TmsV+
  <- tms-2-tm TmsV+ TmV+
  <- tm-unique TmV+ TmV- Absurd
  <- from-absurd-ll _ Absurd LL_X.
 
-res/getLeft/r-pos
+res/getRight/r-pos/obj
   : resolving 
-     (used-as-neg/getLeft (UanObj : used-as-neg _ OfX (OfObj : of (obj L R) _)))
-     (pres/getLeft _ 
-	: pres 
-	   (step/getLeft : step (getLeft (obj L R)) L) 
-	   (of/getLeft (of/obj OfV OfR)) 
-	   OfV 
-	   SubVE) 
+     (used-as-neg/getRight (used-as-neg/obj UanX_V UanX_R))
+     (pres/getRight _ )
      TmsE+
-     WmOfX
      WmOfE
      LL_V
      LL_X
- <- pos-is-bot SubVE TmsE+ TmsV+ 
- <- uan-2-ll (used-as-neg/getLeft UanObj) LL_V LL_X.
+ <- uan-2-ll UanX_V LL_V LL_X.
 
-res/comp : resolving OfX UanXE (pres/compose (_ : =<-trans SubCB SubBA SubCA) (PresBC: pres _ OfB _ _) PresAB) TmsA_pos LLC LLA
-        <- pos-is-bot SubBA TmsA_pos TmsB_pos
-        <- resolving OfB used-as-neg/e PresBC TmsB_pos LLC LLB
-        <- resolving OfX UanXE PresAB TmsA_pos LLB LLA.
+res/getRight/r-pos/objL
+  : resolving 
+     (used-as-neg/getRight (used-as-neg/objL _ TmL- TmV-))
+     (pres/getRight _ : pres _ _ _ SubVE) 
+     TmsE+
+     WmOfE
+     LL_V
+     LL_X
+ <- pos-is-bot SubVE TmsE+ TmsV+
+ <- tms-2-tm TmsV+ TmV+
+ <- tm-unique TmV+ TmV- Absurd
+ <- from-absurd-ll _ Absurd LL_X.
+
+res/getRight/r-pos/objR
+  : resolving 
+     (used-as-neg/getRight (used-as-neg/objR _ TmL- TmV-))
+     (pres/getRight _ : pres _ _ _ SubVE) 
+     TmsE+
+     WmOfE
+     LL_V
+     LL_X
+ <- pos-is-bot SubVE TmsE+ TmsV+
+ <- tms-2-tm TmsV+ TmV+
+ <- tm-unique TmV+ TmV- Absurd
+ <- from-absurd-ll _ Absurd LL_X.
 
 res/@s/app-l
-  : resolving OfX (used-as-neg/app-l UanXE1) (pres/@s (Pres : pres _ OfEf _ _)) TmsA_pos (logic-less/app LLFe LLIe) LLX
+  : resolving 
+     (used-as-neg/app-l UanXE1) 
+     (pres/@s (Pres : pres _ OfEf _ _))
+     TmsE+ 
+     (wm/@s WmF WmI) 
+     (logic-less/app LL_F LL_I) 
+     LL_X
  <- of-safe OfEf (tp-mode-safe/~> TmsA TmsB)
- <- resolving OfX UanXE1 Pres (tp-mode-safe/~> TmsA TmsB) LLFe LLX.
+ <- resolving UanXE1 Pres (tp-mode-safe/~> TmsA TmsB) WmF LL_F LL_X.
 
 res/@s/app-r
   : resolving 
-     (OfX : of X Xt)
-     (used-as-neg/app-r UanXEv TmA- OfEf_A~>B  : used-as-neg _ Xt X (@s Ef Ev))
-     (pres/@s Pres : pres _ (of/@s _ OfEv) _ _)
+     (used-as-neg/app-r UanX_V TmA-)
+     (pres/@s Pres)
      TmsB+
-     (logic-less/app LLEf' LLEv : logic-less (_: of (@s Ef' Ev) _)) 
-     LLX
- <- uan-2-ll UanXEv LLEv LLX.
+     WmE
+     (logic-less/app LL_F LL_V)
+     LL_X
+ <- uan-2-ll UanX_V LL_V LL_X.
 
 res/switch-left
  : resolving 
-    OfX
-    (used-as-neg/sum-unused UAN-L UAN-R)
+    (used-as-neg/sum-unused Uan_L Uan_R)
     (_ : pres step/switch-left _ _ _)
     TmsB+
-    (logic-less/app LL-Fe LL-Ie)
-    LL-X
- <- uan-2-ll OfX UAN-L LL-Fe LL-X.
+    WmE
+    (logic-less/app LL_F LL_I)
+    LL_X
+ <- uan-2-ll Uan_L LL_F LL_X.
 
 res/switch-right
  : resolving 
-    OfX
-    (used-as-neg/sum-unused UAN-L UAN-R)
+    (used-as-neg/sum-unused Uan_L Uan_R)
     (_ : pres step/switch-right _ _ _)
     TmsB+
-    _
-    _
-    (logic-less/app LL-Fe LL-Ie)
-    LL-X
- <- uan-2-ll OfX UAN-R LL-Fe LL-X.
+    WmE
+    (logic-less/app LL_F LL_I)
+    LL_X
+ <- uan-2-ll Uan_R LL_F LL_X.
 
 res/@s/app-r/lam
  : resolving 
-    (used-as-neg/app-r UanXEv _ (of/lam _ _ _ (used-neg/- UanF _ _)))
-    (_ : pres _ (of/@s _ (OfEv : of Ev Vt)) _ Eq)
+    (used-as-neg/app-r UanX_V _)
+    _
     TmsB+
-    _ _
-    LLr
-    LLX
- <- uan-2-ll (UanF Ev Vt Eq OfEv) LLr LLV
- <- uan-2-ll UanXEv LLV LLX.
+    (wm/@s (wm/lam/- Foo_WmF Foo_UanF) WmV)
+    LL_R
+    LL_X
+ <- uan-2-ll (Foo_UanF V OfV) LL_R LL_V
+ <- uan-2-ll UanX_V LL_V LL_X.
 
 
 
-%worlds () (resolving _ _ _ _ _ _ _).
-
-%total {O A B C D E} (resolving O A B C D E _).
-
-
-
-
-
-
-
-
-
-
-
-%{
-
-
-
-
-
-
-
-
-used-as-neg-context : type.
-uan-context/d : used-as-neg-context
-	     <- step E V
-	     <- logic-less (OfV : of V Vt)
-             <- of E Et
-             <- tp-mode-safe Et pos
-             <- ({A}{At} of A At -> tp-mode-safe At neg -> used-as-neg pos At A E).
-
-
-resolving : used-as-neg-context
-         -> pres Step (OfAeAt : of _ At) OfBeBt SubBtAt
-         -> tp-mode-safe At pos
-         -> logic-less OfBeBt
-         -> logic-less OfAeAt
-         -> type.
-
-%mode resolving +C +Pres +TmsP +LL -LL'.
-
-
-res/getLeft/r-pos
-  : resolving Context
-              (pres/getLeft _ : pres step/getLeft (of/getLeft (of/obj OfL (OfR : of R Rt))) OfL Eq) 
-              TmsL_pos 
-              LL_L 
-              (logic-less/getLeft (logic-less/obj-l LL_L TmsR_pos))
- <- of-safe OfR TmsR_pos.
-
-res/getLeft/r-neg
-  : resolving (uan-context/d Foo TmsE+ OfE LLV StepEV) 
-              (pres/getLeft _ : pres step/getLeft (of/getLeft (of/obj OfL (OfR : of R Rt))) OfL Eq) 
-              TmsL_pos 
-              LL_L
-              (logic-less/getLeft (logic-less/obj LL_L LL_R))
- <- of-safe OfR TmsR_neg
- <- {E}{V}{Step : step E V}{Vt}{OfV : of V Vt}{LLV : logic-less OfV} (Context R Rt OfR TmsR_neg) .
-
-%{ <- get-pres StepEV OfE PresEV
- <- resolving (uan-context/d LLV Foo TmsE+ OfE ValV StepEV) PresEV TmsE+ LLV LLE
- <- used-as-neg.
- <- used-as-neg-2-logic-less OfR (Foo R Rt OfR TmsR_neg) OfE TmsE+ LL_R. }%
-
-res/subsump : resolving Context Pres TmsA_pos (logic-less/sub Of) Of.
-
-res/pres : resolving Context (pres/compose (_ : =<-trans SubCB SubBA SubCA) PresBC PresAB) TmsA_pos LLC LLA
-        <- pos-is-bot SubBA TmsA_pos TmsB_pos
-        <- resolving Context PresBC TmsB_pos LLC LLB
-        <- resolving Context PresAB TmsA_pos LLB LLA.
-
-res/sub
-  : resolving Context (pres/sub _ Pres) TmsA_pos LL (logic-less/sub LL')
- <- resolving Context Pres TmsA_pos LL LL'.
-
-res/@s/app 
-  : resolving Context (pres/@s Trans (Pres : pres _ OfEf _ _)) TmsA_pos (logic-less/app LLFe LLIe) (logic-less/app LLFe' LLIe)
- <- of-safe OfEf (tp-mode-safe/~> TmsA TmsB)
- <- resolving Context Pres (tp-mode-safe/~> TmsA TmsB) LLFe LLFe'.
-
-res/@s/-+ 
- : resolving Context (pres/@s Trans Pres) TmsA_pos 
-    (logic-less/app-+ TmsA_pos' LLIe)
-    (logic-less/app-+ TmsA_pos LLIe).
-
-res/@s/++ 
- : resolving Context (pres/@s (Trans : =<-trans Subva Subaa' Subva') Pres ) TmsB+
-    (logic-less/app++ TmsA'+ TmsB'+)
-    (logic-less/app++ TmsA+ TmsB+)
- <- pos-is-bot Subaa' TmsA'+ TmsA+.
-
-     
-
-
-%worlds () (resolving _ _ _ _ _).
-% %total {A B C D} (resolving A B C D _).
-
-
-
-2p0 : resolving UAN 
-                (step/getLeft-simp Step NotValE1) 
-                (of/getLeft TmL TmR OfO)
-                Lpos 
-                (logic-less/getLeft LogicLessObj) 
-                (logic-less/getLeft LogicLessObj')
-   <- of-safe OfO TmsO
-   <- resolving UAN Step OfO TmsO LogicLessObj LogicLessObj'.
-
-4 : resolving _ (step/switch-left _ _ )
-                : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
-              Init_Result_Pos _ (logic-less/app++ tp-mode/sum Init_Result_Pos).
-
-5 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Init_Result_Pos
-              (logic-less/app-+ Init_Result_Pos Ie)
-              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/left Ie)).
-6 : resolving (step/switch-left _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Init_Result_Pos
-              (logic-less/app _ Ie)
-              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/left Ie)).
-
-7 : resolving (step/switch-right _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ pos) ~> _)) _ _) _  _)
-              Init_Result_Pos _ (logic-less/app++ tp-mode/sum Init_Result_Pos).
-8 : resolving (step/switch-right _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Init_Result_Pos
-              (logic-less/app-+ Init_Result_Pos Ie)
-              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/right Ie)).
-9 : resolving (step/switch-right _ _ : step (@s (_ : tm (sum _ _ (_ : ub _ _ neg) ~> _)) _ _) _  _)
-              Init_Result_Pos
-              (logic-less/app _ Ie)
-              (logic-less/app-+ Init_Result_Pos (logic-less/app logic-less/right Ie)).
-
-%% somehow the positivity of the result, 
-%% and the positivity of the first argument imply the non check of the logic-less
-
-
-12 : resolving 
-     (step/lam (GetSubRes : getSubRes (V (subRes/dual T E S)) _ TmB B'eB) : step (@s (lam V (used-neg/+* Arg_Is_Pos)) E S) TmB B'eB)
-     Init_Result_Pos
-     LogicLessTmB
-     (logic-less/app++ Arg_Is_Pos Init_Result_Pos).
-
-% might need to prove an equality lemma for GetSubRes.
-13 : resolving
-      (step/lam (GetSubRes : getSubRes (V (subRes/dual T E S)) B' TmB B'eB) 
-        : step (@s (lam V (used-neg/-+ ProveUsedAsNeg Arg_Is_Neg _)) _ _) _ _)
-      Init_Result_Pos
-      LogicLessTmB
-      (logic-less/app-+ Init_Result_Pos LogicLessE)
-  <- unpack-used-as-neg' (ProveUsedAsNeg (subRes/dual T E S) T E S getSubRes/get) UsedAsNeg
-  <- used-as-neg-2-logic-less UsedAsNeg Init_Result_Pos LogicLessE.
-
-
-
-% "ProveUsedAsNeg T S E E_Is_Neg" should show that "logic-less E"
-% somehow we also would need E_Is_Neg or at least, E could be Neg.
-% to get E_Is_Neg, we need to know that the input is Neg for logic-less.
-% perhaps LogicLessTmB should be entered?  (or not, it feels a bit weird doing that).
-
-
-%worlds () (resolving _ _ _ _).
-%total {A B} (resolving A _ B _).
-}%
+%worlds () (resolving _ _ _ _ _ _).
+%terminates {O A B C D} (resolving O A B C D _).
+%covers resolving +O +A +B +C +D -E.
+% %total {O A B C D} (resolving O A B C D _).

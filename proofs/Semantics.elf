@@ -2,11 +2,6 @@ step : tm -> tm -> type. %name step Step.
 
 %mode step +A -B.
 
-step/compose : step A C
-	    <- step A B 
-            <- step B C.
-            
-
 step/@s : step (@s E1 E2) (@s E1' E2)
        <- step E1 E1'.
 
