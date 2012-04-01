@@ -1,4 +1,5 @@
 of : tm -> tp -> type.
+%name of Of of.
 
 of/empty : of empty unit.
 of/obj : of L Tl -> of R Tr -> of (obj L R) (prod Tl Tr).
@@ -58,9 +59,10 @@ used-as-neg/lam-inner : used-as-neg ResM A (of/lam F _ _)
 used-as-neg/app-l : used-as-neg ResM X E1
                  -> used-as-neg ResM X (of/@s E1 E2).
 
-used-as-neg/app-r : used-as-neg ResM X (of/@s (F : of _ (Vt ~> _)) V)
-		 <- tp-mode Vt neg
-                 <- used-as-neg neg X V.
+used-as-neg/app-r 
+   : used-as-neg ResM X (of/@s (F : of _ (Vt ~> _)) V)
+  <- tp-mode Vt neg
+  <- used-as-neg neg X V.
 
 %{
  We include both Rt neg and Lt neg to ensure that
@@ -83,8 +85,8 @@ used-as-neg/obj : used-as-neg ResM X (of/obj L R)
                 <- used-as-neg ResM X R
                 <- used-as-neg ResM X L.
 
-used-as-neg/product : used-as-neg ResM (of/getLeft A ) E 
-                   -> used-as-neg ResM (of/getRight A) E 
+used-as-neg/product : used-as-neg ResM (of/getLeft A) E 
+                   -> used-as-neg ResM (of/getRight A) E
                    -> used-as-neg ResM A E.
 
 used-as-neg/sum-unused : used-as-neg ResM A L
@@ -99,8 +101,6 @@ used-as-neg/left : used-as-neg ResM A I
 
 used-as-neg/right : used-as-neg ResM A I
       	         -> used-as-neg ResM A (of/right _ _ _ I).
-
-
 
 
 
@@ -119,7 +119,7 @@ wm/@s : well-moded (of/@s OfF OFV) <- well-moded OfV <- well-moded OfF.
 wm/lam/+* : well-moded (of/lam F_Of (TmsA : tp-mode-safe A pos) TmsB)
          <- ({x}{of_x} well-moded of_x -> well-moded (F_Of x of_x)).
 
-wm/lam/- : well-moded (of/lam F_Of (TmsA : tp-mode-safe A neg) (TmsB : tp-mode-safe B M) )
+wm/lam/- : well-moded (of/lam F_Of (TmsA : tp-mode-safe A neg) (TmsB : tp-mode-safe _ M) )
       <- ({x}{of_x} used-as-neg M of_x (F_Of x of_x))
       <- ({x}{of_x} well-moded of_x -> well-moded (F_Of x of_x)).
 

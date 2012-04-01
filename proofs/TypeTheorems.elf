@@ -150,11 +150,23 @@ eq-gen : {Eq : A =< A} =<-eq A Eq -> type.
 %unique (=<-trans +A +B -1C) (=<-trans' +A' +B' -1C').
 %total (A B) (=<-trans A _ _) (=<-trans' B _ _).
 
+%{
+%theorem pbot 
+   : forall* {A}{A'}
+     forall {_:A =< A' }{_ : tp-mode-safe A' pos}
+     exists {_ : tp-mode-safe A pos}
+     true.
 
-neg-is-top : A =< A' -> tp-mode-safe A neg -> tp-mode-safe A' neg -> type.
+%prove 2 {A B} (pbot A B _). 
+}%
+
+neg-is-top : A =< A' -> tp-mode-safe A neg -> tp-mode A' neg -> type.
 %mode neg-is-top +A +B -C. %worlds () (neg-is-top _ _ _).
 %trustme %total {} (neg-is-top _ _ _).
 
-pos-is-bot : A =< A' -> tp-mode-safe A' pos -> tp-mode-safe A pos -> type.
+pos-is-bot : A =< A' -> tp-mode-safe A' pos -> tp-mode A pos -> type.
 %mode pos-is-bot +A +B -C. %worlds () (pos-is-bot _ _ _).
 %trustme %total {} (pos-is-bot _ _ _).
+
+
+      
