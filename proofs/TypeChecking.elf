@@ -47,6 +47,12 @@ used-as-neg : {Result : mode } of A T -> of A' T' -> type.
 
 used-as-neg/e : used-as-neg neg A A.
 
+used-as-neg/sX : used-as-neg M (of/subsump _ _ Of) A
+              <- used-as-neg M Of A.
+
+used-as-neg/sV : used-as-neg M A (of/subsump _ _ Of)
+              <- used-as-neg M A Of.
+
 used-as-neg/getLeft : used-as-neg ResM A (of/getLeft E)
                    <- used-as-neg ResM A E.
 
@@ -63,13 +69,6 @@ used-as-neg/app-r
    : used-as-neg ResM X (of/@s (F : of _ (Vt ~> _)) V)
   <- tp-mode Vt neg
   <- used-as-neg neg X V.
-
-%{
- We include both Rt neg and Lt neg to ensure that
- we only do the used-as-neg check in one side of an object if
- that object will be used negatively, somewhere, as otherwise, it isn't 
- necessarily strict.
-}%
 
 used-as-neg/objL : used-as-neg ResM X (of/obj (L : of _ Lt) (R : of _ Rt))
 		<- tp-mode Rt neg

@@ -13,6 +13,8 @@ step-eq/eq : step-eq A A.
 
 logic-less : of E T -> type. %name logic-less LL.
 
+logic-less/subsump : logic-less (of/subsump _ _ Of) <- logic-less Of.
+
 logic-less/unsafe : logic-less (of/unsafe Tms).
 
 logic-less/app : logic-less (of/@s OfFe OfIe)
