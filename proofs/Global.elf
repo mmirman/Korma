@@ -15,14 +15,14 @@ logic-less : of E T -> type. %name logic-less LL.
 
 logic-less/subsump : logic-less (of/subsump _ _ Of) <- logic-less Of.
 
-logic-less/unsafe : logic-less (of/unsafe Tms).
+logic-less/unsafe : logic-less (of/unsafe _).
 
 logic-less/app : logic-less (of/@s OfFe OfIe)
               <- logic-less OfIe
               <- logic-less OfFe.
 
-logic-less/lam : logic-less (of/lam F _ _) 
-   <- {x}{of_x} logic-less of_x -> logic-less (F x of_x).
+logic-less/lam : logic-less (of/lam F TmsA _) 
+   <- {x}{dx} logic-less dx -> logic-less (F x dx).
 
 logic-less/empty : logic-less of/empty.
 logic-less/obj : logic-less (of/obj L R)

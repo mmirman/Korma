@@ -25,6 +25,7 @@ tms-2-tm : tp-mode-safe T M -> tp-mode T M -> type.
 %mode tms-2-tm +A -B.
 - : tms-2-tm (tp-mode-safe/~> _ _) tp-mode/~>.
 - : tms-2-tm (tp-mode-safe/unit) tp-mode/unit.
+
 - : tms-2-tm (tp-mode-safe/sum _ _ _) tp-mode/sum.
 - : tms-2-tm (tp-mode-safe/prod L A B) (tp-mode/prod L A' B') 
  <- tms-2-tm B B'
@@ -53,6 +54,7 @@ has-tp-mode : {T}{M} tp-mode T M -> type.
 - : has-tp-mode unit pos tp-mode/unit.
 - : has-tp-mode (_ ~> _) pos tp-mode/~>.
 - : has-tp-mode (sum _ _ C) C tp-mode/sum.
+
 - : has-tp-mode (prod A B) Cm (tp-mode/prod L A' B') 
  <- has-tp-mode B Bm B'
  <- has-tp-mode A Am A'
@@ -66,6 +68,7 @@ has-tp-mode : {T}{M} tp-mode T M -> type.
 
 =<-2-<m : A =< A' -> tp-mode A M -> tp-mode A' M' -> M <m M' -> type.
 %mode =<-2-<m +A +B +C -D.
+
 - :  =<-2-<m =</unit tp-mode/unit tp-mode/unit <m/e.
 - :  =<-2-<m (=</~> _ _) tp-mode/~> tp-mode/~> <m/e.
 - :  =<-2-<m (=</sum M _ _) tp-mode/sum tp-mode/sum M.
@@ -89,7 +92,6 @@ has-tp-mode : {T}{M} tp-mode T M -> type.
 
 =<-2-<m-s : A =< A' -> tp-mode-safe A M -> tp-mode-safe A' M' -> M <m M' -> type.
 %mode =<-2-<m-s +A +B +C -D.
-
 - :  =<-2-<m-s =</unit tp-mode-safe/unit tp-mode-safe/unit <m/e.
 - :  =<-2-<m-s (=</~> _ _) (tp-mode-safe/~> _ _) (tp-mode-safe/~> _ _) <m/e.
 - :  =<-2-<m-s (=</sum M _ _) (tp-mode-safe/sum _ _ _) (tp-mode-safe/sum _ _ _) M.
@@ -164,9 +166,19 @@ neg-is-top : A =< A' -> tp-mode-safe A neg -> tp-mode A' neg -> type.
 %mode neg-is-top +A +B -C. %worlds () (neg-is-top _ _ _).
 %trustme %total {} (neg-is-top _ _ _).
 
+neg-is-top' : A =< A' -> tp-mode A neg -> tp-mode A' neg -> type.
+%mode neg-is-top' +A +B -C. %worlds () (neg-is-top' _ _ _).
+%trustme %total {} (neg-is-top' _ _ _).
+
 pos-is-bot : A =< A' -> tp-mode-safe A' pos -> tp-mode A pos -> type.
 %mode pos-is-bot +A +B -C. %worlds () (pos-is-bot _ _ _).
 %trustme %total {} (pos-is-bot _ _ _).
-
+% these have been proven with the theorem prover, trustme is used now for convenience.
 
       
+tm-2-tms : tp-mode T M -> tp-mode-safe T M' -> tp-mode-safe T M -> type.
+%mode tm-2-tms +A +B -C.
+- : tm-2-tms TmM TmsM' TmsM'
+ <- tms-2-tm TmsM' TmM'.
+%worlds () (tm-2-tms _ _ _).
+%total {A B} (tm-2-tms A B _).

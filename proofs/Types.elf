@@ -37,8 +37,6 @@ unit : tp.
 sum : tp -> tp -> mode -> tp.
 prod : tp -> tp -> tp.
 
-
-
 tp-mode : tp -> mode -> type. %name tp-mode TpM tpM.
 %mode tp-mode +A -B.
 tp-mode/~> : tp-mode (B ~> A) pos.
@@ -50,6 +48,7 @@ tp-mode-safe : tp -> mode -> type. %name tp-mode-safe TpM tpM.
 %mode tp-mode-safe +A -B.
 tp-mode-safe/~> : tp-mode-safe (A ~> B) pos <- tp-mode-safe B _ <- tp-mode-safe A _.
 tp-mode-safe/unit : tp-mode-safe unit pos.
+
 tp-mode-safe/sum : tp-mode-safe (sum Lt Rt C) C <- tp-mode-safe Rt Rm <- tp-mode-safe Lt Lm <- ub Lm Rm C.
 tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C <- tp-mode-safe Rt Rm <- tp-mode-safe Lt Lm <- lub Lm Rm C.
 
@@ -57,16 +56,16 @@ tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C <- tp-mode-safe Rt Rm <- tp-mode
 =< : tp -> tp -> type. %infix right 5 =<.
 %mode =< +A +B.
 =</unit : unit =< unit.
+
 =</~> : A' =< A -> B =< B' -> (A ~> B) =< (A' ~> B').
 =</sum :  M <m M'
        -> A =< A'
        -> B =< B'
        -> (sum A B M) =< (sum A' B' M').
+
 =</prod :  A =< A'
         -> B =< B'
         -> (prod A B) =< (prod A' B').
-
-
 
 %block m-b : block {_ : mode}.
 %worlds (m-b) (mode).
