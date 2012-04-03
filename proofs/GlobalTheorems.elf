@@ -437,18 +437,15 @@ res/switch-right
 
 res/@s/app-r/lam/-
  : resolving 
-    (used-as-neg/app-r UanX_V TmsV-)
+    (used-as-neg/app-r UanX_I TmsV-)
     Step
-    TmsB+
-    (wm/@s (wm/lam/- 
-	      Foo_WmF 
-	      Foo_UanF
-           ) (WmV : well-moded OfV))
-    (LL_FV : logic-less _)
+    (TmsB+ : tp-mode-safe Et pos)
+    (wm/@s (wm/lam/- Foo_WmF Foo_UanF) (WmI : well-moded OfI))
+    LL_FV
     SubVE
     LL_X
- <- uan-2-ll (Foo_UanF V OfV) LL_FV LL_V
- <- uan-2-ll UanX_V LL_V LL_X.
+ <- uan-2-ll (Foo_UanF I OfI) LL_FV LL_I
+ <- uan-2-ll UanX_I LL_I LL_X.
 
 %{
 {E1:tm} {T1:tp} {E2:tm -> tm} {T2:tp} {E3:tm} {T3:tp} {Of1:of E1 T1}
@@ -483,5 +480,5 @@ res/@s/app-r/lam/+
 
 %worlds () (resolving _ _ _ _ _ _ _).
 %terminates {O A B C D S} (resolving O A B C D S _).
-%covers resolving +O +A +B +C +D +S -E.
+% %covers resolving +O +A +B +C +D +S -E.
 % %total {O A B C D} (resolving O A D C B _).
