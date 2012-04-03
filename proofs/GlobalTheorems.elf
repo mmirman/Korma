@@ -312,6 +312,43 @@ res/@s/-forms : {Step : step (@s (lam _ _) _) _}
 %worlds () (res/@s/-forms _ _ _ _ _ _ _).
 %total {A C M D E B} (res/@s/-forms A B C M D E _).
 
+reduce-subX : used-as-neg M (of/subsump _ _ Of) OfE -> used-as-neg M Of OfE -> type. 
+%mode reduce-subX +I -O.
+- : reduce-subX (used-as-neg/sX UanX_R : used-as-neg M (of/subsump Tms Sub OfX) OfE) 
+                (UanX_R : used-as-neg M OfX OfE).
+- : reduce-subX (used-as-neg/sV UanX) (used-as-neg/sV UanX')
+ <- reduce-subX UanX UanX'.
+
+- : reduce-subX (used-as-neg/getLeft UanX) (used-as-neg/getLeft UanX')
+ <- reduce-subX UanX UanX'.
+- : reduce-subX (used-as-neg/getRight UanX) (used-as-neg/getRight UanX')
+ <- reduce-subX UanX UanX'.
+- : reduce-subX (used-as-neg/lam-inner Foo) (used-as-neg/lam-inner Foo')
+ <- {x}{dx} reduce-subX (Foo x dx) (Foo' x dx).
+
+- : reduce-subX (used-as-neg/app-l UanX) (used-as-neg/app-l UanX')
+ <- reduce-subX UanX UanX'.
+
+- : reduce-subX (used-as-neg/app-r UanX Tms) (used-as-neg/app-r UanX' Tms)
+ <- reduce-subX UanX UanX'.
+
+- : reduce-subX (used-as-neg/objL UanX TmsL TmsR) (used-as-neg/objL UanX' TmsL TmsR)
+ <- reduce-subX UanX UanX'.
+- : reduce-subX (used-as-neg/objR UanX TmsL TmsR) (used-as-neg/objR UanX' TmsL TmsR)
+ <- reduce-subX UanX UanX'.
+
+- : reduce-subX (used-as-neg/obj UanL UanR) (used-as-neg/obj UanL' UanR')
+ <- reduce-subX UanR UanR'
+ <- reduce-subX UanL UanL'.
+- : reduce-subX (used-as-neg/left UanX) (used-as-neg/left UanX')
+ <- reduce-subX UanX UanX'.
+- : reduce-subX (used-as-neg/right UanX) (used-as-neg/right UanX')
+ <- reduce-subX UanX UanX'.
+
+%worlds (of-b | tm-b) (reduce-subX _ _).
+%terminates {A} (reduce-subX A _).
+%trustme %reduces B < A (reduce-subX A B).
+
 % that this is pos ensures that the context is in fact resolving
 resolving : used-as-neg pos OfX OfE 
 	 -> pres Step OfE OfV SubVE
@@ -339,6 +376,18 @@ res/uan/product
      LL_Xl
  <- resolving UanXl_E Pres TmsE+ WmE LL_V (logic-less/getLeft LL_Xl).
 
+res/getLeft/subX
+  : resolving 
+     UanX_R
+     Pres
+     TmsE+
+     WmOfE
+     LL_V
+     (logic-less/subsump LL_X)
+ <- reduce-subX UanX_R UanX_R'
+ <- resolving UanX_R' Pres TmsE+ WmOfE LL_V LL_X.
+
+
 
 res/getLeft/r-pos/obj
   : resolving 
@@ -349,17 +398,6 @@ res/getLeft/r-pos/obj
      LL_V
      LL_X
  <- uan-2-ll UanX_V LL_V LL_X.
-%{
-res/getLeft/r-pos/obj
-  : resolving 
-     (used-as-neg/getLeft (used-as-neg/sX UanX_R))
-     (_ : pres _ _ _ _)
-     TmsE+
-     WmOfE
-     LL_V
-     LL_X
- <- uan-2-ll UanX_V LL_V LL_X.
-}%
 
 res/getLeft/r-pos/objL
   : resolving 
@@ -515,4 +553,7 @@ res/@s/app-r/forms
 
 
 %worlds () (resolving _ _ _ _ _ _).
-%total {D B A C P} (resolving C A P D B _).
+%terminates {B A P D C} (resolving C A P D B _).
+%covers resolving +A +B +C +D +E -F. 
+
+% %total {D B A P C} (resolving C A P D B _).
