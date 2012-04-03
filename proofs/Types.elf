@@ -4,6 +4,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%
 
 mode : type. %name mode Gs.
+%mode mode.
 pos : mode.
 neg : mode.
 
@@ -32,6 +33,7 @@ glb/pr : glb neg pos pos.
 % the types in the language %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tp : type. %name tp T t.
+%mode tp.
 ~> : tp -> tp -> tp. %infix right 6 ~>.
 unit : tp.
 sum : tp -> tp -> mode -> tp.
@@ -73,10 +75,13 @@ tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C <- tp-mode-safe Rt Rm <- tp-mode
 
 %worlds (m-b) (<m _ _).
 %unique <m +A +B.
+%terminates {A B} (<m A B).
 %freeze <m.
+
 
 %worlds (m-b) (ub _ _ _).
 %unique ub +A +B +C.
+%terminates {A B C} (ub A B C).
 
 safe-moded : tp -> type.
 sm : safe-moded T <- tp-mode-safe T M.
@@ -93,13 +98,13 @@ sm : safe-moded T <- tp-mode-safe T M.
 
 %worlds (tp-mode-always-safe) (tp).
 
-%worlds (tp-mode-always-safe) (tp-mode _ _).
+%worlds () (tp-mode _ _).
 %unique tp-mode +A -1B.
+%total {A} (tp-mode A _).
 
-
-%worlds (tp-mode-always-safe) (tp-mode-safe _ _).
+%worlds () (tp-mode-safe _ _).
 %unique tp-mode-safe +A -1B.
-
+%terminates {A} (tp-mode-safe A _).
 
 %block sub-b : some {T}{T'} block {_: T =< T'}.
 %worlds (sub-b | tp-mode-always-safe) (=< _ _).

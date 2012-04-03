@@ -1,12 +1,18 @@
 of : tm -> tp -> type.
 %name of Of of.
 
+
+of/subsump : of E T'
+          <- of E T
+          <- T =< T'
+          <- tp-mode-safe T' M. % derivations can be specialized.
+
 of/empty : of empty unit.
 of/obj : of L Tl -> of R Tr -> of (obj L R) (prod Tl Tr).
 of/getLeft : of (getLeft O) A
-          <- of O (prod A B).
+          <- of O (prod A _).
 of/getRight : of (getRight O) B
-	    <- of O (prod A B).
+           <- of O (prod _ B).
 of/left : of (left L) (sum Lt Rt M)
        <- of L Lt
        <- tp-mode-safe Rt Rm
@@ -29,10 +35,6 @@ of/logic-var : tp-mode-safe B neg -> of logic-var B.
 
 of/unsafe : tp-mode-safe B M -> of unsafe B.
 
-of/subsump : of E T'
-          <- of E T
-          <- T =< T'
-          <- tp-mode-safe T' M. % derivations can be specialized.
 
 of/@s : of Ef (A ~> C) -> of Ev A -> of (@s Ef Ev) C.
 
@@ -101,7 +103,7 @@ used-as-neg/left : used-as-neg ResM A I
 used-as-neg/right : used-as-neg ResM A I
       	         -> used-as-neg ResM A (of/right _ _ _ I).
 
-
+%mode used-as-neg +R +A +B.
 
 well-moded : of E T -> type.
 
@@ -123,3 +125,4 @@ wm/lam/- : well-moded (of/lam F_Of (TmsA : tp-mode-safe A neg) (TmsB : tp-mode-s
       <- ({x}{of_x} well-moded of_x -> well-moded (F_Of x of_x)).
 
 %block wm-assm-b : some {t} block {x}{of_x:of x t}{_:well-moded of_x}.
+

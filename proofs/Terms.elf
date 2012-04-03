@@ -20,6 +20,7 @@ logic-var : tm.
 
 %block tm-b : block {x : tm}.
 %worlds (tm-b | tp-mode-always-safe) (tm).
+%mode tm.
 
 
 value : tm -> type.
