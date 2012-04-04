@@ -52,7 +52,10 @@ tp-mode-safe/~> : tp-mode-safe (A ~> B) pos <- tp-mode-safe B _ <- tp-mode-safe 
 tp-mode-safe/unit : tp-mode-safe unit pos.
 
 tp-mode-safe/sum : tp-mode-safe (sum Lt Rt C) C <- tp-mode-safe Rt Rm <- tp-mode-safe Lt Lm <- ub Lm Rm C.
-tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C <- tp-mode-safe Rt Rm <- tp-mode-safe Lt Lm <- lub Lm Rm C.
+tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C 
+		 <- tp-mode-safe Rt Rm 
+		 <- tp-mode-safe Lt Lm 
+		 <- lub Lm Rm C.
 
 
 =< : tp -> tp -> type. %infix right 5 =<.
@@ -69,6 +72,14 @@ tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C <- tp-mode-safe Rt Rm <- tp-mode
         -> B =< B'
         -> (prod A B) =< (prod A' B').
 
+~=~ : tp -> tp -> type. %infix right 5 ~=~.
+%mode ~=~ +A +B.
+~=~/~> : A ~=~ A' -> B ~=~ B' -> (A ~> B) ~=~ (A' ~> B').
+~=~/sum : A ~=~ A' -> B ~=~ B' -> (sum A B _) ~=~ (sum A' B' _).
+~=~/prod : A ~=~ A' -> B ~=~ B' -> (prod A B) ~=~ (prod A' B').
+~=~/unit : unit ~=~ unit.
+
+
 %block m-b : block {_ : mode}.
 %worlds (m-b) (mode).
 %freeze mode.
@@ -77,6 +88,7 @@ tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C <- tp-mode-safe Rt Rm <- tp-mode
 %unique <m +A +B.
 %terminates {A B} (<m A B).
 %freeze <m.
+
 
 
 %worlds (m-b) (ub _ _ _).
@@ -108,3 +120,8 @@ sm : safe-moded T <- tp-mode-safe T M.
 
 %block sub-b : some {T}{T'} block {_: T =< T'}.
 %worlds (sub-b | tp-mode-always-safe) (=< _ _).
+
+
+
+
+

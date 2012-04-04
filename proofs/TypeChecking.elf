@@ -10,9 +10,9 @@ of/subsump : of E T'
 of/empty : of empty unit.
 of/obj : of L Tl -> of R Tr -> of (obj L R) (prod Tl Tr).
 of/getLeft : of (getLeft O) A
-          <- of O (prod A _).
+          <- of O (prod A B).
 of/getRight : of (getRight O) B
-           <- of O (prod _ B).
+           <- of O (prod A B).
 of/left : of (left L) (sum Lt Rt M)
        <- of L Lt
        <- tp-mode-safe Rt Rm
@@ -49,17 +49,18 @@ used-as-neg : {Result : mode } of A T -> of A' T' -> type.
 
 used-as-neg/e : used-as-neg neg A A.
 
-used-as-neg/sX : used-as-neg M (of/subsump _ _ Of) A
-              <- used-as-neg M Of A.
+used-as-neg/sX : used-as-neg ResM (of/subsump _ _ OfX) OfV
+              <- used-as-neg ResM OfX OfV.
 
-used-as-neg/sV : used-as-neg M A (of/subsump _ _ Of)
-              <- used-as-neg M A Of.
+
+used-as-neg/sV : used-as-neg ResM OfX (of/subsump _ _ OfV)
+              <- used-as-neg ResM OfX OfV.
 
 used-as-neg/getLeft : used-as-neg ResM A (of/getLeft E)
-                   <- used-as-neg ResM A E.
+                   <- used-as-neg pos A E.
 
 used-as-neg/getRight : used-as-neg ResM A (of/getRight E)
-                    <- used-as-neg ResM A E.
+                    <- used-as-neg pos A E.
 
 used-as-neg/lam-inner : used-as-neg ResM A (of/lam F _ _)
                      <- ({x}{dx} used-as-neg ResM A (F x dx)).
@@ -103,14 +104,19 @@ used-as-neg/left : used-as-neg ResM A I
 used-as-neg/right : used-as-neg ResM A I
       	         -> used-as-neg ResM A (of/right _ _ _ I).
 
-%mode used-as-neg +R +A +B.
 
 well-moded : of E T -> type.
 
 wm/empty : well-moded of/empty.
 wm/obj : well-moded (of/obj OfL OfR) <- well-moded OfR <- well-moded OfL.
-wm/getLeft : well-moded (of/getLeft Of) <- well-moded Of.
-wm/getRight : well-moded (of/getRight Of) <- well-moded Of.
+wm/getLeft : well-moded (of/getLeft (Of: of _ (prod L R))) 
+	  <- tp-mode L M
+          <- tp-mode R M
+	  <- well-moded Of.
+wm/getRight : well-moded (of/getRight (Of: of _ (prod L R))) 
+	   <- tp-mode L M
+           <- tp-mode R M
+	   <- well-moded Of.
 wm/left : well-moded (of/left _ _ _ Of) <- well-moded Of.
 wm/right : well-moded (of/right _ _ _ Of) <- well-moded Of.
 wm/switch : well-moded (of/switch _ _ OfL OfR OfI) <- well-moded OfI <- well-moded OfR <- well-moded OfL.

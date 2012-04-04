@@ -10,7 +10,6 @@ step-eq : step T T' -> step S S' -> type.
 step-eq/eq : step-eq A A.
 %freeze step-eq.
 
-
 logic-less : of E T -> type. %name logic-less LL.
 
 logic-less/subsump : logic-less (of/subsump _ _ Of) <- logic-less Of.
