@@ -27,7 +27,7 @@ tms-2-tm : tp-mode-safe T M -> tp-mode T M -> type.
 - : tms-2-tm (tp-mode-safe/unit) tp-mode/unit.
 
 - : tms-2-tm (tp-mode-safe/sum _ _ _) tp-mode/sum.
-- : tms-2-tm (tp-mode-safe/prod L A B) (tp-mode/prod L A' B') 
+- : tms-2-tm (tp-mode-safe/prod A B) (tp-mode/prod A' B') 
  <- tms-2-tm B B'
  <- tms-2-tm A A'.
 %worlds (tp-mode-always-safe) (tms-2-tm _ _).
@@ -49,22 +49,6 @@ has-lub : {A}{B}{C} lub A B C -> type.
 %unique has-lub +A +B -1C -1L.
 %total {A B} (has-lub A B _ _).
 
-has-tp-mode : {T}{M} tp-mode T M -> type.
-%mode has-tp-mode +A -B -C.
-- : has-tp-mode unit pos tp-mode/unit.
-- : has-tp-mode (_ ~> _) pos tp-mode/~>.
-- : has-tp-mode (sum _ _ C) C tp-mode/sum.
-
-- : has-tp-mode (prod A B) Cm (tp-mode/prod L A' B') 
- <- has-tp-mode B Bm B'
- <- has-tp-mode A Am A'
- <- has-lub Am Bm Cm L.
-
-%worlds () (has-tp-mode _ _ _).
-%unique has-tp-mode +A -1M -1TpM.
-%total {A} (has-tp-mode A _ _).
-
-
 
 =<-2-<m : A =< A' -> tp-mode A M -> tp-mode A' M' -> M <m M' -> type.
 %mode =<-2-<m +A +B +C -D.
@@ -72,20 +56,8 @@ has-tp-mode : {T}{M} tp-mode T M -> type.
 - :  =<-2-<m =</unit tp-mode/unit tp-mode/unit <m/e.
 - :  =<-2-<m (=</~> _ _) tp-mode/~> tp-mode/~> <m/e.
 - :  =<-2-<m (=</sum M _ _) tp-mode/sum tp-mode/sum M.
-- : =<-2-<m (=</prod LL' RR') (tp-mode/prod lub/e L R) (tp-mode/prod Lub' L' R') MlC'
-  <- =<-2-<m LL' L L' MlMl'
- <- lub-2-ub Lub' (ub/p Ml'C' _)
-  <- <m-trans MlMl' Ml'C' MlC'.
-
-- : =<-2-<m (=</prod LL' RR') (tp-mode/prod lub/pr L R) (tp-mode/prod Lub' L' R') MlC'
-  <- =<-2-<m LL' L L' MlMl'
- <- lub-2-ub Lub' (ub/p Ml'C' _)
-  <- <m-trans MlMl' Ml'C' MlC'.
-
-- : =<-2-<m (=</prod LL' RR') (tp-mode/prod lub/pl L R) (tp-mode/prod Lub' L' R') MrC'
-  <- =<-2-<m RR' R R' MrMr'
- <- lub-2-ub Lub' (ub/p _ Mr'C')
-  <- <m-trans MrMr' Mr'C' MrC'.
+- : =<-2-<m (=</prod LL' RR') (tp-mode/prod L R) (tp-mode/prod L' R') MlMl'
+  <- =<-2-<m LL' L L' MlMl'.
 
 %worlds (tp-mode-always-safe) (=<-2-<m _ _ _ _).
 %total {A B C} (=<-2-<m A B C _).
@@ -95,20 +67,9 @@ has-tp-mode : {T}{M} tp-mode T M -> type.
 - :  =<-2-<m-s =</unit tp-mode-safe/unit tp-mode-safe/unit <m/e.
 - :  =<-2-<m-s (=</~> _ _) (tp-mode-safe/~> _ _) (tp-mode-safe/~> _ _) <m/e.
 - :  =<-2-<m-s (=</sum M _ _) (tp-mode-safe/sum _ _ _) (tp-mode-safe/sum _ _ _) M.
-- : =<-2-<m-s (=</prod LL' RR') (tp-mode-safe/prod lub/e L R) (tp-mode-safe/prod Lub' L' R') MlC'
-  <- =<-2-<m-s LL' L L' MlMl'
- <- lub-2-ub Lub' (ub/p Ml'C' _)
-  <- <m-trans MlMl' Ml'C' MlC'.
+- : =<-2-<m-s (=</prod LL' RR') (tp-mode-safe/prod L R) (tp-mode-safe/prod L' R') MlMl'
+  <- =<-2-<m-s LL' L L' MlMl'.
 
-- : =<-2-<m-s (=</prod LL' RR') (tp-mode-safe/prod lub/pr L R) (tp-mode-safe/prod Lub' L' R') MlC'
-  <- =<-2-<m-s LL' L L' MlMl'
- <- lub-2-ub Lub' (ub/p Ml'C' _)
-  <- <m-trans MlMl' Ml'C' MlC'.
-
-- : =<-2-<m-s (=</prod LL' RR') (tp-mode-safe/prod lub/pl L R) (tp-mode-safe/prod Lub' L' R') MrC'
-  <- =<-2-<m-s RR' R R' MrMr'
-  <- lub-2-ub Lub' (ub/p _ Mr'C')
-  <- <m-trans MrMr' Mr'C' MrC'.
 %worlds (tp-mode-always-safe) (=<-2-<m-s _ _ _ _).
 %total {A B C} (=<-2-<m-s A B C _).
 
@@ -182,3 +143,18 @@ tm-2-tms : tp-mode T M -> tp-mode-safe T M' -> tp-mode-safe T M -> type.
  <- tms-2-tm TmsM' TmM'.
 %worlds () (tm-2-tms _ _ _).
 %total {A B} (tm-2-tms A B _).
+
+tm-2-tms-prod-l : tp-mode L M -> tp-mode-safe (prod L R) M' -> tp-mode-safe (prod L R) M -> type.
+%mode tm-2-tms-prod-l +A +B -C.
+- : tm-2-tms-prod-l TmM (tp-mode-safe/prod TmsM' TmsR) (tp-mode-safe/prod TmsM' TmsR)
+ <- tms-2-tm TmsM' TmM'.
+%worlds () (tm-2-tms-prod-l _ _ _).
+%total {A B} (tm-2-tms-prod-l A B _).
+
+
+tm-2-tms-prod-r : tp-mode R M -> tp-mode-safe (prod L R) M' -> tp-mode-safe (prod L R) M -> type.
+%mode tm-2-tms-prod-r +A +B -C.
+- : tm-2-tms-prod-r TmM (tp-mode-safe/prod TmsL TmsM') (tp-mode-safe/prod TmsL TmsM')
+ <- tms-2-tm TmsM' TmM'.
+%worlds () (tm-2-tms-prod-r _ _ _).
+%total {A B} (tm-2-tms-prod-r A B _).

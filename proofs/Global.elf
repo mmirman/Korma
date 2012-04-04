@@ -25,7 +25,7 @@ logic-less/lam : logic-less (of/lam F TmsA _)
    <- {x}{dx} logic-less dx -> logic-less (F x dx).
 
 logic-less/empty : logic-less of/empty.
-logic-less/obj : logic-less (of/obj L R)
+logic-less/obj : logic-less (of/obj _ _ L R)
               <- logic-less R
               <- logic-less L.
 
@@ -36,11 +36,11 @@ logic-less/getRight : logic-less A -> logic-less (of/getRight A).
 logic-less/left : logic-less (of/left _ _ _ L) <- logic-less L.
 logic-less/right : logic-less (of/right _ _ _ R) <- logic-less R.
 
-logic-less/obj-l : logic-less (of/obj L (R : of _ Rt)) 
+logic-less/obj-l : logic-less (of/obj _ _ L (R : of _ Rt)) 
                 <- tp-mode-safe Rt pos
                 <- logic-less L.
 
-logic-less/obj-r : logic-less (of/obj (L : of _ Lt) R) 
+logic-less/obj-r : logic-less (of/obj _ _ (L : of _ Lt) R) 
                 <- tp-mode-safe Lt pos
                 <- logic-less R.
 
@@ -62,6 +62,10 @@ ll-new : of-eq Of Of' -> logic-less Of -> logic-less Of' -> type.
 
 unsafe-free : tm -> type.
 
+unsafe-free/sub
+   : unsafe-free (sub A)
+  <- unsafe-free A.
+
 unsafe-free/lam 
    : unsafe-free (lam F _)
   <- {x} unsafe-free x -> unsafe-free (F x).
@@ -78,10 +82,10 @@ unsafe-free/getRight
    : unsafe-free (getRight I)
   <- unsafe-free I.
 unsafe-free/left
-   : unsafe-free (left I)
+   : unsafe-free (left I _)
   <- unsafe-free I.
 unsafe-free/right
-   : unsafe-free (right I)
+   : unsafe-free (right _ I)
   <- unsafe-free I.
 unsafe-free/switch
    : unsafe-free (switch L R I)

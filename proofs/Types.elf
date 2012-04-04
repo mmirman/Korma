@@ -12,15 +12,18 @@ neg : mode.
 <m/e : A <m A.
 <m/pn : pos <m neg.
 
+
 ub : mode -> mode -> mode -> type.  %name ub UB.
 %mode ub +A +B +C.
 ub/p : A <m C -> B <m C -> ub A B C.
+
 
 lub : mode -> mode -> mode -> type. %name lub LUB. 
 %mode lub +A +B -C.  
 lub/e :  lub A A A.
 lub/pl : lub pos neg neg.
 lub/pr : lub neg pos neg.
+
 
 glb : mode -> mode -> mode -> type. %name glb GLB.
 %mode glb +A +B -C. 
@@ -42,7 +45,7 @@ tp-mode : tp -> mode -> type. %name tp-mode TpM tpM.
 tp-mode/~> : tp-mode (B ~> A) pos.
 tp-mode/unit : tp-mode unit pos.
 tp-mode/sum : tp-mode (sum Lt Rt C) C.
-tp-mode/prod : tp-mode (prod Lt Rt) C <- tp-mode Rt Rm <- tp-mode Lt Lm <- lub Lm Rm C.
+tp-mode/prod : tp-mode (prod Lt Rt) M <- tp-mode Rt M <- tp-mode Lt M.
 
 tp-mode-safe : tp -> mode -> type. %name tp-mode-safe TpM tpM.
 %mode tp-mode-safe +A -B.
@@ -50,7 +53,7 @@ tp-mode-safe/~> : tp-mode-safe (A ~> B) pos <- tp-mode-safe B _ <- tp-mode-safe 
 tp-mode-safe/unit : tp-mode-safe unit pos.
 
 tp-mode-safe/sum : tp-mode-safe (sum Lt Rt C) C <- tp-mode-safe Rt Rm <- tp-mode-safe Lt Lm <- ub Lm Rm C.
-tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C <- tp-mode-safe Rt Rm <- tp-mode-safe Lt Lm <- lub Lm Rm C.
+tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) M <- tp-mode-safe Rt M <- tp-mode-safe Lt M.
 
 
 =< : tp -> tp -> type. %infix right 5 =<.
@@ -73,10 +76,11 @@ tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) C <- tp-mode-safe Rt Rm <- tp-mode
 
 %worlds (m-b) (<m _ _).
 %unique <m +A +B.
-%freeze <m.
+%terminates {} (<m A B).
 
 %worlds (m-b) (ub _ _ _).
 %unique ub +A +B +C.
+%terminates {A B} (ub A B _).
 
 safe-moded : tp -> type.
 sm : safe-moded T <- tp-mode-safe T M.
@@ -95,11 +99,15 @@ sm : safe-moded T <- tp-mode-safe T M.
 
 %worlds (tp-mode-always-safe) (tp-mode _ _).
 %unique tp-mode +A -1B.
-
+%terminates {A} (tp-mode A _).
 
 %worlds (tp-mode-always-safe) (tp-mode-safe _ _).
 %unique tp-mode-safe +A -1B.
+%terminates {A} (tp-mode-safe A _).
 
 
 %block sub-b : some {T}{T'} block {_: T =< T'}.
 %worlds (sub-b | tp-mode-always-safe) (=< _ _).
+%trustme %terminates {A B} (=< A B).
+
+

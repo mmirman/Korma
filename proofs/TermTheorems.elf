@@ -1,9 +1,14 @@
 value-or-not : {T} maybe-value T -> type.
 %mode value-or-not +A -B.
+
+- : value-or-not (sub A) (maybe-value/isn't (not-value/sub AV)) 
+ <- value-or-not A (maybe-value/isn't AV).
+- : value-or-not (sub A) (maybe-value/is (value/sub AV)) 
+ <- value-or-not A (maybe-value/is AV).
 - : value-or-not (lam _ _) (maybe-value/is value/lam).
 - : value-or-not (switch _ _ _) (maybe-value/isn't not-value/switch).
-- : value-or-not (left _) (maybe-value/is value/left).
-- : value-or-not (right _) (maybe-value/is value/right).
+- : value-or-not (left _ _) (maybe-value/is value/left).
+- : value-or-not (right _ _) (maybe-value/is value/right).
 - : value-or-not empty (maybe-value/is value/empty).
 - : value-or-not (obj _ _) (maybe-value/is value/obj).
 - : value-or-not (getLeft _) (maybe-value/isn't not-value/getLeft).
@@ -12,5 +17,4 @@ value-or-not : {T} maybe-value T -> type.
 - : value-or-not logic-var (maybe-value/isn't not-value/logic-var).
 - : value-or-not unsafe (maybe-value/isn't not-value/unsafe).
 %worlds () (value-or-not _ _).
-%unique value-or-not +A -1B.
-%total {A} (value-or-not A _).
+% %total {A} (value-or-not A _).

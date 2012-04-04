@@ -2,17 +2,22 @@ of : tm -> tp -> type.
 %name of Of of.
 
 of/empty : of empty unit.
-of/obj : of L Tl -> of R Tr -> of (obj L R) (prod Tl Tr).
+of/obj : of (obj L R) (prod Tl Tr)
+       <- of R Tr 
+       <- of L Tl
+       <- tp-mode Tr M
+       <- tp-mode Tl M.
+
 of/getLeft : of (getLeft O) A
           <- of O (prod A B).
 of/getRight : of (getRight O) B
 	    <- of O (prod A B).
-of/left : of (left L) (sum Lt Rt M)
+of/left : of (left L Rt) (sum Lt Rt M)
        <- of L Lt
        <- tp-mode-safe Rt Rm
        <- tp-mode-safe Lt Lm
        <- ub Lm Rm M.
-of/right : of (right R)  (sum Lt Rt M)
+of/right : of (right Lt R)  (sum Lt Rt M)
        <- of R Rt
        <- tp-mode-safe Rt Rm
        <- tp-mode-safe Lt Lm
@@ -29,7 +34,7 @@ of/logic-var : tp-mode-safe B neg -> of logic-var B.
 
 of/unsafe : tp-mode-safe B M -> of unsafe B.
 
-of/subsump : of E T'
+of/subsump : of (sub E) T'
           <- of E T
           <- T =< T'
           <- tp-mode-safe T' M. % derivations can be specialized.
@@ -40,6 +45,9 @@ of/lam : of (lam F A) (A ~> B)
       <- tp-mode-safe B OutMode
       <- tp-mode-safe A InMode
       <- ({x} of x A -> of (F x) B).
+
+%trustme %mode of +A -T.
+%terminates {A} (of A _).
 
 %block of-b : some {t}{x : tm} block {_:of x t}.
 
@@ -70,23 +78,23 @@ used-as-neg/app-r
   <- tp-mode Vt neg
   <- used-as-neg neg X V.
 
-used-as-neg/objL : used-as-neg ResM X (of/obj (L : of _ Lt) (R : of _ Rt))
+used-as-neg/objL : used-as-neg ResM X (of/obj _ _ (L : of _ Lt) (R : of _ Rt))
 		<- tp-mode Rt neg
 		<- tp-mode Lt neg
                 <- used-as-neg ResM X L.
 
-used-as-neg/objR : used-as-neg ResM X (of/obj (L : of _ Lt) (R : of _ Rt))
+used-as-neg/objR : used-as-neg ResM X (of/obj _ _ (L : of _ Lt) (R : of _ Rt))
 		<- tp-mode Rt neg
 		<- tp-mode Lt neg
                 <- used-as-neg ResM X R.
 
-used-as-neg/obj : used-as-neg ResM X (of/obj L R)
+used-as-neg/obj : used-as-neg ResM X (of/obj _ _ L R)
                 <- used-as-neg ResM X R
                 <- used-as-neg ResM X L.
 
-used-as-neg/product : used-as-neg ResM (of/getLeft A) E 
-                   -> used-as-neg ResM (of/getRight A) E
-                   -> used-as-neg ResM A E.
+used-as-neg/product : used-as-neg ResM (A : of _ (prod Tl Tr)) E
+                   <- used-as-neg ResM (of/getRight A) E
+                   <- used-as-neg ResM (of/getLeft A) E.
 
 used-as-neg/sum-unused : used-as-neg ResM A L
                       -> used-as-neg ResM A R
@@ -106,7 +114,7 @@ used-as-neg/right : used-as-neg ResM A I
 well-moded : of E T -> type.
 
 wm/empty : well-moded of/empty.
-wm/obj : well-moded (of/obj OfL OfR) <- well-moded OfR <- well-moded OfL.
+wm/obj : well-moded (of/obj _ _ OfL OfR) <- well-moded OfR <- well-moded OfL.
 wm/getLeft : well-moded (of/getLeft Of) <- well-moded Of.
 wm/getRight : well-moded (of/getRight Of) <- well-moded Of.
 wm/left : well-moded (of/left _ _ _ Of) <- well-moded Of.
