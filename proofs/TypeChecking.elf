@@ -109,7 +109,10 @@ used-as-neg/left : used-as-neg ResM A I
 used-as-neg/right : used-as-neg ResM A I
       	         -> used-as-neg ResM A (of/right _ _ _ I).
 
-
+%{
+used-neg : tm -> tp -> of E T -> type.
+used-neg/uneg : used-neg E T (_ : of E' T') 
+	     <- used-as-neg E T E' T'. }%
 
 well-moded : of E T -> type.
 

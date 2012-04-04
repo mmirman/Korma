@@ -252,7 +252,7 @@ resolving : used-as-neg pos OfX OfE
          -> logic-less OfV
 	 -> logic-less OfX
 	 -> type.
-%mode resolving +UanXE +Step +TmsEp +WM_E +LLV -LLX.
+
 
 res/unsafe
   : resolving _ (_ : pres Step _ _ _) _ WmE (logic-less/unsafe : logic-less (of/unsafe TpM)) LL_X
@@ -304,8 +304,7 @@ res/getLeft-simp
   <- tm-2-tms-prod-l TmE+ TmsObj TmsObj'
   <- resolving UanX_V Pres TmsObj' WmOfE LL_V LL_X.
 
-res/getRight-simp
-  : resolving 
+res/getRight-simp : resolving
      (used-as-neg/getRight UanX_V)
      (pres/getRight-simp Pres)
      TmsE+
@@ -316,6 +315,7 @@ res/getRight-simp
   <- tms-2-tm TmsE+ TmE+
   <- tm-2-tms-prod-r TmE+ TmsObj TmsObj'
   <- resolving UanX_V Pres TmsObj' WmOfE LL_V LL_X.
+
 
 res/getLeft/r-pos/obj
   : resolving 
@@ -451,9 +451,11 @@ res/@s/app-r/forms
     LL_X
  <- res/@s/-forms _ UanX_V Pres TmV- WmF LL_FV LL_X.
 
+%mode (resolving +UanXE +Step +TmsEp +WM_E +LLV -LLX) .
 
 %worlds () (resolving _ _ _ _ _ _).
+           
 %trustme %terminates {B A P D C} (resolving C A P D B _).
-%covers resolving +A +B +C +D +E -F. 
+%covers (resolving +A +B +C +D +E -F).
 
 % %total {D B A P C} (resolving C A P D B _).
