@@ -55,7 +55,6 @@ tp-mode-safe/unit : tp-mode-safe unit pos.
 tp-mode-safe/sum : tp-mode-safe (sum Lt Rt C) C <- tp-mode-safe Rt Rm <- tp-mode-safe Lt Lm <- ub Lm Rm C.
 tp-mode-safe/prod : tp-mode-safe (prod Lt Rt) M <- tp-mode-safe Rt M <- tp-mode-safe Lt M.
 
-
 =< : tp -> tp -> type. %infix right 5 =<.
 %mode =< +A +B.
 =</unit : unit =< unit.
