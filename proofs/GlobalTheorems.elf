@@ -125,9 +125,11 @@ uan-2-ll : used-as-neg R X Xt V Vt
         -> logic-less X Xt
         -> type.
 
-- : uan-2-ll (used-as-neg/sX Uan OfX) LL_V (logic-less/subsump LL_X OfX) <- uan-2-ll Uan LL_V LL_X.
+- : uan-2-ll (used-as-neg/sX Uan OfX) LL_V (logic-less/subsump LL_X OfX) 
+  <- uan-2-ll Uan LL_V LL_X.
 
-- : uan-2-ll (used-as-neg/sV Uan _) (logic-less/subsump LL_V _) LL_X <- uan-2-ll Uan LL_V LL_X.
+- : uan-2-ll (used-as-neg/sV Uan _) (logic-less/subsump LL_V _) LL_X 
+ <- uan-2-ll Uan LL_V LL_X.
 
 - : uan-2-ll (used-as-neg/lam-inner F_UAN TmsA)
              (logic-less/lam F_LL_I)

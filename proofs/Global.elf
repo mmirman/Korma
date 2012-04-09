@@ -12,7 +12,7 @@ step-eq/eq : step-eq A A.
 
 logic-less : tm -> tp -> type. %name logic-less LL.
 
-logic-less/subsump : logic-less (sub A) _
+logic-less/subsump : logic-less (sub A) To
                   <- of A At
 		  <- logic-less A At.
 

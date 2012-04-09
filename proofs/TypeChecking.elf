@@ -57,11 +57,11 @@ used-as-neg : {Result : mode } tm -> tp -> tm -> tp -> type.
 
 used-as-neg/e : used-as-neg neg A T A T.
 
-used-as-neg/sX : used-as-neg M (sub X) _ A T'
+used-as-neg/sX : used-as-neg M (sub X) To A T'
 	      <- of X T
               <- used-as-neg M X T A T'.
 
-used-as-neg/sV : used-as-neg M X T (sub A) _
+used-as-neg/sV : used-as-neg M X T (sub A) To
 	      <- of A T'
               <- used-as-neg M X T A T'.
 
