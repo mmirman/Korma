@@ -10,54 +10,57 @@ step-eq : step T T' -> step S S' -> type.
 step-eq/eq : step-eq A A.
 %freeze step-eq.
 
-logic-less : of E T -> type. %name logic-less LL.
+logic-less : tm -> tp -> type. %name logic-less LL.
 
-logic-less/subsump : logic-less (of/subsump _ _ Of) <- logic-less Of.
+logic-less/subsump : logic-less (sub A) _
+                  <- of A At
+		  <- logic-less A At.
 
-logic-less/unsafe : logic-less (of/unsafe _).
+logic-less/unsafe : tp-mode-safe T M -> logic-less unsafe T.
 
-logic-less/app : logic-less (of/@s OfFe OfIe)
-              <- logic-less OfIe
-              <- logic-less OfFe.
+logic-less/app : logic-less (@s F V) O
+  	      <- of F (Vt ~> O)
+	      <- of V Vt
+              <- logic-less V Vt
+              <- logic-less F (Vt ~> O).
 
-logic-less/lam : logic-less (of/lam F TmsA _) 
-   <- {x}{dx} logic-less dx -> logic-less (F x dx).
+logic-less/lam : logic-less (lam F I) (I ~> O)
+	      <- {x} of x I -> logic-less x I -> logic-less (F x) O.
 
-logic-less/empty : logic-less of/empty.
-logic-less/obj : logic-less (of/obj L R)
-              <- logic-less R
-              <- logic-less L.
+logic-less/empty : logic-less empty unit.
+logic-less/obj : logic-less (obj L R) (prod Lt Rt)
+              <- logic-less R Rt
+              <- logic-less L Lt.
 
-logic-less/getLeft : logic-less A -> logic-less (of/getLeft A).
+logic-less/getLeft : logic-less (getLeft A) Lt
+	          <- of A (prod Lt Rt)
+                  <- logic-less A (prod Lt Rt).
 
-logic-less/getRight : logic-less A -> logic-less (of/getRight A).
+logic-less/getRight : logic-less (getRight A) Rt
+                   <- of A (prod Lt Rt)
+                   <- logic-less A (prod Lt Rt).
 
-logic-less/left : logic-less (of/left _ _ _ L) <- logic-less L.
-logic-less/right : logic-less (of/right _ _ _ R) <- logic-less R.
+logic-less/left : logic-less (left L Rt) (sum Lt Rt _) <- logic-less L Lt.
+logic-less/right : logic-less (right Lt R) (sum Lt Rt _) <- logic-less R Rt.
 
-logic-less/obj-l : logic-less (of/obj L (R : of _ Rt)) 
+logic-less/obj-l : logic-less (obj L R) (prod Lt Rt)
                 <- tp-mode-safe Rt pos
-                <- logic-less L.
+                <- logic-less L Lt.
 
-logic-less/obj-r : logic-less (of/obj (L : of _ Lt) R) 
+logic-less/obj-r : logic-less (obj L R) (prod Lt Rt)
                 <- tp-mode-safe Lt pos
-                <- logic-less R.
+                <- logic-less R Rt.
 
-logic-less/switch : logic-less (of/switch _ _ L R I)
-                 <- logic-less I
-		 <- logic-less R
-		 <- logic-less L.
+logic-less/switch : logic-less (switch L R I) O
+                 <- of R (Rt ~> O)
+		 <- of L (Lt ~> O)
+		 <- of I (sum Lt Rt M)
+                 <- logic-less I (sum Lt Rt M)
+		 <- logic-less R (Rt ~> O)
+		 <- logic-less L (Lt ~> O).
 
-
-%block ll-b : some {t} block {e}{of_x: of e t}{_ : logic-less of_x}.
-%worlds (ll-b) (logic-less _).
-
-
-ll-new : of-eq Of Of' -> logic-less Of -> logic-less Of' -> type.
-- : ll-new of-eq/eq LL_X LL_X.
-%mode ll-new +A +B -C.
-%worlds () (ll-new _ _ _).
-%total {A B} (ll-new A B _).
+%block ll-b : some {t} block {e}{_: of e t}{_ : logic-less e t}.
+%worlds (ll-b) (logic-less _ _).
 
 unsafe-free : tm -> type.
 
@@ -77,10 +80,10 @@ unsafe-free/getRight
    : unsafe-free (getRight I)
   <- unsafe-free I.
 unsafe-free/left
-   : unsafe-free (left I)
+   : unsafe-free (left I _)
   <- unsafe-free I.
 unsafe-free/right
-   : unsafe-free (right I)
+   : unsafe-free (right _ I)
   <- unsafe-free I.
 unsafe-free/switch
    : unsafe-free (switch L R I)
