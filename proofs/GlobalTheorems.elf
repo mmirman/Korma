@@ -229,15 +229,25 @@ res/unsafe
  <- unsafe-free-2-absurd UnsfV Absurd
  <- from-absurd-ll _ Absurd LL_X. 
 
-res/uan/product
+res/uan/productL
   : resolving 
      (used-as-neg/product UanXl_E UanXr_E)
      Pres 
      TmsE+
      WmE
      LL_V
-     LL_Xl
- <- resolving UanXl_E Pres TmsE+ WmE LL_V (logic-less/getLeft LL_Xl).
+     LL_X
+ <- resolving UanXl_E Pres TmsE+ WmE LL_V (logic-less/getLeft LL_X).
+
+res/uan/productR
+  : resolving 
+     (used-as-neg/product UanXl_E UanXr_E)
+     Pres 
+     TmsE+
+     WmE
+     LL_V
+     LL_X
+ <- resolving UanXr_E Pres TmsE+ WmE LL_V (logic-less/getRight LL_X).
 
 res/getLeft-simp
   : resolving 
@@ -274,6 +284,46 @@ res/getLeft/r-pos/obj
      LL_V
      LL_X
  <- uan-2-ll UanX_V LL_V LL_X.
+
+res/getLeft/r-pos/productL
+  : resolving 
+     (used-as-neg/getLeft (used-as-neg/product UanXl_E UanXr_E))
+     Pres
+     TmsE+
+     WmOfE
+     LL_V
+     LL_X
+ <- resolving (used-as-neg/getLeft UanXl_E) Pres TmsE+ WmOfE LL_V (logic-less/getLeft LL_X).
+res/getLeft/r-pos/productR
+  : resolving 
+     (used-as-neg/getLeft (used-as-neg/product UanXl_E UanXr_E))
+     Pres
+     TmsE+
+     WmOfE
+     LL_V
+     LL_X
+ <- resolving (used-as-neg/getLeft UanXr_E) Pres TmsE+ WmOfE LL_V (logic-less/getRight LL_X).
+
+res/getRight/r-pos/productL
+  : resolving 
+     (used-as-neg/getRight (used-as-neg/product UanXl_E UanXr_E))
+     Pres
+     TmsE+
+     WmOfE
+     LL_V
+     LL_X
+ <- resolving (used-as-neg/getRight UanXl_E) Pres TmsE+ WmOfE LL_V (logic-less/getLeft LL_X).
+res/getRight/r-pos/productR
+  : resolving 
+     (used-as-neg/getRight (used-as-neg/product UanXl_E UanXr_E))
+     Pres
+     TmsE+
+     WmOfE
+     LL_V
+     LL_X
+ <- resolving (used-as-neg/getRight UanXr_E) Pres TmsE+ WmOfE LL_V (logic-less/getRight LL_X).
+
+
 
 res/getLeft/r-pos/objL
   : resolving 
@@ -336,10 +386,10 @@ res/getRight/r-pos/objR
  <- from-absurd-ll _ Absurd LL_X.
 
 res/@s/app-l
-  : resolving 
+  : resolving
      (used-as-neg/app-l UanXE1) 
      (pres/@s Pres)
-     TmsE+ 
+     TmsE+
      (wm/@s (WmF : well-moded OfEf) WmI) 
      (logic-less/app LL_F LL_I) 
      LL_X
@@ -388,4 +438,5 @@ res/@s/app-r/forms
 
 %mode resolving +UanXE +Step +TmsEp +WM_E +LLV -LLX.
 %worlds () (resolving _ _ _ _ _ _).
-%total {B A P D C} (resolving C A P D B _).
+%covers resolving +C +A +P +D +B -D.
+% %total {B A P D C} (resolving C A P D B _).
