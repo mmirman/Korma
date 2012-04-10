@@ -20,14 +20,12 @@ step/getRight : step (getRight (obj _ R)) R.
 step/getRight-simp : step (getRight A) (getRight A')
                   <- not-value A
                   <- step A A'.
-step/switch-simp  : step (switch LF RF O) (switch (sub LF) (sub RF) O')
+step/switch-simp  : step (switch LF RF O) (switch LF RF O')
                  <- not-value O
                  <- step O O'.
 
 step/switch-left  : step (switch LF _ (left L _)) (@s LF L).
 
 step/switch-right : step (switch _ RF (right _ R)) (@s RF R).
-
-step/sub : step (sub A) A.
 
 %worlds (tm-b) (step _ _).

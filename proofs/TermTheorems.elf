@@ -1,10 +1,6 @@
 value-or-not : {T} maybe-value T -> type.
 %mode value-or-not +A -B.
 
-- : value-or-not (sub A) (maybe-value/isn't (not-value/sub AV)) 
- <- value-or-not A (maybe-value/isn't AV).
-- : value-or-not (sub A) (maybe-value/is (value/sub AV)) 
- <- value-or-not A (maybe-value/is AV).
 - : value-or-not (lam _ _) (maybe-value/is value/lam).
 - : value-or-not (switch _ _ _) (maybe-value/isn't not-value/switch).
 - : value-or-not (left _ _) (maybe-value/is value/left).
