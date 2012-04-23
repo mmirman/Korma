@@ -262,15 +262,12 @@ res-ivar/uan
      LL_X
  <- resolving Uan Pres TmsE+ WmE LL_V LL_X.
 
-
 res/unsafe
   : resolving _ (_ : pres Step _ _) _ WmE (logic-less/unsafe TmsM) LL_X
  <- pres-wm Step WmE (of/unsafe TmsM) WmV
  <- wm-2-unsafe-free WmV UnsfV
  <- unsafe-free-2-absurd UnsfV Absurd
  <- from-absurd-ll _ Absurd LL_X. 
-
-
 
 res/getLeft-simp
   : resolving 
@@ -311,7 +308,7 @@ res/getLeft/r-pos/obj
 
 res/getLeft/r-pos/objL
   : resolving 
-     (used-as-neg/getLeft (used-as-neg/objL _ : used-as-neg _ _ (of/obj TmV- TmR- _ _)))
+     (used-as-neg/getLeft (used-as-neg/objL _ : used-as-neg _ _ (of/obj TmV- _ _ _)))
      _
      TmsE+
      WmOfE
@@ -324,7 +321,7 @@ res/getLeft/r-pos/objL
 
 res/getLeft/r-pos/objR
   : resolving 
-     (used-as-neg/getLeft (used-as-neg/objR _ : used-as-neg _ _ (of/obj TmV- TmR- _ _)))
+     (used-as-neg/getLeft (used-as-neg/objR _ : used-as-neg _ _ (of/obj TmV- _ _ _)))
      _
      TmsE+
      WmOfE
@@ -342,24 +339,11 @@ res/getRight/r-pos/obj
      WmOfE
      LL_V
      LL_X
- <- uan-2-ll UanX_V LL_V LL_X.
-
-res/getRight/r-pos/objL
-  : resolving 
-     (used-as-neg/getRight (used-as-neg/objL _ : used-as-neg _ _ (of/obj TmV- TmR- _ _)))
-     _
-     TmsE+
-     (WmOfE : well-moded (of/getRight (of/obj _ _ OfL OfV)))
-     LL_V
-     LL_X
- <- tms-2-tm TmsE+ TmV+
- <- tm-unique TmV+ TmV- Absurd
- <- from-absurd-ll _ Absurd LL_X.
-
+ <- uan-2-ll UanX_R LL_V LL_X.
 
 res/getRight/r-pos/objR
   : resolving 
-     (used-as-neg/getRight (used-as-neg/objR _ : used-as-neg _ _ (of/obj TmV- TmR- _ _)))
+     (used-as-neg/getRight (used-as-neg/objR _ : used-as-neg _ _ (of/obj _ TmV- _ _)))
      _
      TmsE+
      WmOfE
@@ -368,6 +352,19 @@ res/getRight/r-pos/objR
  <- tms-2-tm TmsE+ TmV+
  <- tm-unique TmV+ TmV- Absurd
  <- from-absurd-ll _ Absurd LL_X.
+
+res/getRight/r-pos/objL
+  : resolving 
+     (used-as-neg/getRight (used-as-neg/objL _ : used-as-neg _ _ (of/obj _ TmV- _ _)))
+     _
+     TmsE+
+     WmOfE
+     LL_V
+     LL_X
+ <- tms-2-tm TmsE+ TmV+
+ <- tm-unique TmV+ TmV- Absurd
+ <- from-absurd-ll _ Absurd LL_X.
+
 
 res/@s/app-l
   : resolving
@@ -421,10 +418,8 @@ res/@s/app-r/forms
  <- res/@s/-forms _ UanX_V Pres TmV- WmF LL_FV LL_X.
 
 
-
 %mode (resolving-ivar +UanXE +Step +TmsEp +WM_E +LLV -LLX) (resolving +UanXE +Step +TmsEp +WM_E +LLV -LLX).
 %worlds () (resolving-ivar _ _ _ _ _ _) (resolving _ _ _ _ _ _).
 
 %total {(B B') (A A') (P P') (D D') (C C')} (resolving C A P D B _) (resolving-ivar C' A' P' D' B' _).
-
 
