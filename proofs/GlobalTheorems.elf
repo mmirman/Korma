@@ -197,7 +197,6 @@ res/@s/-forms : {Step : step (@s (lam _ _) _) _}
 	     -> logic-less OfV
              -> logic-less OfX
              -> type.
-
 %mode res/@s/-forms +A +B +C +M +D +E -F.
 - : res/@s/-forms 
      step/lam 
@@ -234,6 +233,7 @@ resolving-ivar : i-var pos OfX OfE
          -> logic-less OfV
 	 -> logic-less OfX
 	 -> type.
+
 res-ivar/productL
   : resolving-ivar
      (i-var/product UanXl_E UanXr_E)
@@ -243,6 +243,7 @@ res-ivar/productL
      LL_V
      LL_X
  <- resolving-ivar UanXl_E Pres TmsE+ WmE LL_V (logic-less/getLeft LL_X).
+
 res-ivar/productR
   : resolving-ivar
      (i-var/product UanXl_E UanXr_E)
@@ -252,6 +253,7 @@ res-ivar/productR
      LL_V
      LL_X
  <- resolving-ivar UanXr_E Pres TmsE+ WmE LL_V (logic-less/getRight LL_X).
+
 res-ivar/uan
   : resolving-ivar
      (i-var/uan Uan)
@@ -261,6 +263,8 @@ res-ivar/uan
      LL_V
      LL_X
  <- resolving Uan Pres TmsE+ WmE LL_V LL_X.
+
+
 
 res/unsafe
   : resolving _ (_ : pres Step _ _) _ WmE (logic-less/unsafe TmsM) LL_X
@@ -294,7 +298,6 @@ res/getRight-simp : resolving
   <- tm-2-tms-prod-r TmE+ TmsObj TmsObj'
   <- resolving UanX_V Pres TmsObj' WmOfE LL_V LL_X.
 
-
 res/getLeft/r-pos/obj
   : resolving 
      (used-as-neg/getLeft (used-as-neg/obj UanX_V UanX_R))
@@ -305,18 +308,15 @@ res/getLeft/r-pos/obj
      LL_X
  <- uan-2-ll UanX_V LL_V LL_X.
 
-
-res/getLeft/r-pos/objL
+res/getLeft/r-pos/objL'
   : resolving 
-     (used-as-neg/getLeft (used-as-neg/objL _ : used-as-neg _ _ (of/obj TmV- _ _ _)))
+     (used-as-neg/getLeft (used-as-neg/objL UanL))
      _
      TmsE+
      WmOfE
      LL_V
      LL_X
- <- tms-2-tm TmsE+ TmV+
- <- tm-unique TmV+ TmV- Absurd
- <- from-absurd-ll _ Absurd LL_X.
+ <- uan-2-ll UanL LL_V LL_X.
 
 
 res/getLeft/r-pos/objR
@@ -341,21 +341,19 @@ res/getRight/r-pos/obj
      LL_X
  <- uan-2-ll UanX_R LL_V LL_X.
 
-res/getRight/r-pos/objR
-  : resolving 
-     (used-as-neg/getRight (used-as-neg/objR _ : used-as-neg _ _ (of/obj _ TmV- _ _)))
+res/getRight/r-pos/objR'
+  : resolving
+     (used-as-neg/getRight (used-as-neg/objR UanR))
      _
      TmsE+
      WmOfE
      LL_V
      LL_X
- <- tms-2-tm TmsE+ TmV+
- <- tm-unique TmV+ TmV- Absurd
- <- from-absurd-ll _ Absurd LL_X.
+ <- uan-2-ll UanR LL_V LL_X.
 
 res/getRight/r-pos/objL
   : resolving 
-     (used-as-neg/getRight (used-as-neg/objL _ : used-as-neg _ _ (of/obj _ TmV- _ _)))
+     (used-as-neg/getRight (used-as-neg/objL Uan : used-as-neg _ _ (of/obj _ TmV- _ _)))
      _
      TmsE+
      WmOfE
@@ -364,7 +362,6 @@ res/getRight/r-pos/objL
  <- tms-2-tm TmsE+ TmV+
  <- tm-unique TmV+ TmV- Absurd
  <- from-absurd-ll _ Absurd LL_X.
-
 
 res/@s/app-l
   : resolving
@@ -387,6 +384,7 @@ res/@s/app-r
      LL_X
  <- uan-2-ll UanX_V LL_V LL_X.
 
+
 res/switch-left
  : resolving 
     (used-as-neg/sum-unused Uan_L Uan_R)
@@ -407,6 +405,56 @@ res/switch-right
     LL_X
  <- uan-2-ll Uan_R LL_F LL_X.
 
+res/sum-used
+ : resolving 
+    (used-as-neg/sum-used Uan)
+    Pres
+    TmsB+
+    WmE
+    (logic-less/app LL_F LL_I)
+    LL_X
+ <- uan-2-ll Uan LL_I LL_X.
+
+%% The TmsB+ here should be destructed to prove the positivity of sum-used
+%% here there are two cases, either I is pos or I is neg.
+%% if I is pos, we are done.  
+%% if I is neg, then L and R have to be - -> +, so they must be resolving.
+%% since we are reverse applying this theorem, we will have had to apply the result
+%% to either L or R, which means that we could apply this theorem.
+%% perhaps it is better to have a single step reduction switch-simp which simplifies it's argument
+%% entirely, then applies it to the result, this would allow us to perform this logic here rather than
+%% as a verbal argument.
+res/sum-used/simp
+ : resolving
+    (used-as-neg/sum-used Uan)
+    (pres/switch-simp Pres)
+    TmsB+
+    (wm/switch WmL WmR WmI)
+    (logic-less/switch LL_L LL_R LL_I) 
+    LL_X
+ <- resolving Uan Pres TmsB+ WmI LL_I LL_X.
+
+
+res/sum-used/simp/l
+ : resolving 
+    (used-as-neg/sum-unused Uan_L Uan_R)
+    _
+    _
+    _
+    (logic-less/switch LL_L LL_R LL_I) 
+    LL_X
+ <- uan-2-ll Uan_L LL_L LL_X.
+
+res/sum-used/simp/r
+ : resolving 
+    (used-as-neg/sum-unused Uan_L Uan_R)
+    _
+    _
+    _
+    (logic-less/switch LL_L LL_R LL_I) 
+    LL_X
+ <- uan-2-ll Uan_R LL_R LL_X.
+
 res/@s/app-r/forms
  : resolving 
     (used-as-neg/app-r UanX_V TmV-)
@@ -416,6 +464,9 @@ res/@s/app-r/forms
     LL_FV
     LL_X
  <- res/@s/-forms _ UanX_V Pres TmV- WmF LL_FV LL_X.
+
+%% used-as-neg/e is precluded by this function being neg/pos acting.
+
 
 
 %mode (resolving-ivar +UanXE +Step +TmsEp +WM_E +LLV -LLX) (resolving +UanXE +Step +TmsEp +WM_E +LLV -LLX).
