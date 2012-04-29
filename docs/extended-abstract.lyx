@@ -35,7 +35,7 @@ linguistics
 \use_geometry false
 \use_amsmath 2
 \use_esint 1
-\cite_engine natbib_authoryear
+\cite_engine natbib_numerical
 \use_bibtopic false
 \paperorientation portrait
 \secnumdepth 3
@@ -59,7 +59,11 @@ Static Verification for Non Strict Functional Logical Languages
 \end_layout
 
 \begin_layout Author
-Matthew Mirman
+Matthew Mirman (mmirman@andrew.cmu.edu)
+\end_layout
+
+\begin_layout Author
+Advisor: Frank Pfenning (fp@cs.cmu.edu)
 \end_layout
 
 \begin_layout Abstract
@@ -92,13 +96,6 @@ n of small step semantics, it appears as though less attention has been
  The proposed analysis are formalized using Twelf.
 \end_layout
 
-\begin_layout Abstract
-\begin_inset Newpage pagebreak
-\end_inset
-
-
-\end_layout
-
 \begin_layout Part*
 Introduction
 \end_layout
@@ -106,7 +103,7 @@ Introduction
 \begin_layout Standard
 While there exist non strict functional logical programming languages
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "FLP"
 
 \end_inset
@@ -116,7 +113,7 @@ key "FLP"
  which we hope to provide a safer runtime analysis.
  The Korma language is based on the Curry
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "Curry"
 
 \end_inset
@@ -125,7 +122,6 @@ key "Curry"
  Prolog and Haskell.
  The Korma language is pure, but for the IO monad, uses System F, and has
  type classes.
- 
 \end_layout
 
 \begin_layout Standard
@@ -185,7 +181,7 @@ findAll
  switch statement could very easily result in an exponential blowup in time
  complexity of programs, the Needed Narrowing evaluation strategy
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "Sergio1994"
 
 \end_inset
@@ -216,7 +212,7 @@ findAll
  as a complete primitive in the presence of non strict semantics makes mode
  checking
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "Pfenning1996"
 
 \end_inset
@@ -226,13 +222,6 @@ key "Pfenning1996"
  in the process of formalizing the rules and proving progress for the language
  in Twelf.
  
-\end_layout
-
-\begin_layout Standard
-\begin_inset Newpage pagebreak
-\end_inset
-
-
 \end_layout
 
 \begin_layout Part*
@@ -435,13 +424,6 @@ provided
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Newpage pagebreak
-\end_inset
-
-
-\end_layout
-
 \begin_layout Section*
 Types
 \end_layout
@@ -450,7 +432,7 @@ Types
 To better understand these rules, it is helpful to assign typing rules.
  The Korma languages uses System F, as described in 
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "Pierce2002"
 
 \end_inset
@@ -597,18 +579,33 @@ key "Pierce2002"
 
 \end_layout
 
+\begin_layout Section
+Small Step Operational Semantics
+\end_layout
+
 \begin_layout Standard
-\begin_inset Newpage pagebreak
+\align center
+\begin_inset Float table
+placement t
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\align center
+Small step operational semantics
+\end_layout
+
 \end_inset
 
 
 \end_layout
 
-\begin_layout Section*
-Small Step Operational Semantics
-\end_layout
-
-\begin_layout Standard
+\begin_layout Plain Layout
+\noindent
 \align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="23" columns="5">
@@ -1920,12 +1917,17 @@ free
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
 \begin_layout Standard
 The small step semantics above are an extended and simplified version of
  those provided in the literature
 \begin_inset CommandInset citation
-LatexCommand cite
-key "Albert2002"
+LatexCommand citep
+key "Albert02adeterministic"
 
 \end_inset
 
@@ -1934,13 +1936,6 @@ key "Albert2002"
  for every guess, and placing the potential solution on a breadth first
  search queue.
  
-\end_layout
-
-\begin_layout Standard
-\begin_inset Newpage pagebreak
-\end_inset
-
-
 \end_layout
 
 \begin_layout Part*
@@ -2120,15 +2115,8 @@ nistic function can be used, but not visa versa.
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Newpage pagebreak
-\end_inset
-
-
-\end_layout
-
 \begin_layout Part*
-Mode Checking & Future Work
+Future Work
 \end_layout
 
 \begin_layout Standard
@@ -2199,7 +2187,7 @@ right (head list)
 Logic programming systems such as Twelf and Prolog have introduced the notion
  of mode checking 
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "Pfenning1996"
 
 \end_inset
@@ -2210,7 +2198,7 @@ key "Pfenning1996"
  While checking modes in an entirely logical system, even a higher order
  logical system is a solved problem 
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "Pfenning2004"
 
 \end_inset
@@ -2221,7 +2209,7 @@ key "Pfenning2004"
  One possible solution to extending the power of modes is to use refinement
  modes in a manner akin to refinement types 
 \begin_inset CommandInset citation
-LatexCommand cite
+LatexCommand citep
 key "Refinement,Refinement2"
 
 \end_inset
@@ -2246,17 +2234,11 @@ findAll
 \end_layout
 
 \begin_layout Standard
-\begin_inset Newpage pagebreak
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset CommandInset bibtex
 LatexCommand bibtex
+btprint "btPrintAll"
 bibfiles "/Users/matt/Documents/MyBib"
-options "bibtotoc,plain"
+options "bibtotoc,amsplain"
 
 \end_inset
 
