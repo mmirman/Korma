@@ -58,9 +58,9 @@ Modes for Non Strict Functional Logical Languages
 
 \begin_layout Author
 Matthew Mirman
-\end_layout
+\begin_inset Newline newline
+\end_inset
 
-\begin_layout Author
 Advisor: Frank Pfenning (fp@cs.cmu.edu)
 \end_layout
 
@@ -103,7 +103,7 @@ While mode analysis prevents logical variables from leaving the scope of
  
 \end_layout
 
-\begin_layout Part*
+\begin_layout Part
 Introduction
 \end_layout
 
@@ -298,7 +298,7 @@ in
  step term red
 \end_layout
 
-\begin_layout Section*
+\begin_layout Section
 Motivation
 \end_layout
 
@@ -452,7 +452,7 @@ right (head list)
  
 \end_layout
 
-\begin_layout Part*
+\begin_layout Part
 Language Definition
 \end_layout
 
@@ -536,7 +536,7 @@ unresolved
 
 \end_layout
 
-\begin_layout Subsection*
+\begin_layout Subsection
 Semantics
 \end_layout
 
@@ -1993,7 +1993,7 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \end_layout
 
-\begin_layout Part*
+\begin_layout Part
 Type and Mode Checking
 \end_layout
 
@@ -2163,7 +2163,12 @@ for all
 \end_layout
 
 \begin_layout Proof
-Formalized in Twelf.
+The proof is trivial by induction on the structure of 
+\begin_inset Formula $m$
+\end_inset
+
+.
+ 
 \end_layout
 
 \begin_layout Lemma
@@ -2437,7 +2442,7 @@ For every sum type inferred, annotate it with either a positive or negative
  possible mode assignments.
 \end_layout
 
-\begin_layout Subsection*
+\begin_layout Subsection
 Preservation
 \end_layout
 
@@ -2566,7 +2571,7 @@ The proof is mostly straightforward, by lexographical induction on the reduction
  
 \end_layout
 
-\begin_layout Subsection*
+\begin_layout Subsection
 Progress
 \end_layout
 
@@ -2581,7 +2586,7 @@ Before we can prove progress for the full language, we need to prove that
 \end_inset
 
 
-\begin_inset Formula $\mbox{logicFree}(E)$
+\begin_inset Formula $\mbox{logicFess}(E)$
 \end_inset
 
  shall mean that the term 
@@ -2598,8 +2603,6 @@ Before we can prove progress for the full language, we need to prove that
 \end_inset
 
  is not an application of a not necessarily grounding function to any argument.
- Again, the full definition is omitted here for brevity, but included in
- the Twelf file Global.elf.
  
 \end_layout
 
@@ -2805,7 +2808,7 @@ Free
  
 \end_layout
 
-\begin_layout Subsection*
+\begin_layout Subsection
 Strictness Analysis
 \end_layout
 
@@ -2885,7 +2888,7 @@ on to diverge.
 \begin_inset Formula $E$
 \end_inset
 
-will either diverge converge to a value with logical variables.
+ will either diverge converge to a value with logical variables.
  Thus 
 \begin_inset Formula $E$
 \end_inset
@@ -2915,21 +2918,33 @@ Closed
  
 \end_layout
 
-\begin_layout Subsubsection*
+\begin_layout Subsubsection
 Ramifications
 \end_layout
 
 \begin_layout Standard
 Because mode checking and strictness checking are equivalent, mode checking
  algorithms can be used for strictness analysis.
- It is unlikely however, that strictness analysis would be as applicable
- to mode checking, as they need not be decidable nor sound.
- Mode checking is performed when well modedness is a requirement and not
- simply a benefit, and thus deciding when code is improperly moded is as
- important as deciding when it is properly moded.
+ Natural deduction formulations of strictness and relevance logics have
+ been given relevant proof terms and could very well be used as an alternate
+ type system, with the addition of new syntax.
+ The polymorphic linear lambda calculus Lily has been shown to have equivalent
+ termination properties under call-by-value and call-by-need semantics.
+\begin_inset CommandInset citation
+LatexCommand citep
+key "lazy-lily"
+
+\end_inset
+
+ In principle, terms like 
+\begin_inset Formula $\mathbf{findAll}$
+\end_inset
+
+ might be added to Lily and be have groundedness properties ensured.
+ 
 \end_layout
 
-\begin_layout Section*
+\begin_layout Section
 The Scope of Non-determinism
 \end_layout
 
@@ -3106,7 +3121,7 @@ nistic function can be used, but not vise versa.
 
 \end_layout
 
-\begin_layout Part*
+\begin_layout Part
 Conclusions & Future Work
 \end_layout
 

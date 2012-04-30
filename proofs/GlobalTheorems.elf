@@ -30,7 +30,6 @@ pres/getLeft-simp : pres (step/getLeft-simp Step _) (of/getLeft OfObj) (of/getLe
 pres/getRight-simp : pres (step/getRight-simp Step _) (of/getRight OfObj) (of/getRight OfObj')
                  <- pres Step OfObj OfObj'.
 
-
 pres/switch-left : pres 
     step/switch-left 
     (of/switch TmsL TmsR OfFl OfFr (of/left _ _ _ OfL))
@@ -47,23 +46,10 @@ pres/switch-simp :
 	  (of/switch TmL TmR OfFl OfFr OfO')
   <- pres Step OfO OfO'.
 
-%{ 
-we will need a lemma to get terminates working, 
-but for now, we know it works 
-for the pres/switch-subsump cases because 
-we always move the of/subsump to the OfFl and OfFr from the OfO'
-so eventually we will match again'st something with of/left or of/right instead of of/subsump for OfO'
-and in those two cases, we don't match against OfFl or OfFr.
-
-The same goes for lam, getLeft and getRight.
-
-We also never match on the outputs except where it obviously works, so output coverage should succeed.
-}%
 %worlds () (pres _ _ _).
 %covers pres +A +B -C.
 %total {A B} (pres A B _).
 %freeze pres.
-
 
 pres-wm : step E V -> well-moded (OfE : of E _) -> {OfV : of V Vt } well-moded OfV -> type.
 %mode pres-wm +A +B +C -D.
@@ -433,7 +419,6 @@ res/sum-used/simp
     (logic-less/switch LL_L LL_R LL_I) 
     LL_X
  <- resolving Uan Pres TmsB+ WmI LL_I LL_X.
-
 
 res/sum-used/simp/l
  : resolving 
