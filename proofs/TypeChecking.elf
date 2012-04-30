@@ -12,12 +12,12 @@ of/getLeft : of (getLeft O) A
           <- of O (prod A B).
 of/getRight : of (getRight O) B
 	    <- of O (prod A B).
-of/left : of (left L Rt) (sum Lt Rt M)
+of/left : of (left L) (sum Lt Rt M)
        <- of L Lt
        <- tp-mode-safe Rt Rm
        <- tp-mode-safe Lt Lm
        <- ub Lm Rm M.
-of/right : of (right Lt R) (sum Lt Rt M)
+of/right : of (right R) (sum Lt Rt M)
        <- of R Rt
        <- tp-mode-safe Rt Rm
        <- tp-mode-safe Lt Lm

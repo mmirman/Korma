@@ -8,8 +8,8 @@ empty : tm.
 obj : tm -> tm -> tm.
 getLeft : tm -> tm.
 getRight : tm -> tm.
-left : tm -> tp -> tm.
-right : tp -> tm -> tm.
+left : tm -> tm.
+right : tm -> tm.
 % switch should be GLB not LUB, but right now just making them equal seems good enough.
 switch : tm
       -> tm
@@ -26,8 +26,8 @@ logic-var : tm.
 value : tm -> type.
 %mode value +A.
 value/lam : value (lam _ _).
-value/left : value (left _ _).
-value/right : value (right _ _).
+value/left : value (left _).
+value/right : value (right _).
 value/empty : value empty.
 value/obj : value (obj A B).
 %worlds (tm-b) (value _).

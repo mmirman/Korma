@@ -3058,7 +3058,7 @@ This has been mostly proved in Twelf without subtyping for all but a few
 \begin_inset Formula $usedCorrectly$
 \end_inset
 
- measures strict occurrences of 
+ accounts for strict occurrences of 
 \begin_inset Formula $X$
 \end_inset
 
@@ -3068,7 +3068,10 @@ This has been mostly proved in Twelf without subtyping for all but a few
 \end_inset
 
  completely.
- 
+ The remaining cases not handled in the twelf proof are those involving
+ switch.
+ In this case, we can use the argument that we only apply the subterm resolving
+ theorem if there is a reduction to a normal form.
 \end_layout
 
 \begin_layout Corollary

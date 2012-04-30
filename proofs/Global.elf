@@ -69,10 +69,10 @@ unsafe-free/getRight
    : unsafe-free (getRight I)
   <- unsafe-free I.
 unsafe-free/left
-   : unsafe-free (left I _)
+   : unsafe-free (left I)
   <- unsafe-free I.
 unsafe-free/right
-   : unsafe-free (right _ I)
+   : unsafe-free (right I)
   <- unsafe-free I.
 unsafe-free/switch
    : unsafe-free (switch L R I)
