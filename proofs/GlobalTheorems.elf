@@ -47,7 +47,6 @@ pres/switch-simp :
   <- pres Step OfO OfO'.
 
 %worlds () (pres _ _ _).
-%covers pres +A +B -C.
 %total {A B} (pres A B _).
 %freeze pres.
 
@@ -89,8 +88,7 @@ uan-2-ll : used-as-neg R OfX OfV
 - : uan-2-ll (used-as-neg/lam-inner F_UAN)
              (logic-less/lam F_LL_I : logic-less (of/lam _ TmsA _))
              (F_LL_X unsafe (of/unsafe TmsA) (logic-less/unsafe TmsA))
-  <- ({x}{dx}{ll_x} uan-2-ll (F_UAN x dx) (F_LL_I x dx ll_x) (F_LL_X x dx ll_x)).
-
+ <- ({x}{dx}{ll_x} uan-2-ll (F_UAN x dx) (F_LL_I x dx ll_x) (F_LL_X x dx ll_x)).
 
 - : uan-2-ll used-as-neg/e LLV LLV.
 

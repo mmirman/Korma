@@ -2,6 +2,10 @@ step : tm -> tm -> type. %name step Step.
 
 %mode step +A -B.
 
+step/e : step A A.
+
+step/trans : step A C <- step A B <- step B C.
+
 step/@s : step (@s E1 E2) (@s E1' E2)
        <- step E1 E1'.
 
@@ -16,7 +20,6 @@ step/getLeft-simp : step (getLeft A) (getLeft A')
              
 step/getRight : step (getRight (obj _ R)) R.
 
-
 step/getRight-simp : step (getRight A) (getRight A')
                   <- not-value A
                   <- step A A'.
@@ -25,6 +28,7 @@ step/switch-simp  : step (switch LF RF O) (switch LF RF O')
                  <- step O O'.
 
 step/switch-left  : step (switch LF _ (left L _)) (@s LF L).
+
 
 step/switch-right : step (switch _ RF (right _ R)) (@s RF R).
 

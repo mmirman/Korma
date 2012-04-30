@@ -30,20 +30,22 @@ figs-within-sections
 \spacing single
 \use_hyperref false
 \papersize letterpaper
-\use_geometry false
+\use_geometry true
 \use_amsmath 2
 \use_esint 1
 \cite_engine natbib_numerical
 \use_bibtopic false
 \paperorientation portrait
-\secnumdepth 5
-\tocdepth 5
+\leftmargin 1.5in
+\rightmargin 1.5in
+\secnumdepth 3
+\tocdepth 3
 \paragraph_separation indent
 \defskip medskip
 \quotes_language english
 \papercolumns 1
 \papersides 1
-\paperpagestyle empty
+\paperpagestyle default
 \tracking_changes false
 \output_changes false
 \author "" 
@@ -57,7 +59,7 @@ Modes for Non Strict Functional Logical Languages
 \end_layout
 
 \begin_layout Author
-Matthew Mirman
+Matthew Mirman (mmirman@andrew.cmu.edu)
 \begin_inset Newline newline
 \end_inset
 
@@ -103,7 +105,7 @@ While mode analysis prevents logical variables from leaving the scope of
  
 \end_layout
 
-\begin_layout Part
+\begin_layout Section
 Introduction
 \end_layout
 
@@ -298,7 +300,7 @@ in
  step term red
 \end_layout
 
-\begin_layout Section
+\begin_layout Subsection
 Motivation
 \end_layout
 
@@ -408,6 +410,10 @@ z -> case z of
     B -> (right a,left a) =:= ([A],A) 
 \end_layout
 
+\begin_layout LyX-Code
+
+\end_layout
+
 \begin_layout Standard
 Given the needed narrowing evaluation strategy, list would contain two values,
  
@@ -452,43 +458,51 @@ right (head list)
  
 \end_layout
 
-\begin_layout Part
+\begin_layout Section
 Language Definition
 \end_layout
 
 \begin_layout Standard
 It is first necessary to provide a language as a target for the analysis.
  To simplify, unification, recursive types, and polymorphism are omitted,
- although it is likely that they will not pose much of a problem when reconsider
-ed.
+ although it is likely that they will not pose significant complications
+ in the future.
+ For purposes of the proof, the term 
+\series bold
+unresolved
+\series default
+ is also included, which is used as a logical variable which can take on
+ any type but can only be used in a negative setting.
+\end_layout
+
+\begin_layout Subsection
+Syntax
 \end_layout
 
 \begin_layout Standard
-The grammar is as follows:
+The syntax for the language is defined as follows.
+ 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Formula \[
-m\;::=\oplus\;|\;\ominus\]
-
+\begin_layout Description
+Modes 
+\begin_inset Formula $m\;::=\oplus\;|\;\ominus$
 \end_inset
 
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Formula \[
-t\;::=t\rightarrow t\;|\; t\twoheadrightarrow t\;|\;\emptyset\;|\;\mbox{answer}\;|\; t\times t\;|\; t+_{m}t\]
-
+\begin_layout Description
+Types 
+\begin_inset Formula $t\;::=t\rightarrow t\;|\; t\twoheadrightarrow t\;|\;\emptyset\;|\;\mbox{answer}\;|\; t\times t\;|\; t+_{m}t$
 \end_inset
 
 
 \end_layout
 
-\begin_layout Standard
-\begin_inset Formula \[
-e\;::=x\;|\;\lambda x:t.e\;|\;\lambda v.e\;|\;(e\; e)\;|\]
-
+\begin_layout Description
+Terms 
+\begin_inset Formula $e\;::=x\;|\;\lambda x:t.e\;|\;\lambda v.e\;|\;(e\; e)\;|$
 \end_inset
 
 
@@ -505,7 +519,7 @@ e\;::=x\;|\;\lambda x:t.e\;|\;\lambda v.e\;|\;(e\; e)\;|\]
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{obj}\;|\;\mbox{getLeft}\;|\;\mbox{getRight}\;|\]
+(e,e)\;|\;\mbox{getLeft}\;|\;\mbox{getRight}\;|\]
 
 \end_inset
 
@@ -514,19 +528,11 @@ e\;::=x\;|\;\lambda x:t.e\;|\;\lambda v.e\;|\;(e\; e)\;|\]
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{left}\;|\;\mbox{right}\;|\;\mbox{caseof}\;|\;\mbox{unit}\;|\;\mbox{unresolved}\]
+\mbox{left}\;|\;\mbox{right}\;|\;\mbox{case\;}e\;\mbox{of}\; e_{1}\; e_{2}|\;\mbox{unit}\;|\;\mbox{unresolved}\]
 
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-For purposes of the proof, the term 
-\series bold
-unresolved
-\series default
- is also included.
 \end_layout
 
 \begin_layout Standard
@@ -541,9 +547,9 @@ Semantics
 \end_layout
 
 \begin_layout Standard
-Language semanitics are a crucial property to specify before meaningfull
- anlysis can take place.
- Logical languages when given naive semantics can be extraodinarily inneficient.
+Language semantics are a crucial property to specify before meaningfull
+ analysis can take place.
+ Logical languages when given naive semantics can be extraordinarily inefficient.
  The small step Needed Narrowing semantics 
 \begin_inset CommandInset citation
 LatexCommand citep
@@ -557,10 +563,10 @@ key "Albert02adeterministic"
 \begin_layout Standard
 \align center
 \begin_inset Float table
-placement t
+placement H
 wide false
 sideways false
-status open
+status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Caption
@@ -1903,13 +1909,15 @@ free
 \begin_layout Standard
 The semantics used in our analysis is a reduction semantics which approximate
  the small step semantics above.
+ 
 \end_layout
 
 \begin_layout Definition
 \begin_inset Formula $E\Rightarrow E'$
 \end_inset
 
- is the lazy single step relation defined as follows:
+ is the lazy single step relation defined as follows.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -1940,8 +1948,8 @@ The semantics used in our analysis is a reduction semantics which approximate
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula \[
-\mbox{(E-GET RIGHT) }\mbox{getRight }(\mbox{obj}\; e_{1}\; e_{2})\Rightarrow e_{2}\]
+\begin_inset Formula \begin{align*}
+\mbox{(E-GET LEFT-EVAL) } & \frac{e\Rightarrow e'}{\mbox{getLeft }e\Rightarrow\mbox{getLeft }e'}\end{align*}
 
 \end_inset
 
@@ -1950,7 +1958,7 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(E-SWITCH-LEFT) }(\mbox{caseof}\; LF\; RF)\;(\mbox{left}L)\Rightarrow LF\; L\]
+\mbox{(E-SWITCH-EVAL) }\frac{e\Rightarrow e'}{\mbox{case}\; e\;\mbox{of}LF\; RF\Rightarrow\mbox{case}\; e'\;\mbox{of}\; LF\; RF}\]
 
 \end_inset
 
@@ -1959,7 +1967,7 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(E-SWITCH-RIGHT) }(\mbox{caseof}\; LF\; RF)\;(\mbox{right\;}L)\Rightarrow RF\; R\]
+\mbox{(E-SWITCH-RIGHT) }(\mbox{case}\;(\mbox{right\;}L)\;\mbox{of}\; LF\; RF)\Rightarrow RF\; R\]
 
 \end_inset
 
@@ -1977,7 +1985,7 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(E-FINDALL FAIL) }\frac{V:T\vdash(E\; V)\Rightarrow\mbox{fail}}{\mbox{findAll}_{T}\; E\Rightarrow(\mbox{right}\;())}\]
+\mbox{(E-FINDALL FAIL) }\frac{(E\; V)\Rightarrow\mbox{fail}\;\;\vdash V:T}{\mbox{findAll}_{T}\; E\Rightarrow(\mbox{right}\;())}\]
 
 \end_inset
 
@@ -1993,7 +2001,15 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \end_layout
 
-\begin_layout Part
+\begin_layout Standard
+Note that in these rules we need no context, since 
+\begin_inset Formula $V$
+\end_inset
+
+ should not contain free variables.
+\end_layout
+
+\begin_layout Chapter
 Type and Mode Checking
 \end_layout
 
@@ -2032,18 +2048,11 @@ We also need to define what it means for a type to specify a mode.
 \end_layout
 
 \begin_layout Definition
+The immediate mode of a type 
 \begin_inset Formula $t\sim m$
 \end_inset
 
- shall mean that the type 
-\begin_inset Formula $t$
-\end_inset
-
- has mode 
-\begin_inset Formula $m$
-\end_inset
-
-.
+ is defined as follows.
 \end_layout
 
 \begin_layout Standard
@@ -2089,19 +2098,11 @@ Not all types are necessarily well moded.
 \end_layout
 
 \begin_layout Definition
+The safe mode of a type 
 \begin_inset Formula $t\approx m$
 \end_inset
 
- shall mean that the type 
-\begin_inset Formula $t$
-\end_inset
-
- is well moded with mode 
-\begin_inset Formula $m$
-\end_inset
-
-.
- 
+ is inductively defined as follows 
 \end_layout
 
 \begin_layout Standard
@@ -2141,57 +2142,167 @@ Not all types are necessarily well moded.
 \end_layout
 
 \begin_layout Lemma
-for all 
-\begin_inset Formula $t$
-\end_inset
-
- there exists some 
-\begin_inset Formula $m$
-\end_inset
-
- such that 
-\begin_inset Formula $t\sim m$
-\end_inset
-
-.
- Furthermore, 
-\begin_inset Formula $m$
-\end_inset
-
- is unique.
- 
+All types have a unique immediate mode.
 \end_layout
 
 \begin_layout Proof
-The proof is trivial by induction on the structure of 
-\begin_inset Formula $m$
-\end_inset
-
-.
+The proof is trivial by induction on the structure of a type.
  
 \end_layout
 
 \begin_layout Lemma
+If a type has a safe mode, it has the same immediate mode.
+\end_layout
+
+\begin_layout Proof
+The proof is by induction on the structure of the predicate 
 \begin_inset Formula $t\approx m$
 \end_inset
 
- implies that 
+.
+ The intuition here is that 
 \begin_inset Formula $t\sim m$
+\end_inset
+
+ produces 
+\begin_inset Formula $m$
+\end_inset
+
+ in the same way that 
+\begin_inset Formula $t\approx m$
+\end_inset
+
+ produces 
+\begin_inset Formula $m$
+\end_inset
+
+, but 
+\begin_inset Formula $t\approx m$
+\end_inset
+
+ performs extra checks.
+ 
+\end_layout
+
+\begin_layout Standard
+Before we can discuss type checking, we need to explain the subtype relation.
+ 
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula $T\leq T'$
+\end_inset
+
+ simply means that 
+\begin_inset Formula $T$
+\end_inset
+
+and 
+\begin_inset Formula $T'$
+\end_inset
+
+ have the same structure but different modes.
+ At each sum, 
+\begin_inset Formula $m\leq m'$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\emptyset\leq\emptyset\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\frac{T_{1}\leq T'_{1}\;\;\; T_{2}\leq T'_{2}}{T_{1}\times T_{2}\leq T'_{1}\times T'_{2}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\frac{T_{1}\leq T'_{1}\;\;\; T_{2}\leq T'_{2}\;\;\; m\leq m'}{T_{1}+_{m}T_{2}\leq T'_{1}+_{m'}T_{2}'}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\frac{T'_{1}\leq T{}_{1}\;\;\; T_{2}\leq T'_{2}}{T_{1}\rightarrow T_{2}\leq T'_{1}\rightarrow T_{2}'}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Lemma
+\begin_inset Formula $T\leq T$
+\end_inset
+
+ is admissible.
+\end_layout
+
+\begin_layout Proof
+This is a straightforward proof by induction.
+ 
+\end_layout
+
+\begin_layout Standard
+The following lemma proof is relied on heavily thought the proof of preservation
+ and progress.
+\end_layout
+
+\begin_layout Lemma
+\begin_inset Formula $T\leq T'$
+\end_inset
+
+ and 
+\begin_inset Formula $T\sim m$
+\end_inset
+
+ and 
+\begin_inset Formula $T'\sim m'$
+\end_inset
+
+ implies 
+\begin_inset Formula $m\leq m'$
 \end_inset
 
 .
 \end_layout
 
 \begin_layout Proof
-Formalized in Twelf
+Again, this is has been formalized in Twelf.
+\begin_inset Formula $ $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+First Pass
 \end_layout
 
 \begin_layout Standard
 Given that modes are an annotation on the type system, mode checking and
- type checking are done together.
- In order to keep type checking minimal, we provide it as a lemma that the
+ type checking are done in two passes.
+ The first pass ensures that the types with mode annotations are used reasonably
+, while the second pass ensures that functions marked as resolving use their
+ arguments at least once somewhere that resolves inputs, and will be subsequentl
+y called.
+ In order to keep type checking simple, we provide it as a lemma that the
  types produced from type checking are mode safe.
- The rules for type checking are as follows
+ 
 \end_layout
 
 \begin_layout Definition
@@ -2207,15 +2318,6 @@ Given that modes are an annotation on the type system, mode checking and
 \end_inset
 
  and is defined as follows.
- It depends on the predicate 
-\begin_inset Formula $\mbox{usedCorrectly}(T_{1},T_{2},e)$
-\end_inset
-
- which measures given that 
-\begin_inset Formula $e$
-\end_inset
-
- is a function, whether it's argument is used correctly.
 \end_layout
 
 \begin_layout Standard
@@ -2238,7 +2340,7 @@ Given that modes are an annotation on the type system, mode checking and
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(OF-LAM)}\frac{\Gamma,x:T_{1}\vdash e[x]:T_{2}\;\;\;\mbox{usedCorrectly}(T_{1},T_{2},e)\;\;\; T_{1}\approx m_{1}\;\;\; T_{2}\approx m_{2}}{\Gamma\vdash(\lambda x:T_{1}.e[x]):T_{1}\rightarrow T_{2}}\]
+\mbox{(OF-LAM)}\frac{\Gamma,x:T_{1}\vdash e:T_{2}\;\; T_{1}\approx m_{1}\;\;\; T_{2}\approx m_{2}\;\; x\notin V[\Gamma]}{\Gamma\vdash(\lambda x:T_{1}.e):T_{1}\rightarrow T_{2}}\]
 
 \end_inset
 
@@ -2265,25 +2367,7 @@ Given that modes are an annotation on the type system, mode checking and
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(OF-getLeft)}\frac{v_{1}\times v_{2}\approx m}{\Gamma\vdash\mbox{getLeft}:\; v_{1}\times v_{2}\rightarrow v_{1}}\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula \[
 \mbox{(OF-getRight)}\frac{v_{1}\times v_{2}\approx m}{\Gamma\vdash\mbox{getRight}:\; v_{1}\times v_{2}\rightarrow v_{2}}\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula \[
-\mbox{(OF-LEFT)}\frac{v_{1}+_{m}v_{2}\approx m}{\Gamma\vdash\mbox{left}:v_{1}\rightarrow v_{1}+_{m}v_{2}}\]
 
 \end_inset
 
@@ -2301,7 +2385,7 @@ Given that modes are an annotation on the type system, mode checking and
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{right}:\; v_{2}\rightarrow v_{1}+v_{2}\]
+\mbox{(OF-OBJ)}\frac{\Gamma\vdash e_{1}:v_{1}\;\; v_{1}\sim m\;\;\;\Gamma\vdash e_{2}:v_{2}\;\; v_{2}\sim m}{\Gamma\vdash(e_{1},e_{2}):\; v_{1}\times v_{2}}\]
 
 \end_inset
 
@@ -2310,7 +2394,7 @@ Given that modes are an annotation on the type system, mode checking and
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(OF-OBJ)}\frac{v_{1}\times v_{2}\approx m}{\Gamma\vdash\mbox{obj}:v_{1}\rightarrow v_{2}\rightarrow v_{1}\times v_{2}}\]
+\mbox{(OF-UNIT)}\frac{}{\Gamma\vdash\mbox{unit}:\emptyset}\]
 
 \end_inset
 
@@ -2319,45 +2403,62 @@ Given that modes are an annotation on the type system, mode checking and
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{unit}:\emptyset\]
+\mbox{(OF-CASE-OF)}\frac{\Gamma\vdash l:v_{1}\rightarrow v_{3}\;\;\;\Gamma\vdash r:v_{2}\rightarrow v_{3}\;\;\Gamma\vdash e:v_{1}+_{m}v_{2}\;\; v_{1}\approx m\;\;\; v_{2}\approx m}{\Gamma\vdash\mbox{case}\; e\;\mbox{of}\; l\; r:\; v_{3}}\]
 
 \end_inset
 
 
 \end_layout
 
-\begin_layout Standard
+\begin_layout Proposition
+\begin_inset Formula $E:T$
+\end_inset
+
+ implies that there is a unique 
+\begin_inset Formula $m$
+\end_inset
+
+ such that 
+\begin_inset Formula $T\approx m$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Proof
+The proof is by induction on the structure of a proof of type.
+ There are only three interesting cases however.
+ In the case of subsumption, we already ensure the type is well moded.
+ In the case of application, the resulting safe mode proof for the left
+ hand side after an application of induction must end in 
 \begin_inset Formula \[
-\mbox{(OF-CASE-OF)}\frac{v_{1}\approx m\;\;\; v_{2}\approx m}{\mbox{caseof}:(v_{1}\rightarrow v_{3})\rightarrow(v_{2}\rightarrow v_{3})\rightarrow v_{1}+_{m}v_{2}\rightarrow v_{3}}\]
+\mbox{(TP-MODE-SAFE/ARROW)\;}\frac{t_{1}\approx m_{1}\;\; t_{2}\approx m_{2}}{t_{1}\rightarrow t_{2}\approx\oplus}\]
 
 \end_inset
 
+ since it is the only case for an arrow type.
+ Since the type of 
+\begin_inset Formula $E_{1}\; E_{2}$
+\end_inset
 
+ is 
+\begin_inset Formula $t_{2}$
+\end_inset
+
+ we have a proof of 
+\begin_inset Formula $t_{2}\approx m_{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Proof
+The rest of the proof is formalized in the associated Twelf file, TypeCheckingTh
+eorems.elf.
 \end_layout
 
 \begin_layout Standard
-We defined 
-\begin_inset Formula $usedCorrectly$
-\end_inset
-
- in the associated Twelf file (TypeChecking.elf).
- For the moment, it's full definition here is omitted for brevity.
- Essentially, 
-\begin_inset Formula $usedCorrectly$
-\end_inset
-
- ensures that in the current environment, if it is given a supposedly negatively
- moded argument, it is used somewhere as a negatively moded argument.
- That argument would have to be used in either both sided of a switch statement,
- have both it's left and right constituents used negatively if it is an
- object, or if we are checking if it is used inside of an application, that
- it is either used on the left hand side, or it is used negatively on the
- right hand side, and the left hand side is strict.
- 
-\end_layout
-
-\begin_layout Standard
-As the heavy analysis we will make does not involve 
+As our analysis does does not involve 
 \series bold
 free,
 \series default
@@ -2373,7 +2474,8 @@ or
 \series bold
  fail
 \series default
-, we will give their types in System F.
+, we will give their types in polymorphic terms for ease of understanding
+ their actions.
 \end_layout
 
 \begin_layout Standard
@@ -2412,26 +2514,222 @@ or
 
 \end_layout
 
-\begin_layout Proposition
-\begin_inset Formula $E:T$
+\begin_layout Standard
+We can now introduce some short hand for the remainder of the paper.
+ Given that 
+\begin_inset Formula $E$
 \end_inset
 
- implies that 
-\begin_inset Formula $T\approx m$
+ has already been type checked, we can write that it has a unique type 
+\begin_inset Formula $T$
+\end_inset
+
+ as 
+\begin_inset Formula $E::T$
 \end_inset
 
 .
- Furthermore, 
+ This can be ensured in an implementation by annotating each term in the
+ abstract syntax tree with its associated type during type checking.
+ Also, the shorthand 
+\begin_inset Formula $E/m$
+\end_inset
+
+ is used for 
+\begin_inset Formula $E::T$
+\end_inset
+
+ and 
+\begin_inset Formula $T\sim m$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Second Pass
+\end_layout
+
+\begin_layout Standard
+In the second pass, we ensure that functions annotated as resolving use
+ their arguments as input to another resolving function in a place that
+ will get used.
+ The predicate 
+\begin_inset Formula $usedCorrectly_{m}(x,E)$
+\end_inset
+
+ ensures that 
+\begin_inset Formula $x$
+\end_inset
+
+ is used as a negative argument to some function in 
+\begin_inset Formula $E$
+\end_inset
+
+.
+ We can generalize even further to allow object arguments by creating another
+ predicate 
+\begin_inset Formula $objectUsedCorrectly(x,E)$
+\end_inset
+
+.
+ That argument would have to be used in either both sided of a switch statement,
+ have both it's left and right constituents used negatively if it is an
+ object, or if we are checking if it is used inside of an application, that
+ it is either used on the left hand side, or it is used negatively on the
+ right hand side, and the left hand side is strict.
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula $usedCorrectly_{m}(X,E)$
+\end_inset
+
+ is defined according to the following rules, on type annotated terms 
+\begin_inset Formula $E$
+\end_inset
+
+ and 
+\begin_inset Formula $X$
+\end_inset
+
+ and mode 
 \begin_inset Formula $m$
 \end_inset
 
- is unique.
+.
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(USED-CORRECTLY/VAR)}\frac{}{usedCorrectly_{\ominus}(X,X)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(USED-CORRECTLY/LAM)}\frac{usedCorrectly_{m}(X,[y/x]E)\;\;\;\;\mbox{x is new}}{usedCorrect_{m}(X,\lambda y:t.E)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(USED-CORRECTLY/APP-L)}\frac{usedCorrectly_{m}(X,E_{1})}{usedCorrectly_{m}(X,E_{1}E_{2})}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(USED-CORRECTLY/APP-R)}\frac{usedCorrectly_{\ominus}(X,E_{2})\;\; E_{1}::\; t_{1}\rightarrow t_{2}\;\; t_{1}\sim\ominus}{usedCorrect_{m}(X,E_{1}E_{2})}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(USED-CORRECTLY/OBJ)}\frac{usedCorrectly_{m}(X,E_{1})\;\; usedCorrectly_{m}(X,E_{2})}{usedCorrect_{m}(X,(E_{1},E_{2}))}\]
+
+\end_inset
+
+
+\begin_inset Formula \[
+\mbox{(USED-CORRECTLY/OBJ-L)}\frac{usedCorrectly_{m}(X,E_{1})\;\;(E_{1},E_{2})/\ominus}{usedCorrect_{m}(X,(E_{1},E_{2}))}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(USED-CORRECTLY/SUM-ARG)}\frac{usedCorrectly_{m}(X,E)}{usedCorrect_{m}(X,\mbox{case}\; E\;\mbox{of}\; E_{1}\; E_{2})}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(USED-CORRECTLY/SUM-C)}\frac{usedCorrectly_{m}(X,E_{1})\;\; usedCorrectly_{m}(X,E_{2})}{usedCorrect_{m}(X,\mbox{case}\; E\;\mbox{of}\; E_{1}\; E_{2})}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We also can show the expansion of an object.
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula $objUsedCorrectly_{m}(X,E)$
+\end_inset
+
+ is defined according to the following rules.
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(OBJ-USED/EXP)}\frac{usedCorrectly_{m}(X,E)}{objUsedCorrect_{m}(X,E)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(OBJ-USED/PROD)}\frac{objUsedCorrectly_{m}(getLeft\; X,E)\;\; objUsedCorrectly_{m}(getRight\; X,E)}{objUsedCorrect_{m}(X,E)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Definition
+The predicate 
+\begin_inset Formula $wellModed(E)$
+\end_inset
+
+ traverses the syntax of a term and only has two rules that are of interest:
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(WM-LAM/POS)}\frac{t\sim\oplus\;\;\;\Gamma,wellModed(x)\vdash wellModed(E)}{\Gamma\vdash wellModed(\lambda x:t.E)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(WM-LAM/NEG)}\frac{t\sim\ominus\;\;\;\Gamma,wellModed(x)\vdash wellModed(E)\;\;\; objUsedCorrectly(x,E)}{\Gamma\vdash wellModed(\lambda x:t.E)}\]
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Lemma
-If there is a decidable algorithm to infer these types, and one to perform
- the mode checking analysis on the annotated system, then inferring their
- modes is decidable.
+A decidable algorithm to infer types and check well modedness implies mode
+ inference is also decidable.
 \end_layout
 
 \begin_layout Proof
@@ -2450,96 +2748,6 @@ Preservation
 Because of submoding, the proof of preservation is slightly more complex
  than in simply typed lambda calculus.
  
-\end_layout
-
-\begin_layout Definition
-\begin_inset Formula $T\leq T'$
-\end_inset
-
- simply means that 
-\begin_inset Formula $T$
-\end_inset
-
-and 
-\begin_inset Formula $T'$
-\end_inset
-
- have the same structure but different modes.
- At each sum, 
-\begin_inset Formula $m\leq m'$
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Definition
-\begin_inset Formula \[
-\frac{T_{1}\leq T'_{1}\;\;\; T_{2}\leq T'_{2}}{T_{1}\times T_{2}\leq T'_{1}\times T'_{2}}\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Definition
-\begin_inset Formula \[
-\frac{T_{1}\leq T'_{1}\;\;\; T_{2}\leq T'_{2}\;\;\; m\leq m'}{T_{1}+_{m}T_{2}\leq T'_{1}+_{m'}T_{2}'}\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Definition
-\begin_inset Formula \[
-\frac{T'_{1}\leq T{}_{1}\;\;\; T_{2}\leq T'_{2}}{T_{1}\rightarrow T_{2}\leq T'_{1}\rightarrow T_{2}'}\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Lemma
-\begin_inset Formula $T\leq T$
-\end_inset
-
- is admissible.
-\end_layout
-
-\begin_layout Proof
-This is a straightforward proof by induction, and has been entirely formalized
- in Twelf.
-\begin_inset Formula $ $
-\end_inset
-
-
-\end_layout
-
-\begin_layout Lemma
-\begin_inset Formula $T\leq T'$
-\end_inset
-
- and 
-\begin_inset Formula $T\sim m$
-\end_inset
-
- and 
-\begin_inset Formula $T'\sim m'$
-\end_inset
-
- implies 
-\begin_inset Formula $m\leq m'$
-\end_inset
-
-.
-\end_layout
-
-\begin_layout Proof
-Again, this is has been formalized in Twelf.
-\begin_inset Formula $ $
-\end_inset
-
-
 \end_layout
 
 \begin_layout Theorem
@@ -2566,9 +2774,24 @@ Preservation
 \end_layout
 
 \begin_layout Proof
-The proof is mostly straightforward, by lexographical induction on the reduction.
- It has also been entirely formalized in Twelf.
- 
+The proof is by lexicographic induction on the reduction and proof of type,
+ and it has been formalized in Twelf.
+ The intuition behind the subsumption is that as reductions occur, we might
+ find out more about the resulting value, but nothing we already know about
+ the resulting value will become invalidated.
+ In the case of subsumption of a right hand side, the argument for termination
+ is more subtle.
+ The invariant is made that in an inductive step, no new the size of the
+ proof of 
+\begin_inset Formula $of$
+\end_inset
+
+ never increases, and 
+\begin_inset Formula $of/subsump$
+\end_inset
+
+ instances always move to the right hand side in the inductive call or disappear
+s entirely.
 \end_layout
 
 \begin_layout Subsection
@@ -2586,7 +2809,7 @@ Before we can prove progress for the full language, we need to prove that
 \end_inset
 
 
-\begin_inset Formula $\mbox{logicFess}(E)$
+\begin_inset Formula $\mbox{logicFree}(E)$
 \end_inset
 
  shall mean that the term 
@@ -2606,16 +2829,191 @@ Before we can prove progress for the full language, we need to prove that
  
 \end_layout
 
-\begin_layout Conjecture
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(LFREE/APP})\frac{logicFree(V)\;\; logicFree(F)}{logicFree(F\;\; V)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(LFREE/LAM})\frac{logicFree(E)}{logicFree(\lambda x.E)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(LFREE/VAR})\frac{}{logicFree(x)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(LFREE/UNIT})\frac{}{logicFree(unit)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(LFREE/OBJ-L})\frac{logicFree(E_{1})\;\; E_{2}/\oplus}{logicFree((E_{1},E_{2}))}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(LFREE/OBJ})\frac{logicFree(E_{1})\;\; logicFree(E_{2})}{logicFree((E_{1},E_{2}))}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(LFREE/SWITCH})\frac{logicFree(E)\;\; logicFree(L)\;\; logicFree(R)}{logicFree(\mbox{case}\; E\;\mbox{of}\; L\; R)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Lemma
+If 
+\begin_inset Formula $E\implies_{\alpha}E'$
+\end_inset
+
+ and 
+\begin_inset Formula $logicFree(E)$
+\end_inset
+
+ then 
+\begin_inset Formula $logicFree(E')$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Theorem
+\begin_inset Formula $\mbox{usedCorrectly}_{m}(X,E)$
+\end_inset
+
+ and 
+\begin_inset Formula $logicFree(E)$
+\end_inset
+
+ implies 
+\begin_inset Formula $ $
+\end_inset
+
+
+\begin_inset Formula $logicFree(X)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Proof
+By induction on the structure of 
+\begin_inset Formula $E$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Proof
+The only case of interest here is 
+\begin_inset Formula $\mbox{USED-CORRECTLY/LAM}$
+\end_inset
+
+ along with 
+\begin_inset Formula $\mbox{LOGIC-LESS/LAM}$
+\end_inset
+
+.
+ In this case, where we receive 
+\begin_inset Formula $usedCorrectly_{m}(X,\lambda x.E)$
+\end_inset
+
+ and 
+\begin_inset Formula $logicLess(\lambda x.E)$
+\end_inset
+
+.
+ We then know 
+\begin_inset Formula $usedCorrectly(X,[x/y]E)$
+\end_inset
+
+ for some new 
+\begin_inset Formula $y$
+\end_inset
+
+.
+ Thus, 
+\begin_inset Formula $E\implies_{\alpha}[x/y]E$
+\end_inset
+
+ and 
+\begin_inset Formula $logicLess(E)$
+\end_inset
+
+ so 
+\begin_inset Formula $logicLess([x/y]E)$
+\end_inset
+
+ by the above lemma.
+ By the induction hypothesis, we know 
+\begin_inset Formula $logicLess(X)$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Corollary
+\begin_inset Formula $objUsedCorrectly_{m}(X,E)$
+\end_inset
+
+ and 
+\begin_inset Formula $logicFree(E)$
+\end_inset
+
+ implies 
+\begin_inset Formula $ $
+\end_inset
+
+
+\begin_inset Formula $logicFree(X)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Theorem
 Subterm-Resolving
 \end_layout
 
-\begin_layout Conjecture
+\begin_layout Theorem
 \begin_inset Formula $\Gamma\vdash X:T_{x}$
 \end_inset
 
  and 
-\begin_inset Formula $\mbox{usedAsNeg}(X,E)$
+\begin_inset Formula $\mbox{usedCorrectly}_{\oplus}(X,E)$
 \end_inset
 
  and 
@@ -2654,10 +3052,10 @@ Subterm-Resolving
 \end_layout
 
 \begin_layout Proof
-Note that this has been mostly proved in Twelf with all but a few cases
- left to handle.
+This has been mostly proved in Twelf without subtyping for all but a few
+ cases.
  The intuition behind this theorem is that 
-\begin_inset Formula $usedAsNeg$
+\begin_inset Formula $usedCorrectly$
 \end_inset
 
  measures strict occurrences of 
@@ -2670,6 +3068,66 @@ Note that this has been mostly proved in Twelf with all but a few cases
 \end_inset
 
  completely.
+ 
+\end_layout
+
+\begin_layout Corollary
+\begin_inset Formula $\Gamma\vdash X:T_{x}$
+\end_inset
+
+ and 
+\begin_inset Formula $\mbox{objUsedCorrectly}_{\oplus}(X,E)$
+\end_inset
+
+ and 
+\begin_inset Formula $\Gamma\vdash E:T_{E}$
+\end_inset
+
+ and 
+\begin_inset Formula $T_{E}\approx\oplus$
+\end_inset
+
+ and 
+\begin_inset Formula $E\Rightarrow_{k}V$
+\end_inset
+
+ with 
+\begin_inset Formula $\Gamma\vdash V:T_{V}$
+\end_inset
+
+ and 
+\begin_inset Formula $T_{V}\leq T_{E}$
+\end_inset
+
+ by preservation and 
+\begin_inset Formula $\mbox{logicFree(V)}$
+\end_inset
+
+ then 
+\begin_inset Formula $ $
+\end_inset
+
+
+\begin_inset Formula $logicFree(X)$
+\end_inset
+
+and 
+\begin_inset Formula $logicFree(E)$
+\end_inset
+
+ implies 
+\begin_inset Formula $ $
+\end_inset
+
+
+\begin_inset Formula $logicFree(X)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout --Separator--
+
 \end_layout
 
 \begin_layout Corollary
@@ -2731,6 +3189,49 @@ Given that subterm resolving holds, we can simply apply subterm resolving
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Corollary
+WellModed-Resolving
+\end_layout
+
+\begin_layout Corollary
+\begin_inset Formula $\mbox{wellModed}(E)$
+\end_inset
+
+ and 
+\begin_inset Formula $\Gamma\vdash E:T_{E}$
+\end_inset
+
+ and 
+\begin_inset Formula $T_{E}\approx\oplus$
+\end_inset
+
+ and 
+\begin_inset Formula $E\Rightarrow_{k}V$
+\end_inset
+
+ with 
+\begin_inset Formula $\Gamma\vdash V:T_{V}$
+\end_inset
+
+ and 
+\begin_inset Formula $T_{V}\leq T_{E}$
+\end_inset
+
+ by preservation and 
+\begin_inset Formula $\mbox{logicFree(V)}$
+\end_inset
+
+ then 
+\begin_inset Formula $ $
+\end_inset
+
+
+\begin_inset Formula $logicFree(E)$
+\end_inset
+
+
 \end_layout
 
 \begin_layout Theorem
@@ -2893,7 +3394,7 @@ on to diverge.
 \begin_inset Formula $E$
 \end_inset
 
-is grounding.
+ is grounding.
  
 \end_layout
 
@@ -2928,7 +3429,16 @@ Because mode checking and strictness checking are equivalent, mode checking
  Natural deduction formulations of strictness and relevance logics have
  been given relevant proof terms and could very well be used as an alternate
  type system, with the addition of new syntax.
- The polymorphic linear lambda calculus Lily has been shown to have equivalent
+ In particular, our use of the predicate 
+\begin_inset Formula $usedCorrectly$
+\end_inset
+
+ coresponds the notion of a strict use of it's argument.
+ In this formulation product types can be treated a bit more flexibly.
+\end_layout
+
+\begin_layout Standard
+The polymorphic linear lambda calculus Lily has been shown to have equivalent
  termination properties under call-by-value and call-by-need semantics.
 \begin_inset CommandInset citation
 LatexCommand citep
@@ -3068,7 +3578,7 @@ main
 \end_inset
 
 , and 
-\begin_inset Formula $\mbox{return}::a\rightarrow\mbox{Single }(m\; a)$
+\begin_inset Formula $\mbox{return}::\; a\rightarrow\mbox{Single }(m\; a)$
 \end_inset
 
 
@@ -3076,7 +3586,7 @@ main
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{free}::(\mbox{Unifiable}\; a)\implies(a\rightarrow\mbox{Many}\; b)\rightarrow\mbox{Many}\; b\]
+\mbox{free}::\forall a\; b\;.(\mbox{Unifiable}\; a)\implies(a\rightarrow\mbox{Many}\; b)\rightarrow\mbox{Many}\; b\]
 
 \end_inset
 
@@ -3085,7 +3595,7 @@ main
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{findall}::(\mbox{Unifiable}\; a)\implies(a\rightarrow\mbox{Many}\;\mbox{Success})\rightarrow\mbox{Single}\;[a]\]
+\mbox{findall}::\forall a\; b\;.\;(\mbox{Unifiable}\; a)\implies(a\rightarrow\mbox{Many}\;\mbox{Success})\rightarrow\mbox{Single}\;[a]\]
 
 \end_inset
 
@@ -3121,14 +3631,15 @@ nistic function can be used, but not vise versa.
 
 \end_layout
 
-\begin_layout Part
+\begin_layout Section
 Conclusions & Future Work
 \end_layout
 
 \begin_layout Standard
 In this thesis, we discussed a lazy functional logical language similar
- to curry and proved its safety in an interacting environment.
- We supplied a mode system and a way to seperate nondeterminism from input
+ to curry and proved its hypothetical runtime safety in an interacting environme
+nt.
+ We supplied a mode system and a way to separate nondeterminism from input
  and output.
  However, the mode system is not always entirely expressive enough.
  Strictness type systems based on resource logics have been defined, but
