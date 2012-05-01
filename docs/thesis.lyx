@@ -3068,10 +3068,15 @@ This has been mostly proved in Twelf without subtyping for all but a few
 \end_inset
 
  completely.
- The remaining cases not handled in the twelf proof are those involving
- switch.
- In this case, we can use the argument that we only apply the subterm resolving
- theorem if there is a reduction to a normal form.
+ The remaining cases not currently handled in the twelf proof are those
+ involving expressions used negatively on the left hand side.
+ In these cases, subterm resolving follows from preservation of 
+\begin_inset Formula $usedCorrectly$
+\end_inset
+
+ under substitution.
+ **The remaining cases appear to have been formalized in alternate versions
+ of the proof.**
 \end_layout
 
 \begin_layout Corollary

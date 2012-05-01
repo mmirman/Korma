@@ -197,7 +197,6 @@ res/@s/-forms : {Step : step (@s (lam _ _) _) _}
 %worlds () (res/@s/-forms _ _ _ _ _ _ _).
 %trustme %total {A C M D E B} (res/@s/-forms A B C M D E _).
 
-
 % that this is pos ensures that the context is in fact resolving
 resolving : used-as-neg M OfX OfE
 	 -> pres Step OfE (OfV : of V Et)
@@ -293,15 +292,6 @@ res/e/getRight
     WmE
     LL_V
     (logic-less/getRight (logic-less/obj-r LL_V)).
-
-res/getLeft/e
- : resolving
-    (used-as-neg/getLeft used-as-neg/e)
-    pres/getLeft
-    TmsC+
-    WmE
-    LL_V
-    (logic-less/obj-l LL_V).
 
 res/getRight/e
  : resolving
@@ -412,18 +402,26 @@ res/@s/app-l
  <- of-safe OfEf (tp-mode-safe/~> TmsA TmsB)
  <- resolving UanXE1 Pres (tp-mode-safe/~> TmsA TmsB) WmF LL_F LL_X.
 
-%{
+resolving-sub : used-as-neg ResM OfX (of/lam F_OfF _ _)
+             -> {OfY} used-as-neg ResM OfX (F_OfF _ OfY)
+             -> type.
+%mode resolving-sub +A +C -B.
+
+%worlds () (resolving-sub _ _ _).
+%trustme %total { A B } (resolving-sub A B _).
+
 %% Need some lemmas here.
 res/@s/app-l
   : resolving
-     (used-as-neg/app-l UanXE1) 
-     pres/lam
+     (used-as-neg/app-l UanX_F) 
+     (_ : pres _ (of/@s _ OfI) _)
      TmsE+
-     (wm/@s (WmF : well-moded OfEf) WmI) 
+     WmE
      LL_V
-     LL_X.
+     LL_X
+ <- resolving-sub UanX_F OfI UanX_FsI
+ <- uan-2-ll UanX_FsI LL_V LL_X.
 
-}%
 
 
 res/@s/app-r
@@ -476,7 +474,8 @@ res/sum-used
     LL_V
     LL_X
  <- pres-wm Step WmI _ WmI'
- <- resolving (used-as-neg/app-r Uan _) pres/e TmsB+ (wm/@s WmL WmI') LL_V LL_X. }%
+ <- resolving (used-as-neg/app-r Uan _) pres/e TmsB+ (wm/@s WmL WmI') LL_V LL_X. 
+}%
 
 res/sum-used/simp/l
  : resolving 
@@ -512,8 +511,9 @@ res/@s/app-r/forms
 
 
 
+
 %mode (resolving-ivar +UanXE +Step +TmsEp +WM_E +LLV -LLX) (resolving +UanXE +Step +TmsEp +WM_E +LLV -LLX).
 %worlds () (resolving-ivar _ _ _ _ _ _) (resolving _ _ _ _ _ _).
 
-%total { (A A') (B B') (P P') (D D') (C C')} (resolving C A P D B _) (resolving-ivar C' A' P' D' B' _).
+%total { (A A') (B B') (P P') (D D') (C C')  } (resolving C A P D B _) (resolving-ivar C' A' P' D' B' _).
 
