@@ -7,60 +7,63 @@ subst-of : of V T
 - : subst-of (Of : of V T) F (F V Of).
 %mode subst-of +D1 +D2 -D3.
 %worlds () (subst-of _ _ _).
+%unique subst-of +A +B -1C.
 %total {A B} (subst-of A B _).
+
 
 pres : step E E' -> of E T -> of E' T -> type.
 %mode pres +Step +T -T'.
 
-pres/e : pres step/e Of Of.
-pres/trans : pres (step/trans Sbc Sab) OfA OfC
-          <- pres Sab OfA OfB
-          <- pres Sbc OfB OfC.
+pres/empty : pres step/empty Of Of.
 
-pres/lam : pres 
-            step/lam
-	    (of/@s (of/lam Foo_OfF TmsV TmsO) (OfV : of V _))
-	    (Foo_OfF V OfV).
+pres/obj : pres step/obj Of Of.
+pres/left : pres step/left Of Of.
+pres/right : pres step/right Of Of.
 
-pres/@s 
-   : pres (step/@s Step) 
-          (of/@s OfEf OfEv) 
-          (of/@s OfEf' OfEv)
-  <- pres Step OfEf OfEf'.
+getFoo : of (lam F _) (A ~> B) -> ({x} of x A -> of (F x) B) -> type.
+getFoo/lm : getFoo (of/lam Foo _ _) Foo.
+%mode getFoo +A -B.
+%worlds () (getFoo _ _).
+%unique getFoo +A -1B.
+%total {A} (getFoo A _).
 
-pres/getLeft 
-   : pres step/getLeft (of/getLeft (of/obj _ _ OfL OfR)) OfL.
+pres/app : pres 
+            (step/app StpFV StpLm)
+	    (of/@s OfA OfV)
+	    OfR
+        <- pres StpLm OfA OfL
+        <- getFoo OfL Foo_OfF
+        <- pres StpFV (Foo_OfF _ OfV) OfR.
 
-pres/getRight 
-   : pres step/getRight (of/getRight (of/obj _ _ OfL OfR)) OfR.
+pres/getLeft
+   : pres (step/getLeft StB StA) (of/getLeft OfA) OfL'
+  <- pres StA OfA (of/obj _ _ OfL OfR)
+  <- pres StB OfL OfL'.
 
-pres/getLeft-simp 
-   : pres (step/getLeft-simp Step _) 
-          (of/getLeft OfObj) 
-          (of/getLeft OfObj')
-  <- pres Step OfObj OfObj'.
+pres/getRight
+   : pres (step/getRight StB StA) (of/getRight OfA) OfR'
+  <- pres StA OfA (of/obj _ _ OfL OfR)
+  <- pres StB OfR OfR'.
 
-pres/getRight-simp 
-   : pres (step/getRight-simp Step _) 
-          (of/getRight OfObj) 
-          (of/getRight OfObj')
-  <- pres Step OfObj OfObj'.
+pres-sw : step-sw I LF RF O -> of I (sum Lt Rt _) -> of LF (Lt ~> C) -> of RF (Rt ~> C) -> of O C -> type.
+%mode pres-sw +A +B +C +D -E.
 
-pres/switch-left : pres 
-    (step/switch-left Step)
-    (of/switch _ _ OfFl _ OfO)
-    (of/@s OfFl OfL)
-  <- pres Step OfO (of/left _ _ _ OfL).
+pres-sw/left : pres-sw (step-sw/left St) (of/left _ _ _ OfL) OfLF OfRF Of
+    	    <- pres St (of/@s OfLF OfL) Of.
 
-pres/switch-right : pres 
-     (step/switch-right (Step1 : step E3 (right E4)))
-     (of/switch _ _ _ (Of2 : of E2 (T4 ~> T1)) (Of3 : of E3 (sum T2 T4 _)))
-     (of/@s Of2 OfR)
-    <- pres Step1 Of3 (of/right _ _ _ OfR).
+pres-sw/right : pres-sw (step-sw/right St) (of/right _ _ _ OfR) OfLF OfRF Of
+    	    <- pres St (of/@s OfRF OfR) Of.
 
+pres/switch : pres 
+     (step/switch PresSw Step)
+     (of/switch _ _ OfLF OfRF OfI)
+     Of
+  <- pres Step OfI OfI'
+  <- pres-sw PresSw OfI' OfLF OfRF Of.
 
-%worlds () (pres _ _ _).
-%total {A B} (pres A B _).
+%worlds () (pres _ _ _) (pres-sw _ _ _ _ _).
+%unique (pres +A +B -1C) (pres-sw +A +B +C +D -1E).
+%total {(A A') (B B')} (pres-sw A' B' _ _ _) (pres A B _).
 %freeze pres.
 
 pres-wm : step E V -> well-moded (OfE : of E _) 
@@ -192,6 +195,8 @@ res/@s/-forms : {Step : step (@s (lam _ _) _) _}
              -> logic-less OfX
              -> type.
 %mode res/@s/-forms +A +B +C +M +D +E -F.
+%{
+
 - : res/@s/-forms 
      step/lam 
      UanX_V
@@ -207,6 +212,7 @@ res/@s/-forms : {Step : step (@s (lam _ _) _) _}
  <- tms-2-tm TmsV+ TmV+
  <- tm-unique TmV+ TmV- Absurd
  <- from-absurd-ll _ Absurd LL_X.
+}%
 %worlds () (res/@s/-forms _ _ _ _ _ _ _).
 %trustme %total {A C M D E B} (res/@s/-forms A B C M D E _).
 
@@ -218,7 +224,7 @@ resolving : used-as-neg M OfX OfE
          -> logic-less OfV
 	 -> logic-less OfX
 	 -> type.
-
+%{
 res/trans
  : resolving
     UanE
@@ -230,16 +236,48 @@ res/trans
  <- pres-wm StepAB WmE OfB WmB
  <- resolving used-as-neg/e PresBC TmsC+ WmB LL_C LL_B
  <- resolving UanE PresAB TmsC+ WmE LL_B LL_X.
+}%
 
-res/eq
+res/empty
  : resolving
     UanE
-    pres/e
+    pres/empty
     TmsB+
     _
     LL_E
     LL_X
  <- uan-2-ll UanE LL_E LL_X.
+
+res/obj
+ : resolving
+    UanE
+    pres/obj
+    TmsB+
+    _
+    LL_E
+    LL_X
+ <- uan-2-ll UanE LL_E LL_X.
+
+res/left
+ : resolving
+    UanE
+    pres/left
+    TmsB+
+    _
+    LL_E
+    LL_X
+ <- uan-2-ll UanE LL_E LL_X.
+
+res/left
+ : resolving
+    UanE
+    pres/right
+    TmsB+
+    _
+    LL_E
+    LL_X
+ <- uan-2-ll UanE LL_E LL_X.
+
 
 res/unsafe
   : resolving _ (_ : pres Step _ _) _ WmE (logic-less/unsafe TmsM) LL_X
@@ -248,6 +286,7 @@ res/unsafe
  <- unsafe-free-2-absurd UnsfV Absurd
  <- from-absurd-ll _ Absurd LL_X. 
 
+%{
 res/getLeft-simp
   : resolving
      (used-as-neg/getLeft UanX_V)
@@ -272,6 +311,7 @@ res/getRight-simp : resolving
   <- tms-2-tm TmsE+ TmE+
   <- tm-2-tms-prod-r TmE+ TmsObj TmsObj'
   <- resolving UanX_V Pres TmsObj' WmOfE LL_V LL_X.
+}%
 
 res/getLeft/r-pos/obj
   : resolving
@@ -337,6 +377,8 @@ res/getRight/r-pos/objL
  <- tm-unique TmV+ TmV- Absurd
  <- from-absurd-ll _ Absurd LL_X.
 
+%{
+
 res/@s/app-l
   : resolving
      (used-as-neg/app-l UanXE1) 
@@ -348,7 +390,7 @@ res/@s/app-l
  <- of-safe OfEf (tp-mode-safe/~> TmsA TmsB)
  <- resolving UanXE1 Pres (tp-mode-safe/~> TmsA TmsB) 
     WmF LL_F LL_X.
-
+}%
 resolving-sub : used-as-neg ResM OfX (of/lam F_OfF _ _)
              -> {OfY} used-as-neg ResM OfX (F_OfF _ OfY)
              -> type.

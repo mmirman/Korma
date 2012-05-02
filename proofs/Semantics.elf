@@ -1,30 +1,35 @@
 step : tm -> tm -> type. %name step Step.
-step* : tm -> tm -> type. %name step Step*.
-%mode (step +A -B) (step* +A -B).
 
-step*/e : step* A A.
-step*/s : step* A C <- step A B <- step* B C.
 
-step/app : step (@s E_F V) (F V)
-        <- step* E_F (lam F _).
+step/empty : step empty empty.
 
-step/getLeft : step (getLeft (obj L _)) L.
+step/obj : step (obj A B) (obj A B).
 
-step/getLeft : step (getLeft A) (getLeft A')
-            <- step* A A'.
-             
-step/getRight : step (getRight (obj _ R)) R.
+step/left : step (left A) (left A).
+step/right : step (right A) (right A).
 
-step/getRight-simp : step (getRight A) (getRight A')
-                  <- not-value A
-                  <- step A A'.
+step/app : step (@s E_F V) R
+        <- step E_F (lam F _)
+        <- step (F V) R.
 
-step/switch-left  : step (switch LF _ I) (@s LF L)
-		 <- step I (left L).
+step/getLeft : step (getLeft A) L'
+            <- step A (obj L _)
+            <- step L L'.
 
-step/switch-right : step (switch _ RF I) (@s RF R)
-		 <- step I (right R).
+step/getRight : step (getRight A) R'
+             <- step A (obj _ R)
+             <- step R R'.
 
-%worlds (tm-b) (step _ _) (step* _ _).
+step-sw : tm -> tm -> tm -> tm -> type.
+step-sw/left : step-sw (left L) LF _ O
+            <- step (@s LF L) O. 
+step-sw/right : step-sw (right R) _ RF O
+            <- step (@s RF R) O.
 
-%unique (step +A -1B) (step* +A -1B).
+step/switch  : step (switch LF RF I) O
+            <- step I R
+            <- step-sw R LF RF O.
+
+%mode (step +A -B) (step-sw +A +LF +RF -B).
+%worlds (tm-b) (step _ _) (step-sw _ _ _ _).
+%unique (step +A -1B) (step-sw +A +B +C -1D).
