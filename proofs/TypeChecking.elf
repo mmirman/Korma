@@ -56,7 +56,7 @@ used-as-neg/getRight : used-as-neg ResM OfX (of/getRight E)
                     <- used-as-neg ResM OfX E.
 
 used-as-neg/lam-inner : used-as-neg ResM OfX (of/lam F _ _)
-                     <- ({x}{of_x} used-as-neg ResM OfX (F x of_x)).
+             <- ({x}{of_x} used-as-neg ResM OfX (F x of_x)).
 
 used-as-neg/app-l : used-as-neg ResM OfX (of/@s E1 E2)
                  <- used-as-neg ResM OfX E1.
@@ -66,11 +66,13 @@ used-as-neg/app-r
   <- tp-mode T neg
   <- used-as-neg neg OfX V.
 
-used-as-neg/objL : used-as-neg ResM OfX (of/obj (_ : tp-mode _ neg) _ L R)
-                <- used-as-neg ResM OfX L.
+used-as-neg/objL 
+   : used-as-neg ResM OfX (of/obj (_ : tp-mode _ neg) _ L R)
+  <- used-as-neg ResM OfX L.
 
-used-as-neg/objR : used-as-neg ResM OfX (of/obj _ (_ : tp-mode _ neg) L R )
-                <- used-as-neg ResM OfX R.
+used-as-neg/objR 
+   : used-as-neg ResM OfX (of/obj _ (_ : tp-mode _ neg) L R )
+  <- used-as-neg ResM OfX R.
 
 used-as-neg/obj : used-as-neg ResM OfX (of/obj _ _ L R)
                <- used-as-neg ResM OfX R
@@ -101,20 +103,29 @@ i-var/product : i-var M O1 O2
 well-moded : of E T -> type.
 
 wm/empty : well-moded of/empty.
-wm/obj : well-moded (of/obj _ _ OfL OfR) <- well-moded OfR <- well-moded OfL.
+wm/obj : well-moded (of/obj _ _ OfL OfR) 
+	  <- well-moded OfR <- well-moded OfL.
 wm/getLeft : well-moded (of/getLeft Of) <- well-moded Of.
 wm/getRight : well-moded (of/getRight Of) <- well-moded Of.
 wm/left : well-moded (of/left _ _ _ Of) <- well-moded Of.
 wm/right : well-moded (of/right _ _ _ Of) <- well-moded Of.
-wm/switch : well-moded (of/switch _ _ OfL OfR OfI) <- well-moded OfI <- well-moded OfR <- well-moded OfL.
+wm/switch : well-moded (of/switch _ _ OfL OfR OfI) 
+	 <- well-moded OfI 
+	 <- well-moded OfR 
+         <- well-moded OfL.
 wm/logic-var : well-moded (of/logic-var _).
-wm/@s : well-moded (of/@s OfF OFV) <- well-moded OfV <- well-moded OfF.
-wm/lam/+* : well-moded (of/lam F_Of (TmsA : tp-mode-safe A pos) TmsB)
-         <- ({x}{of_x} well-moded of_x -> well-moded (F_Of x of_x)).
+wm/@s : well-moded (of/@s OfF OFV) 
+     <- well-moded OfV <- well-moded OfF.
+wm/lam/+* 
+   : well-moded (of/lam F_Of (TmsA : tp-mode-safe A pos) TmsB)
+  <- ({x}{of_x} well-moded of_x -> well-moded (F_Of x of_x)).
 
-wm/lam/- : well-moded (of/lam F_Of (TmsA : tp-mode-safe A neg) (TmsB : tp-mode-safe _ M) )
-      <- ({x}{of_x : of x A} i-var M of_x (F_Of x of_x))
-      <- ({x}{of_x : of x A} well-moded of_x -> well-moded (F_Of x of_x)).
+wm/lam/- 
+   : well-moded (of/lam F_Of (_ : tp-mode-safe A neg) 
+		             (_ : tp-mode-safe _ M))
+  <- ({x}{of_x : of x A} i-var M of_x (F_Of x of_x))
+  <- ({x}{of_x : of x A} well-moded of_x 
+	-> well-moded (F_Of x of_x)).
 
 %block wm-assm-b : some {t} block {x}{of_x:of x t}{_:well-moded of_x}.
 
