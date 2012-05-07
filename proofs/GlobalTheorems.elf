@@ -212,6 +212,7 @@ res/@s/-forms : {Step : step (@s (lam _ _) _) _}
  <- tms-2-tm TmsV+ TmV+
  <- tm-unique TmV+ TmV- Absurd
  <- from-absurd-ll _ Absurd LL_X.
+
 }%
 %worlds () (res/@s/-forms _ _ _ _ _ _ _).
 %trustme %total {A C M D E B} (res/@s/-forms A B C M D E _).
@@ -286,32 +287,60 @@ res/unsafe
  <- unsafe-free-2-absurd UnsfV Absurd
  <- from-absurd-ll _ Absurd LL_X. 
 
-%{
+%% Will need a lemma here about OfL being positive
 res/getLeft-simp
   : resolving
      (used-as-neg/getLeft UanX_V)
-     (pres/getLeft-simp Pres)
+     (pres/getLeft PresR (PresI : pres StepI _ (of/obj TpML TpMR OfL OfR)))
      TmsE+
-     (wm/getLeft (WmOfE : well-moded OfE))
-     (logic-less/getLeft LL_V)
+     (wm/getLeft (WmOfI : well-moded OfE))
+     LL_V
      LL_X
   <- of-safe OfE TmsObj
   <- tms-2-tm TmsE+ TmE+
   <- tm-2-tms-prod-l TmE+ TmsObj TmsObj'
-  <- resolving UanX_V Pres TmsObj' WmOfE LL_V LL_X.
+  <- pres-wm StepI WmOfI (of/obj TpML TpMR OfL OfR) (wm/obj WmL _)
+  <- resolving used-as-neg/e PresR TmsE+ WmL LL_V LL_E
+  <- resolving UanX_V PresI TmsObj' WmOfI (logic-less/obj-l LL_E) LL_X.
 
+res/getLeft/absurd
+  : resolving
+     _
+     (pres/getLeft PresR (PresI : pres StepI _ (of/obj TmL- _ OfL OfR)))
+     TmsE+
+     _
+     _
+     LL_X
+  <- tms-2-tm TmsE+ TmE+
+  <- tm-unique TmE+ TmL- Absurd
+  <- from-absurd-ll _ Absurd LL_X.
+
+%% Will need a lemma here about OfR being positive
 res/getRight-simp : resolving
      (used-as-neg/getRight UanX_V)
-     (pres/getRight-simp Pres)
+     (pres/getRight PresR (PresI : pres StepI _ (of/obj TpML TpMR OfL OfR)))
      TmsE+
-     (wm/getRight (WmOfE : well-moded OfE))
-     (logic-less/getRight LL_V)
+     (wm/getRight (WmOfI : well-moded OfE))
+     LL_V
      LL_X
   <- of-safe OfE TmsObj
   <- tms-2-tm TmsE+ TmE+
   <- tm-2-tms-prod-r TmE+ TmsObj TmsObj'
-  <- resolving UanX_V Pres TmsObj' WmOfE LL_V LL_X.
-}%
+  <- pres-wm StepI WmOfI (of/obj TpML TpMR OfL OfR) (wm/obj _ WmR)
+  <- resolving used-as-neg/e PresR TmsE+ WmR LL_V LL_E
+  <- resolving UanX_V PresI TmsObj' WmOfI (logic-less/obj-r LL_E) LL_X.
+
+res/getRight/absurd
+  : resolving
+     _
+     (pres/getRight PresR (PresI : pres StepI _ (of/obj _ TmL- OfL OfR)))
+     TmsE+
+     _
+     _
+     LL_X
+  <- tms-2-tm TmsE+ TmE+
+  <- tm-unique TmE+ TmL- Absurd
+  <- from-absurd-ll _ Absurd LL_X.
 
 res/getLeft/r-pos/obj
   : resolving
@@ -500,7 +529,7 @@ res/@s/app-r/forms
 res/e/getLeft
  : resolving
     used-as-neg/e
-    pres/getLeft 
+    (pres/getLeft _ _)
     TmsC+
     WmE
     LL_V
@@ -509,7 +538,7 @@ res/e/getLeft
 res/e/getRight
  : resolving
     used-as-neg/e
-    pres/getRight
+    (pres/getRight _ _)
     TmsC+
     WmE
     LL_V
@@ -517,7 +546,7 @@ res/e/getRight
 
 - : resolving
      used-as-neg/e 
-     pres/getLeft 
+     (pres/getLeft _ _)
      TmsL+ 
      (wm/getLeft (X : well-moded (of/obj TmL- _ _ _)))
      _
@@ -528,7 +557,7 @@ res/e/getRight
 
 - : resolving
      used-as-neg/e 
-     pres/getRight
+     (pres/getRight _ _)
      TmsR+ 
      (wm/getRight (X : well-moded (of/obj _ TmR- _ _)))
      _
@@ -541,14 +570,11 @@ res/e/getRight
 res/getRight/e
  : resolving
     (used-as-neg/getRight used-as-neg/e)
-    pres/getRight
+    (pres/getRight _ _)
     TmsC+
     WmE
     LL_V
     (logic-less/obj-r LL_V).
-
-
-
 
 resolving-ivar : i-var pos OfX OfE
 	 -> pres Step OfE (OfV : of V Et)
@@ -557,7 +583,6 @@ resolving-ivar : i-var pos OfX OfE
          -> logic-less OfV
 	 -> logic-less OfX
 	 -> type.
-
 
 res-ivar/productL
   : resolving-ivar

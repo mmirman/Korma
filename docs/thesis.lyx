@@ -55,7 +55,7 @@ figs-within-sections
 \begin_body
 
 \begin_layout Title
-Modes for Non Strict Functional Logical Languages
+Modes for Non Strict Functional Logic Languages
 \end_layout
 
 \begin_layout Author
@@ -67,21 +67,22 @@ Advisor: Frank Pfenning (fp@cs.cmu.edu)
 \end_layout
 
 \begin_layout Abstract
-Functional logical programming is a paradigm that introduces predicate satisfact
-ion as a first class construct into the functional setting.
- In consolidating logical and functional semantics, a complete logical query
+Functional logic programming is a paradigm that introduces proof search
+ as a first class construct into the functional setting.
+ In consolidating logic and functional semantics, a complete logic query
  primitive is desirable.
- In the non strict, breadth first evaluation strategy, it is possible to
- return unground logical variables.
- This makes useless the notion of the scope of logical variable declaration.
+ In the reasonable and efficient evaluation strategy, it is possible to
+ determine the correctness of a statement without entirely determining the
+ proof.
+ This would allow searches to leave their intended scope.
  Given the small step operational semantics for a practical lazy functional
- logical language, I approximate them with natural semantics for a lambda
- calculus with lazy logical primitives for which I supply a type and mode
+ logic language, I approximate them with natural semantics for a lambda
+ calculus with lazy logic primitives for which I supply a type and mode
  system.
  Types are annotated with modes denoting their intended groundedness attributes.
- Furthermore, given that the analysis is to be performed on functional logical
+ Furthermore, given that the analysis is to be performed on functional logic
  code, the type system allows annotation of higher order function types
- with modes, and thus supports grounding functions.
+ with modes.
  Modes are observed as forming a natural ordering, and thus type and mode
  checking supports limited subtyping.
  I prove in Twelf the soundness of the annotations produced from type checking,
@@ -93,30 +94,16 @@ ion as a first class construct into the functional setting.
  analysis.
 \end_layout
 
-\begin_layout Abstract
-While mode analysis prevents logical variables from leaving the scope of
- the search that introduced them, it does not prevent them from being declared
- outside of the scope of a search.
- Such results are meaningless in the context of the determinism necessary
- for meaningful I/O.
- A method of ensuring that logical variables are not introduced outside
- of the scope of search is also introduced by the introduction of a second
- arrow constructor denoting nondeterministic functions.
- 
-\end_layout
-
 \begin_layout Section
 Introduction
 \end_layout
 
 \begin_layout Standard
-Logic programming is a paradigm where rather than describing the action
- the computer should take to achieve a result, properties of the desired
- result are listed.
- Pure logic programming involves listing predicates over simple data types.
- Logic programming is a powerful model for describing complex queries, and
+Logic programming is a powerful model for describing complex queries, and
  encourages programmers to very often write less verbose code.
- Logic programming alone is not always ideal.
+ Pure logic programming involves listing values satisfying predicates over
+ simple data types.
+ However, logic programming alone is not always the correct tool of choice.
  While logic programming is very good for describing a single static data
  input and output, it alone is not adept at describing dynamic interactions.
  Because logic programming describes so much computation in so little code
@@ -124,17 +111,14 @@ Logic programming is a paradigm where rather than describing the action
  if not entirely unspecified.
  In cases where the action of the computer is to be specified, functional
  code is ideal.
- While it is simple to write a language where functional code can call logical
+ While it is simple to write a language where functional code can call logic
  code written separately, mixing the two to allow functional code to be
- accessed within logical code would be ideal.
- The ability to write mostly legible logical code and optimize a few cases
- would allow the programmer to choose what sacrifices to make, and allow
- for more interactive queries.
+ accessed within logic code would logic.
 \end_layout
 
 \begin_layout Standard
 In this thesis, I provide static analysis for a lambda calculus with additional
- logical primitives, in order to inform practical functional logical languages.
+ logic primitives, in order to inform practical functional logic languages.
  The language I analyze here is an extension of the lambda calculus which
  includes the logic primitives 
 \series bold
@@ -166,16 +150,27 @@ caseof
 
 \begin_layout Standard
 Nondeterministically branching for every free variable at every switch statement
- could very easily result in an unnecessarily slow programs, and thus a
- non strict evaluation strategy is desired.
- The Needed Narrowing evaluation strategy optimal in this respect.
- It proceeds by lazily reducing a term, and only initializing logical variables
+ could very easily result in an unnecessarily slow programs; thus a non
+ strict evaluation strategy is desired.
+ The 
+\emph on
+Needed Narrowing
+\emph default
+
+\begin_inset CommandInset citation
+LatexCommand citep
+key "Sergio1994"
+
+\end_inset
+
+ evaluation strategy optimal in this respect.
+ It iterates by lazily reducing a term, and only initializing logic variables
  if they are used as the argument to a 
 \series bold
 caseof
 \series default
- statement who's results are required to continue execution.
- Beyond simply being more efficient, Needed Narrowing is complete 
+ statement whose results are required to continue execution.
+ Beyond simply being more efficient, needed narrowing is complete 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "Sergio1994"
@@ -201,7 +196,7 @@ findAll
 \end_layout
 
 \begin_layout Example*
-To illustrate a case where functional logical programming would be convenient,
+To illustrate a case where functional logic programming would be convenient,
  consider the following Haskell code:
 \end_layout
 
@@ -264,13 +259,13 @@ e2
 \end_layout
 
 \begin_layout Standard
-This code defines a predicate that ensures it's second lambda term is a
- single step nondeterministic reduction of the first.
- It is far simpler and more usefull than the code that performs that single
- step nondeterministic reduction.
- Just given this predicate, we can not easily construct a function which
- lists all possible single step reductions of a term.
- A naive attempt might list all possible terms, and use this predicate as
+This code defines a predicate that ensures its second lambda term is a single
+ step nondeterministic reduction of the first.
+ It is simpler than the code that performs a single step nondeterministic
+ reduction.
+ Just given this predicate, we cannot easily construct a function that lists
+ all possible single step reductions of a term.
+ A naive attempt might list all possible terms and use this predicate as
  a filter.
 \end_layout
 
@@ -279,8 +274,8 @@ reductions term = filter (step term) listAllTerms
 \end_layout
 
 \begin_layout Standard
-In a functional logical language an efficient function to output the same
- set of items can be defined far more easily:
+In a functional logic language, a more efficient function to output the
+ same set of items can be defined far more easily:
 \end_layout
 
 \begin_layout LyX-Code
@@ -305,11 +300,10 @@ Motivation
 \end_layout
 
 \begin_layout Standard
-While functional logical programming has become more present with the formulatio
-n of small step semantics, it appears as though less attention has been
- made to the static analysis and verification of such languages.
- There do exist non strict functional logical programming language implementatio
-ns
+While functional logic programming has become more present with the formulation
+ of small step semantics, it appears as though less attention has been paid
+ to the static analysis and verification of such languages.
+ There do exist non strict functional logic programming language implementations
 \begin_inset CommandInset citation
 LatexCommand cite
 key "FLP"
@@ -320,25 +314,20 @@ key "FLP"
  entirely.
  If the language is intended to be efficiently compiled to safe code, statically
  ensuring safety is essential.
- Furthermore, functional logical programming presents an incredible paradigm
- shift from traditional imperative or functional paradigms.
+ Furthermore, functional logic programming presents a great shift from imperativ
+e or functional paradigms that programmers often learn first.
  It is thus necessary for the compiler to provide as much feedback as possible
  to inform the programmer of the correct use of the language, without hindering
  the readability of code.
- As reasoning about the time complexity of logical code is undesirable and
+ As reasoning about the time complexity of logic code is undesirable and
  difficult in the intended setting, the non strict and complete evaluation
- strategy known as Needed Narrowing is used.
- In consolidating logical and functional semantics, the primitive 
-\series bold
-findAll
-\series default
- is both an accessible and necessary means to make use of successful queries.
+ strategy known as needed narrowing is used.
  I note that in conjunction with a non strict evaluation strategy, it is
  possible for 
 \series bold
 findAll
 \series default
- to return unground logical variables, despite being the only block against
+ to return unground logic variables, despite being the only block against
  nondeterminism.
  Mode analysis
 \begin_inset CommandInset citation
@@ -347,17 +336,21 @@ key "Pfenning1996"
 
 \end_inset
 
- is suggested as a means of ensuring results from findAll are ground.
- As logical code can be considered a non-deterministic search, the primitive
+ might be used as a means of ensuring results from 
+\series bold
+findAll
+\series default
+ are ground.
+ As logic code can be considered a non-deterministic search, the primitive
  
 \series bold
 findAll
 \series default
- can be easily parallelized.
+ is highly concurrent.
  However, the unconstrained use of free variables throughout code could
- easily result in space leaks and unintentional non-deterministic IO.
+ easily result in space leaks and unintentional non-determinism.
  I present a type level system for constraining the scope of non determinism
- in plausible programs.
+ in plausible programs
 \end_layout
 
 \begin_layout Standard
@@ -391,23 +384,31 @@ findAll
 \end_layout
 
 \begin_layout Example*
-Consider the following Hypothetical Korma code
+Consider the following hypothetical code
 \end_layout
 
 \begin_layout LyX-Code
-list = findAll $ 
+list = 
+\emph on
+findAll
+\emph default
+ $ 
 \backslash
-a -> free $ 
+a -> 
+\emph on
+free
+\emph default
+ $ 
 \backslash
 z -> case z of
 \end_layout
 
 \begin_layout LyX-Code
-    A -> left a =:= A
+    A -> left a == A
 \end_layout
 
 \begin_layout LyX-Code
-    B -> (right a,left a) =:= ([A],A) 
+    B -> (right a,left a) == ([A],A) 
 \end_layout
 
 \begin_layout LyX-Code
@@ -420,7 +421,7 @@ Given the needed narrowing evaluation strategy, list would contain two values,
 \begin_inset Quotes eld
 \end_inset
 
-{left = A & right = ? }
+( A , ? )
 \begin_inset Quotes erd
 \end_inset
 
@@ -428,20 +429,16 @@ Given the needed narrowing evaluation strategy, list would contain two values,
 \begin_inset Quotes eld
 \end_inset
 
-{ left = A & right = [A] }
+(A,[A])
 \begin_inset Quotes erd
 \end_inset
 
 .
  We can thus infer that the type of list is 
-\begin_inset Quotes eld
+\begin_inset Formula $[(A+B)\times[A+B]]$
 \end_inset
 
-[ (A+B) * [ A + B ] ]
-\begin_inset Quotes erd
-\end_inset
-
-.
+ .
  However, if we were to ask for 
 \begin_inset Quotes eld
 \end_inset
@@ -450,11 +447,11 @@ right (head list)
 \begin_inset Quotes erd
 \end_inset
 
-, we would have encountered a logical variable.
- This code is thus non resolving.
- The effects from non resolving code can be non local and unintuitive for
- a novice logic programmer, and thus preventing findAll from accepting non
- resolving functions is necessary.
+, we would have encountered a logic variable.
+ We say that this predicate is not grounding.
+ The effects from non resolving code can be non local and non-intuitive
+ for a novice logic programmer, and thus preventing findAll from accepting
+ non resolving functions is necessary.
  
 \end_layout
 
@@ -464,15 +461,15 @@ Language Definition
 
 \begin_layout Standard
 It is first necessary to provide a language as a target for the analysis.
- To simplify, unification, recursive types, and polymorphism are omitted,
- although it is likely that they will not pose significant complications
- in the future.
+ To simplify recursive types, and polymorphism are omitted, although it
+ is likely that they will not pose significant complications in the future
+ if restricted in the usual fashions.
  For purposes of the proof, the term 
 \series bold
 unresolved
 \series default
- is also included, which is used as a logical variable which can take on
- any type but can only be used in a negative setting.
+ is also included, which is used as a logic variable which can have any
+ negatively moded type.
 \end_layout
 
 \begin_layout Subsection
@@ -494,7 +491,7 @@ Modes
 
 \begin_layout Description
 Types 
-\begin_inset Formula $t\;::=t\rightarrow t\;|\; t\twoheadrightarrow t\;|\;\emptyset\;|\;\mbox{answer}\;|\; t\times t\;|\; t+_{m}t$
+\begin_inset Formula $t\;::=t\rightarrow t\;|\; t\twoheadrightarrow t\;|\;1\;|\;\mbox{answer}\;|\; t\times t\;|\; t+_{m}t$
 \end_inset
 
 
@@ -519,7 +516,7 @@ Terms
 
 \begin_layout Standard
 \begin_inset Formula \[
-(e,e)\;|\;\mbox{getLeft}\;|\;\mbox{getRight}\;|\]
+(e,e)\;|\;\pi_{1}\;|\;\pi_{2}\;|\]
 
 \end_inset
 
@@ -528,7 +525,7 @@ Terms
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{left}\;|\;\mbox{right}\;|\;\mbox{case\;}e\;\mbox{of}\; e_{1}\; e_{2}|\;\mbox{unit}\;|\;\mbox{unresolved}\]
+\mbox{inl}\;|\;\mbox{inr}\;|\;\mbox{case\;}e\;\mbox{of}\;(e_{1},e_{2})|\;\mbox{unit}\;|\;\mbox{unresolved}\]
 
 \end_inset
 
@@ -547,10 +544,13 @@ Semantics
 \end_layout
 
 \begin_layout Standard
-Language semantics are a crucial property to specify before meaningfull
- analysis can take place.
- Logical languages when given naive semantics can be extraordinarily inefficient.
- The small step Needed Narrowing semantics 
+Language semantics are a crucial property to specify before meaningful analysis
+ can take place.
+ logic languages when given naive semantics can be extraordinarily inefficient.
+ Needed narrowing is an evaluation strategy where variables are only instantiate
+d when continuing the lazy evaluation of a predicate requires their instantiatio
+n, such as at a branching construct.
+ The small step needed narrowing semantics 
 \begin_inset CommandInset citation
 LatexCommand citep
 key "Albert02adeterministic"
@@ -566,7 +566,7 @@ key "Albert02adeterministic"
 placement H
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset Caption
@@ -651,7 +651,7 @@ Notes
 \begin_inset Text
 
 \begin_layout Plain Layout
-varcons
+ST-VARCONS
 \end_layout
 
 \end_inset
@@ -763,7 +763,7 @@ varcons
 \begin_inset Text
 
 \begin_layout Plain Layout
-varexp
+ST-VAREXP
 \end_layout
 
 \end_inset
@@ -875,7 +875,7 @@ e
 \begin_inset Text
 
 \begin_layout Plain Layout
-val
+ST-VAL
 \end_layout
 
 \end_inset
@@ -994,7 +994,7 @@ variable with
 \begin_inset Text
 
 \begin_layout Plain Layout
-lam
+ST-LAM
 \end_layout
 
 \end_inset
@@ -1109,7 +1109,7 @@ lam
 \begin_inset Text
 
 \begin_layout Plain Layout
-app
+ST-APP
 \end_layout
 
 \end_inset
@@ -1221,7 +1221,7 @@ app
 \begin_inset Text
 
 \begin_layout Plain Layout
-case
+ST-CASE
 \end_layout
 
 \end_inset
@@ -1330,7 +1330,7 @@ S
 \begin_inset Text
 
 \begin_layout Plain Layout
-select-left
+ST-CASE-L
 \end_layout
 
 \end_inset
@@ -1351,7 +1351,7 @@ select-left
 \begin_inset Text
 
 \begin_layout Plain Layout
-\begin_inset Formula $\mbox{left }e$
+\begin_inset Formula $\mbox{inl }e$
 \end_inset
 
 
@@ -1442,7 +1442,7 @@ select-left
 \begin_inset Text
 
 \begin_layout Plain Layout
-select-right
+ST-CASE-R
 \end_layout
 
 \end_inset
@@ -1463,7 +1463,7 @@ select-right
 \begin_inset Text
 
 \begin_layout Plain Layout
-\begin_inset Formula $\mbox{right }e$
+\begin_inset Formula $\mbox{inr }e$
 \end_inset
 
 
@@ -1554,7 +1554,7 @@ select-right
 \begin_inset Text
 
 \begin_layout Plain Layout
-guess-left
+ST-GUESS-L
 \end_layout
 
 \end_inset
@@ -1622,7 +1622,7 @@ guess-left
 \begin_inset Text
 
 \begin_layout Plain Layout
-\begin_inset Formula $\Gamma[x\mapsto\mbox{left}\; y,\; y\mapsto y]$
+\begin_inset Formula $\Gamma[x\mapsto\mbox{inl}\; y,\; y\mapsto y]$
 \end_inset
 
 
@@ -1669,7 +1669,7 @@ guess-left
 \begin_inset Text
 
 \begin_layout Plain Layout
-guess-right
+ST-GUESS-R
 \end_layout
 
 \end_inset
@@ -1737,7 +1737,7 @@ guess-right
 \begin_inset Text
 
 \begin_layout Plain Layout
-\begin_inset Formula $\Gamma[x\mapsto\mbox{right}\; y,\; y\mapsto y]$
+\begin_inset Formula $\Gamma[x\mapsto\mbox{inr}\; y,\; y\mapsto y]$
 \end_inset
 
 
@@ -1784,7 +1784,7 @@ guess-right
 \begin_inset Text
 
 \begin_layout Plain Layout
-free
+ST-FREE
 \end_layout
 
 \end_inset
@@ -1907,7 +1907,7 @@ free
 \end_layout
 
 \begin_layout Standard
-The semantics used in our analysis is a reduction semantics which approximate
+The semantics used in our analysis is a reduction semantics which approximates
  the small step semantics above.
  
 \end_layout
@@ -1916,13 +1916,13 @@ The semantics used in our analysis is a reduction semantics which approximate
 \begin_inset Formula $E\Rightarrow E'$
 \end_inset
 
- is the lazy single step relation defined as follows.
+ is the lazy big step reduction defined as follows.
  
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(E-APP_{1})}\frac{E_{1}\Rightarrow E_{1}'}{E_{1}\; E_{2}\Rightarrow E_{1}'\; E_{2}}\]
+\mbox{(E-ID-LAM)}(\lambda x:t.F)\Rightarrow(\lambda x:t.F)\]
 
 \end_inset
 
@@ -1931,7 +1931,61 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(E-APP LAM)}(\lambda x:t.e_{1})\; e_{2}\Rightarrow[x\mapsto e_{2}]e_{1}\mbox{provided t is free for e_{2} in e_{1}}\]
+\mbox{(E-ID-OBJ)}(A,B)\Rightarrow(A,B)\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-ID-UNIT)}\mbox{unit}\Rightarrow\mbox{unit}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-ID-SUCCESS)}\mbox{success}\Rightarrow\mbox{success}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-ID-FAIL)}\mbox{fail}\Rightarrow\mbox{fail}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-ID-INL)}\mathbf{inl}\; A\Rightarrow\mathbf{inl}\; A\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-ID-INR)}\mathbf{inr}\; A\Rightarrow\mathbf{inr}\; A\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-APP-LAM)}\frac{E_{1}\Rightarrow(\lambda x:t.F)\;\;\;\;[x\mapsto E_{2}]F\Rightarrow V}{E_{1}\;\; E_{2}\Rightarrow V}\mbox{provided x is free for e_{2} in e_{1}}\]
 
 \end_inset
 
@@ -1940,16 +1994,7 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \begin_layout Standard
 \begin_inset Formula \begin{align*}
-\mbox{(E-GET LEFT) }\mbox{getLeft }(\mbox{obj}\; e_{1}\; e_{2}) & \Rightarrow e_{1}\end{align*}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula \begin{align*}
-\mbox{(E-GET LEFT-EVAL) } & \frac{e\Rightarrow e'}{\mbox{getLeft }e\Rightarrow\mbox{getLeft }e'}\end{align*}
+\mbox{(E-GET) } & \frac{E\Rightarrow(E_{1},E_{2})\;\; E_{i}\Rightarrow V}{\pi_{i}E\Rightarrow V}\end{align*}
 
 \end_inset
 
@@ -1958,7 +2003,7 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(E-SWITCH-EVAL) }\frac{e\Rightarrow e'}{\mbox{case}\; e\;\mbox{of}LF\; RF\Rightarrow\mbox{case}\; e'\;\mbox{of}\; LF\; RF}\]
+\mbox{(E-SWITCH-LEFT) \frac{E\Rightarrow\mathbf{inl}\; L\;\;\; LF\; L\Rightarrow V}{\mbox{case}\; E\;\mbox{of}\;(LF,RF)\Rightarrow V}}\]
 
 \end_inset
 
@@ -1967,7 +2012,7 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(E-SWITCH-RIGHT) }(\mbox{case}\;(\mbox{right\;}L)\;\mbox{of}\; LF\; RF)\Rightarrow RF\; R\]
+\mbox{(E-SWITCH-RIGHT) }\frac{E\Rightarrow\mathbf{inr}\; R\;\;\; RF\; R\Rightarrow V}{\mbox{case}\; E\;\mbox{of}\;(LF,RF)\Rightarrow V}\]
 
 \end_inset
 
@@ -1976,7 +2021,7 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(E-FINDALL-SUCC) }\frac{\vdash V:T\;\;\;\;(E\; V)\Rightarrow\mbox{success}}{\mbox{findAll}_{T}\; E\Rightarrow(\mbox{left}\; V)}\]
+\mbox{(E-FINDALL-SUCC) }\frac{\vdash V:T\;\;(E\; V)\Rightarrow\mbox{success}}{\mbox{findAll}_{T}\; E\Rightarrow(inl\; V)}\]
 
 \end_inset
 
@@ -1985,7 +2030,7 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(E-FINDALL FAIL) }\frac{(E\; V)\Rightarrow\mbox{fail}\;\;\vdash V:T}{\mbox{findAll}_{T}\; E\Rightarrow(\mbox{right}\;())}\]
+\mbox{(E-FINDALL FAIL) }\frac{\forall V:T\;\;(E\; V)\Rightarrow\mbox{fail}}{\mbox{findAll}_{T}\; E\Rightarrow(\mbox{inr}\;\mbox{unit})}\]
 
 \end_inset
 
@@ -1994,7 +2039,16 @@ The semantics used in our analysis is a reduction semantics which approximate
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(E-FREE-SUCC) }\frac{\vdash V:T}{\mbox{free}_{T}\; E\Rightarrow E\; V}\]
+\mbox{(E-FREE-SUCC) }\frac{\vdash V:T\;\;\; E\; V\Rightarrow\mbox{success}}{\mbox{free}_{T}\; E\Rightarrow\mbox{success}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(E-FREE-SUCC) }\frac{\vdash V:T\;\;\; E\; V\Rightarrow fail}{\mbox{free}_{T}\; E\Rightarrow fail}\]
 
 \end_inset
 
@@ -2007,10 +2061,25 @@ Note that in these rules we need no context, since
 \end_inset
 
  should not contain free variables.
+ Importantly, the big step semantics also have the useful property that
+ the result of a reduction is always in weak head normal form.
+ 
 \end_layout
 
-\begin_layout Chapter
+\begin_layout Subsection
 Type and Mode Checking
+\end_layout
+
+\begin_layout Standard
+Modes are a system for characterizing what arguments are input and outputs
+ for a predicate.
+ We say that a value is ground or resolved if all of its constituents are
+ known.
+ We can say that an argument is intended to be an output to a predicate
+ if, upon satisfying that predicate, it must be ground.
+ An argument is an input to a predicate if it will be ground on every instantiat
+ion of the rule.
+ 
 \end_layout
 
 \begin_layout Standard
@@ -2026,7 +2095,7 @@ In order to discuss the type checker, it is necessary to first describe
 
  describes values which must become ground.
  We can use a value which does not need to become ground anywhere we know
- we will ground the value, but we should not us a value which must become
+ we will ground the value, but we should not use a value which must become
  ground anywhere we do not know we will ground it (some programs which violate
  this rule will be correct, but this rule makes life easier).
  Thus, 
@@ -2092,8 +2161,8 @@ The immediate mode of a type
 \end_layout
 
 \begin_layout Standard
-Not all types are necessarily well moded.
- In order for a type to be well moded, sums must have a mode that is an
+Not all types are necessarily well-moded.
+ In order for a type to be well-moded, sums must have a mode that is an
  upper bound of the modes of it's constituent types.
 \end_layout
 
@@ -2211,7 +2280,7 @@ and
 
 \begin_layout Definition
 \begin_inset Formula \[
-\emptyset\leq\emptyset\]
+1\leq1\]
 
 \end_inset
 
@@ -2245,6 +2314,12 @@ and
 
 \end_layout
 
+\begin_layout Standard
+The following lemmas are relied on heavily thought the proof of preservation
+ and progress, and have been entirely formalized in Twelf in the TypeTheorems
+ file.
+\end_layout
+
 \begin_layout Lemma
 \begin_inset Formula $T\leq T$
 \end_inset
@@ -2257,9 +2332,16 @@ This is a straightforward proof by induction.
  
 \end_layout
 
-\begin_layout Standard
-The following lemma proof is relied on heavily thought the proof of preservation
- and progress.
+\begin_layout Lemma
+\begin_inset Formula $\frac{A\leq B\;\;\; B\leq C}{A\leq C}$
+\end_inset
+
+ is admissible.
+\end_layout
+
+\begin_layout Proof
+By lexicographic induction on the structure of the first and second subtyping
+ relations.
 \end_layout
 
 \begin_layout Lemma
@@ -2282,11 +2364,9 @@ The following lemma proof is relied on heavily thought the proof of preservation
 \end_layout
 
 \begin_layout Proof
-Again, this is has been formalized in Twelf.
-\begin_inset Formula $ $
-\end_inset
-
-
+By lexicographic induction on the structure of the subtyping relation and
+ mode derivations.
+ 
 \end_layout
 
 \begin_layout Subsection
@@ -2367,7 +2447,7 @@ y called.
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(OF-getRight)}\frac{v_{1}\times v_{2}\approx m}{\Gamma\vdash\mbox{getRight}:\; v_{1}\times v_{2}\rightarrow v_{2}}\]
+\mbox{(OF-PROJ)}\frac{\Gamma\vdash a:v_{1}\times v_{2}\;\;\; v_{1}\times v_{2}\approx m}{\Gamma\vdash\pi_{i}a:v_{2}}\]
 
 \end_inset
 
@@ -2376,7 +2456,16 @@ y called.
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(OF-RIGHT)}\frac{v_{1}+_{m}v_{2}\approx m}{\Gamma\vdash\mbox{right}:v_{2}\rightarrow v_{1}+_{m}v_{2}}\]
+\mbox{(OF-Left)}\frac{\Gamma\vdash a:v_{1}\;\;\; v_{1}+_{m}v_{2}\approx m}{\Gamma\vdash\mbox{inl}\; a\;:v_{1}+_{m}v_{2}}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula \[
+\mbox{(OF-RIGHT)}\frac{\Gamma\vdash a:v_{2}\;\;\; v_{1}+_{m}v_{2}\approx m}{\Gamma\vdash\mbox{inr}\; a\;:v_{1}+_{m}v_{2}}\]
 
 \end_inset
 
@@ -2394,7 +2483,7 @@ y called.
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{(OF-UNIT)}\frac{}{\Gamma\vdash\mbox{unit}:\emptyset}\]
+\mbox{(OF-UNIT)}\frac{}{\Gamma\vdash\mbox{unit}:1}\]
 
 \end_inset
 
@@ -2411,7 +2500,7 @@ y called.
 \end_layout
 
 \begin_layout Proposition
-\begin_inset Formula $E:T$
+\begin_inset Formula $\Gamma\vdash E:T$
 \end_inset
 
  implies that there is a unique 
@@ -2480,7 +2569,7 @@ or
 
 \begin_layout Standard
 \begin_inset Formula \[
-\mbox{free}:\forall v_{1}\; v_{2}.(v_{1}\rightarrow v_{2})\rightarrow v_{2}\]
+\mbox{free}:\forall v_{1}\; v_{2}.(v_{1}\rightarrow\mbox{answer})\rightarrow\mbox{answer}\]
 
 \end_inset
 
@@ -2795,13 +2884,180 @@ s entirely.
 \end_layout
 
 \begin_layout Subsection
+Runtime Properties
+\end_layout
+
+\begin_layout Standard
+The first important theorem about these semantics is that they always result
+ in precisely weak head normal form of a value, and thus capture an entire
+ computation and not just a computational step.
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula $whnf(E)$
+\end_inset
+
+ is defined as follows:
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(WHNF-OBJ)}whnf((A,B))\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(WHNF-UNIT)}whnf(\mbox{unit}\mathbf{)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(WHNF-INL)}whnf(\mbox{inl}\; A\mathbf{)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(WHNF-INR)}whnf(\mbox{inr}\; A\mathbf{)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(WHNF-SUCC)}whnf(\mbox{success}\mathbf{)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(WHNF-FAIL)}whnf(\mbox{fail}\mathbf{)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Theorem
+If 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $E\Rightarrow V$
+\end_inset
+
+ then 
+\begin_inset Formula $whnf(V)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Proof
+Simply by lexicographic induction on the structure of a reduction.
+ In cases where we reduce twice, the induction argument is invoked on the
+ second, output term.
+ The E-ID-
+\emph on
+VTP
+\emph default
+ cases form the base cases of the proof, where the output proof of 
+\begin_inset Formula $whnf$
+\end_inset
+
+ is WHNF-
+\emph on
+VTP
+\emph default
+.
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Standard
+Note, for sake of brevity, the full small step reduction shall not be defined
+ here.
+ Instead it will be assumed that it is defined as it usually is and has
+ the following operational properties.
+\end_layout
+
+\begin_layout Definition
+Let 
+\begin_inset Formula $E\Rightarrow_{S}R$
+\end_inset
+
+
+\begin_inset Formula $ $
+\end_inset
+
+be the small step reduction such that 
+\begin_inset Formula $ $
+\end_inset
+
+if 
+\begin_inset Formula $E\Rightarrow R$
+\end_inset
+
+ then 
+\begin_inset Formula $E\Rightarrow_{S}*R$
+\end_inset
+
+, and if 
+\begin_inset Formula $E\Rightarrow_{S}*R$
+\end_inset
+
+and 
+\begin_inset Formula $whnf(R)$
+\end_inset
+
+ then 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $E\Rightarrow R$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
 Progress
 \end_layout
 
 \begin_layout Standard
 Before we can prove progress for the full language, we need to prove that
  the sublanguage not considering findAll has the property that it can not
- reduce away logical variables.
+ reduce away logic variables.
 \end_layout
 
 \begin_layout Definition
@@ -2816,7 +3072,7 @@ Before we can prove progress for the full language, we need to prove that
 \begin_inset Formula $E$
 \end_inset
 
- contains no logical variables in cases where it matters, for example when
+ contains no logic variables in cases where it matters, for example when
  
 \begin_inset Formula $E$
 \end_inset
@@ -2876,7 +3132,43 @@ Before we can prove progress for the full language, we need to prove that
 
 \begin_layout Definition
 \begin_inset Formula \[
+\mbox{(LFREE/OBJ-R})\frac{logicFree(E_{2})\;\; E_{1}/\oplus}{logicFree((E_{1},E_{2}))}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
 \mbox{(LFREE/OBJ})\frac{logicFree(E_{1})\;\; logicFree(E_{2})}{logicFree((E_{1},E_{2}))}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(LFREE/INL})\frac{logicFree(E)}{logicFree(\mbox{inl}\; E)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(LFREE/INR})\frac{logicFree(E)}{logicFree(\mbox{inr}\; E)}\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Definition
+\begin_inset Formula \[
+\mbox{(LFREE/PROJ})\frac{logicFree(E)}{logicFree(\pi_{i}\; E)}\]
 
 \end_inset
 
@@ -2942,7 +3234,7 @@ The only case of interest here is
 \end_inset
 
  along with 
-\begin_inset Formula $\mbox{LOGIC-LESS/LAM}$
+\begin_inset Formula $\mbox{LFREE/LAM}$
 \end_inset
 
 .
@@ -3004,6 +3296,14 @@ The only case of interest here is
 .
 \end_layout
 
+\begin_layout Standard
+The following theorem is vital to progress, as it ensures that when we search
+ by applying values with logical variables in them to the search predicate,
+ a successful result can only occur when the argument in fact has no logic
+ variables.
+ 
+\end_layout
+
 \begin_layout Theorem
 Subterm-Resolving
 \end_layout
@@ -3025,18 +3325,14 @@ Subterm-Resolving
 \end_inset
 
  and 
-\begin_inset Formula $E\Rightarrow_{k}V$
+\begin_inset Formula $E\Rightarrow_{*}V$
 \end_inset
 
- with 
+ where 
 \begin_inset Formula $\Gamma\vdash V:T_{V}$
 \end_inset
 
- and 
-\begin_inset Formula $T_{V}\leq T_{E}$
-\end_inset
-
- by preservation and 
+,  and 
 \begin_inset Formula $\mbox{logicFree(V)}$
 \end_inset
 
@@ -3068,15 +3364,13 @@ This has been mostly proved in Twelf without subtyping for all but a few
 \end_inset
 
  completely.
- The remaining cases not currently handled in the twelf proof are those
+ The remaining cases not currently handled in the Twelf proof are those
  involving expressions used negatively on the left hand side.
  In these cases, subterm resolving follows from preservation of 
 \begin_inset Formula $usedCorrectly$
 \end_inset
 
  under substitution.
- **The remaining cases appear to have been formalized in alternate versions
- of the proof.**
 \end_layout
 
 \begin_layout Corollary
@@ -3216,7 +3510,7 @@ WellModed-Resolving
 \end_inset
 
  and 
-\begin_inset Formula $E\Rightarrow_{k}V$
+\begin_inset Formula $E\Rightarrow_{*}V$
 \end_inset
 
  with 
@@ -3243,6 +3537,90 @@ WellModed-Resolving
 \end_layout
 
 \begin_layout Theorem
+If 
+\begin_inset Formula $wellModed(E)$
+\end_inset
+
+ , 
+\begin_inset Formula $logicFree(E)$
+\end_inset
+
+ and 
+\begin_inset Formula $E\implies E'$
+\end_inset
+
+ then 
+\begin_inset Formula $logicFree(E')$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Proof
+This theorem is by lexicographic induction.
+ The only non-trivial cases are those where a logical variable could potentially
+ be introduced.
+ This restricts us to the cases of 
+\begin_inset Formula $findAll$
+\end_inset
+
+ and 
+\begin_inset Formula $free$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Proof
+In the case of 
+\begin_inset Formula $findAll$
+\end_inset
+
+, there are two applicable reductions.
+ In the case of 
+\begin_inset Formula $\mbox{E-FINDALL-SUCC}$
+\end_inset
+
+, corollary 27 can be applied to the reduction 
+\begin_inset Formula $E\; V\Rightarrow\mbox{success}$
+\end_inset
+
+ to show 
+\begin_inset Formula $logicFree(V)$
+\end_inset
+
+.
+ The output 
+\begin_inset Formula $logicFree(left\; V)$
+\end_inset
+
+ is an application of 
+\begin_inset Formula $\mbox{LFREE-INL}$
+\end_inset
+
+.
+ The case of 
+\begin_inset Formula $\mbox{E-FINDALL-FAIL}$
+\end_inset
+
+ is trivial.
+ 
+\end_layout
+
+\begin_layout Proof
+In the case of 
+\begin_inset Formula $free$
+\end_inset
+
+ , both reductions involving it must return values which are certainly resolved.
+ 
+\end_layout
+
+\begin_layout --Separator--
+
+\end_layout
+
+\begin_layout Theorem
 Progress Holds
 \end_layout
 
@@ -3260,7 +3638,7 @@ Provided Term-Resolving holds in general,
 \end_inset
 
  is a value or 
-\begin_inset Formula $E\Rightarrow E'$
+\begin_inset Formula $E\Rightarrow_{S}E'$
 \end_inset
 
  for some 
@@ -3272,53 +3650,80 @@ Provided Term-Resolving holds in general,
 \begin_inset Formula $E$
 \end_inset
 
- does not contain logical variables, then 
+ does not contain logic variables, then 
 \begin_inset Formula $E'$
 \end_inset
 
- will also contain no logical variables.
+ will also contain no logic variables.
 \end_layout
 
 \begin_layout Proof
-Without the 
-\series bold
-findAll 
-\series default
-or 
-\series bold
-free
-\series default
- primitives or logical variables, the language given is just the simply
- typed lambda calculus, and the progress theorem follows nearly trivially.
- The introduction of logical variables, 
-\series bold
-findAll
-\series default
- makes the analysis a bit more complex.
- In the case of a 
-\series bold
-findAll
-\series default
-, we show that it must only accept grounding arguments.
- This implies that if we apply a value to the argument and it evaluates
- to success, it could not originally have had any logical variables by the
- Term-Resolving corollary.
- Thus, no results from 
-\series bold
-findAll 
-\series default
-will contain logical variables.
- 
-\series bold
-Free
-\series default
- is not defined as containing no logical variables, and no other primitives
- introduce logical variables.
+This proof is by lexicographic induction, application of theorem 28, the
+ relationship between the small step and big step semantics, and theorem
+ 18.
+ Appart from the cases of 
+\begin_inset Formula $findAll$
+\end_inset
+
+ and 
+\begin_inset Formula $free$
+\end_inset
+
+, the proof is similar to traditional proofs of progress.
+ We proceed as normal, until the cases of 
+\begin_inset Formula $findAll$
+\end_inset
+
+ and 
+\begin_inset Formula $free$
+\end_inset
+
+.
+ It makes more sense to say here that 
+\begin_inset Formula $findAll$
+\end_inset
+
+ of any expression is a value.
+ A more meaningful proof of progress can be given if a queue of attempting
+ expressions and a set of unattempted expressions is included in the semantics
+ for 
+\begin_inset Formula $findAll$
+\end_inset
+
+.
  
 \end_layout
 
 \begin_layout Subsection
 Strictness Analysis
+\end_layout
+
+\begin_layout Definition
+A function E is grounding if when 
+\begin_inset Formula $E\; V\implies C$
+\end_inset
+
+ and 
+\begin_inset Formula $C$
+\end_inset
+
+ has no logic variables, and both 
+\begin_inset Formula $C$
+\end_inset
+
+ and 
+\begin_inset Formula $V$
+\end_inset
+
+ are values, then 
+\begin_inset Formula $V$
+\end_inset
+
+ has no logic variables.
+\end_layout
+
+\begin_layout --Separator--
+
 \end_layout
 
 \begin_layout Definition
@@ -3354,7 +3759,7 @@ Suppose
 \begin_inset Formula $E$
 \end_inset
 
-, every aspect of it's argument must be used, thus evaluating that argument
+, every aspect of its argument must be used, thus evaluating that argument
  to head normal form will not expose any divergent computations not already
  exposed.
  
@@ -3370,8 +3775,8 @@ Suppose
 \begin_inset Formula $E$
 \end_inset
 
- with logical variables.
- Substitute every logical variable for a divergent computation.
+ with logic variables.
+ Substitute every logic variable for a divergent computation.
  Then because 
 \begin_inset Formula $ $
 \end_inset
@@ -3393,11 +3798,11 @@ on to diverge.
 \end_inset
 
  will cause the computation to diverge.
- Thus the original argument with logical variables passed to 
+ Thus the original argument with logic variables passed to 
 \begin_inset Formula $E$
 \end_inset
 
- will either diverge converge to a value with logical variables.
+ will either diverge converge to a value with logic variables.
  Thus 
 \begin_inset Formula $E$
 \end_inset
@@ -3407,7 +3812,7 @@ on to diverge.
 \end_layout
 
 \begin_layout Corollary
-Closed
+A combinator
 \begin_inset Formula $E$
 \end_inset
 
@@ -3434,8 +3839,8 @@ Ramifications
 \begin_layout Standard
 Because mode checking and strictness checking are equivalent, mode checking
  algorithms can be used for strictness analysis.
- Natural deduction formulations of strictness and relevance logics have
- been given relevant proof terms and could very well be used as an alternate
+ Natural deduction formulations of strictness and relevance logic have been
+ given relevant proof terms and could very well be used as an alternate
  type system, with the addition of new syntax.
  In particular, our use of the predicate 
 \begin_inset Formula $usedCorrectly$
@@ -3463,207 +3868,31 @@ key "lazy-lily"
 \end_layout
 
 \begin_layout Section
-The Scope of Non-determinism
-\end_layout
-
-\begin_layout Standard
-To show that the 
-\series bold
-findAll
-\series default
- primitive can be used to control the scope of free variables, it is easiest
- to use notions from subtyping systems, and to construct a syntactic transformat
-ion.
- I also present a method for ensuring the unifiability of the free variables.
- In order to unify, free variables must be unifiable, and constructed from
- products and sums only.
-\end_layout
-
-\begin_layout Standard
-We can refine the types stated earlier for as follows, given the presence
- of type classes:
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula \[
-\mbox{free}::\;\forall a\; b.(\mbox{Unifiable}\; a)\implies(a\rightarrow b)\rightarrow b\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula \[
-\mbox{findAll}::\mbox{Unifiable}\; a\implies(a\rightarrow\mbox{Success})\rightarrow[a]\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Note here that 
-\series bold
-findAll
-\series default
- returns a list.
- The typeclass 
-\series bold
-Unifiable
-\series default
- can be automatically derived for types which do not contain arrows.
- 
-\end_layout
-
-\begin_layout Standard
-In a pure lazy functional setting, IO has traditionally been accomplished
- using the IO monad.
- In order to not deviate from this pattern, it is necessary to ensure that
- computations still make sense from within the IO monad, and that the scope
- of the free variables does cause unexpected nondeterminism of effects.
- Ensuring that the nondeterminism of free does leek into the IO monad statically
- can be made into a type level problem by the following system.
-\end_layout
-
-\begin_layout Standard
-Suppose we have two parameterized types 
-\begin_inset Formula $\mbox{Many}\; a$
-\end_inset
-
- and 
-\begin_inset Formula $\mbox{Single}\; a$
-\end_inset
-
-, with the following subtyping rules:
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula \[
-(\mbox{S-ReturnQuantity})\;\mbox{Single}\; a<:\;\mbox{Many}\; a\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $\mbox{Single}$
-\end_inset
-
- and 
-\begin_inset Formula $\mbox{Many}$
-\end_inset
-
- are instances of the built in 
-\begin_inset Formula $\mbox{ReturnQuantity}$
-\end_inset
-
- typeclass, and the following application function's type is given as a
- primitive.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula \[
-\$\$::\mbox{ReturnQuantity}\; m\implies(a\rightarrow m\; b)\rightarrow(m\; a\rightarrow m\; b)\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The 
-\begin_inset Quotes eld
-\end_inset
-
-main
-\begin_inset Quotes erd
-\end_inset
-
- action for the program will has type 
-\begin_inset Formula $\mbox{Single}\;(\mbox{IO}\;())$
-\end_inset
-
-, and 
-\begin_inset Formula $\mbox{return}::\; a\rightarrow\mbox{Single }(m\; a)$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula \[
-\mbox{free}::\forall a\; b\;.(\mbox{Unifiable}\; a)\implies(a\rightarrow\mbox{Many}\; b)\rightarrow\mbox{Many}\; b\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula \[
-\mbox{findall}::\forall a\; b\;.\;(\mbox{Unifiable}\; a)\implies(a\rightarrow\mbox{Many}\;\mbox{Success})\rightarrow\mbox{Single}\;[a]\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-This way, any function which is deterministic can be used anywhere a non-determi
-nistic function can be used, but not vise versa.
- To make this feature not cumbersome to the user, we apply the inductively
- defined transformation 
-\begin_inset Formula $\phi$
-\end_inset
-
- to the abstract syntax tree.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula \[
-\phi(e_{1}\; e_{2})=\phi(e_{1})\;\$\$\;\phi(e_{2})\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula \[
-\phi(\lambda x.e)=\lambda x.\phi(e)\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Section
 Conclusions & Future Work
 \end_layout
 
 \begin_layout Standard
-In this thesis, we discussed a lazy functional logical language similar
- to curry and proved its hypothetical runtime safety in an interacting environme
-nt.
+In this thesis, we discussed a lazy functional logic language similar to
+ Curry and proved its runtime safety.
  We supplied a mode system and a way to separate nondeterminism from input
  and output.
  However, the mode system is not always entirely expressive enough.
- Strictness type systems based on resource logics have been defined, but
- type systems based on them including fixed points and polymorphism do not
- yet seem to have been examined.
+ It is also still necessary to show the safety of extensions of polymorphism
+ and recursion to the current mode algorithm.
+ Finally, a full implementation of the language has yet to be completed.
  
 \end_layout
 
 \begin_layout Standard
-It would also be interesting to explore the sorts of safe concurrency primitives
- that could be created using the same principles as 
+Strictness type systems based on natural deduction formulations of resource
+ logic have been defined, but type systems based on them including fixed
+ points and polymorphism do not yet seem to have been examined.
+ It would also be interesting to explore the sorts of safe concurrency primitive
+s that could be created using the same principles as 
 \series bold
 findAll
 \series default
 .
- 
 \end_layout
 
 \begin_layout Standard
@@ -3676,6 +3905,19 @@ options "bibtotoc,amsplain"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Remark*
+The Twelf proofs will be available at 
+\begin_inset CommandInset href
+LatexCommand href
+name "http://github.com/mmirman/korma"
+target "http://github.com/mmirman/korma"
+
+\end_inset
+
+ in the branches simple and explicit.
+ 
 \end_layout
 
 \end_body
