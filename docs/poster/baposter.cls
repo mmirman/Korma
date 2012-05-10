@@ -233,7 +233,7 @@
 \DeclareOptionX{screen}        {\@geometryKnowsThisSizetrue\baposter@setfinalpapersize{225mm}{180mm}}%g
 
 % Margin
-\setlength{\baposter@finalmargin}{1.5cm}
+\setlength{\baposter@finalmargin}{2cm}
 \DeclareOptionX{fontscale}[0.292]{\renewcommand{\baposter@fontscale}{#1}}
 \DeclareOptionX{margin}   [1.5cm]{\setlength{\baposter@finalmargin}{#1}}
 

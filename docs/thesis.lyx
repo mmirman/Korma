@@ -3625,7 +3625,6 @@ Progress Holds
 \end_layout
 
 \begin_layout Theorem
-Provided Term-Resolving holds in general, 
 \begin_inset Formula $E:T$
 \end_inset
 
@@ -3899,7 +3898,7 @@ findAll
 \begin_inset CommandInset bibtex
 LatexCommand bibtex
 btprint "btPrintAll"
-bibfiles "/Users/matt/Documents/MyBib"
+bibfiles "MyBib"
 options "bibtotoc,amsplain"
 
 \end_inset
